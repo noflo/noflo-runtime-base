@@ -9,7 +9,7 @@ class BaseTransport
   constructor: ->
     @graph = new protocols.Graph @
     @network = new protocols.Network @
-    @components = new protocols.Component @
+    @component = new protocols.Component @
 
   # Send a message back to the user via the transport protocol.
   #
