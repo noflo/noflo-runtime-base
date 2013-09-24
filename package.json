@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/noflo/noflo-ui.git"
+    "url": "git://github.com/noflo/noflo-runtime-base.git"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
