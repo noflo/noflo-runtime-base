@@ -4,15 +4,16 @@
   "author": "Henri Bergius <henri.bergius@iki.fi>",
   "repo": "noflo/noflo-runtime-iframe",
   "version": "0.1.0",
-  "keywords": [
-  ],
+  "keywords": [],
   "dependencies": {
     "noflo/noflo": "*"
   },
   "scripts": [
-    "src/Base.coffee"
+    "src/Base.coffee",
+    "src/protocol/Graph.coffee",
+    "src/protocol/Network.coffee",
+    "src/protocol/Component.coffee"
   ],
   "main": "src/Base.js",
-  "files": [
-  ]
+  "files": []
 }
