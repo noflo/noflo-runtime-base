@@ -19,7 +19,7 @@ module.exports = ->
       install:
         command: './node_modules/.bin/component install'
       build:
-        command: './node_modules/.bin/component build -u component-json,component-coffee -o browser -n noflo-ui -c'
+        command: './node_modules/.bin/component build -u component-json,component-coffee -o browser -n noflo-runtime-base -c'
 
     # Automated recompilation and testing when developing
     watch:
@@ -42,7 +42,13 @@ module.exports = ->
 
     # Coding standards
     coffeelint:
-      components: ['components/*.coffee']
+      src:
+        files:
+          src: ['src/*.coffee', 'src/**/*.coffee']
+        options:
+          max_line_length:
+            value: 80
+            level: 'warn'
 
   # Grunt plugins used for building
   @loadNpmTasks 'grunt-contrib-coffee'

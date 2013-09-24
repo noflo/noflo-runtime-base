@@ -10,8 +10,9 @@
     "noflo/noflo": "*"
   },
   "scripts": [
-    "index.js"
+    "src/Base.coffee"
   ],
+  "main": "src/Base.js",
   "files": [
   ]
 }
