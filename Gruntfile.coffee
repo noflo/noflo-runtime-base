@@ -5,6 +5,18 @@ module.exports = ->
 
     # CoffeeScript compilation
     coffee:
+      src:
+        expand: true
+        cwd: 'src'
+        src: ['**.coffee']
+        dest: ''
+        ext: '.js'
+      protocol:
+        expand: true
+        cwd: 'src/protocol'
+        src: ['**.coffee']
+        dest: 'protocol'
+        ext: '.js'
       spec:
         options:
           bare: true
@@ -62,6 +74,9 @@ module.exports = ->
 
   # Our local tasks
   @registerTask 'build', 'Build NoFlo for the chosen target platform', (target = 'all') =>
+    if target is 'all' or target is 'nodejs'
+      @task.run 'coffee:src'
+      @task.run 'coffee:protocol'
     if target is 'all' or target is 'browser'
       @task.run 'exec'
 
@@ -71,7 +86,7 @@ module.exports = ->
       @task.run 'cafemocha'
     if target is 'all' or target is 'browser'
       @task.run 'exec'
-      @task.run 'coffee'
+      @task.run 'coffee:spec'
       @task.run 'mocha_phantomjs'
 
   @registerTask 'default', ['test']

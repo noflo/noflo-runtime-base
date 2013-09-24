@@ -2,3 +2,5 @@
 /node_modules
 /browser
 /npm-debug.log
+Base.js
+protocol/*.js
