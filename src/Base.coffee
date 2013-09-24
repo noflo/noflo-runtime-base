@@ -6,7 +6,8 @@ protocols =
 # This is the class all NoFlo runtime implementations can extend to easily wrap
 # into any transport protocol.
 class BaseTransport
-  constructor: ->
+  constructor: (@options) ->
+    @options = {} unless @options
     @graph = new protocols.Graph @
     @network = new protocols.Network @
     @component = new protocols.Component @

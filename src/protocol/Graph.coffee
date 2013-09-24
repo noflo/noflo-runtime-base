@@ -27,7 +27,10 @@ class GraphProtocol
       payload.name = 'NoFlo runtime'
 
     graph = new noflo.Graph payload.name
+
     graph.baseDir = payload.baseDir
+    # Allow override
+    graph.baseDir = @transport.options.baseDir if @transport.options.baseDir
 
     @subscribeGraph graph, context
 

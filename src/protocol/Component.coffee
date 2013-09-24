@@ -11,6 +11,9 @@ class ComponentProtocol
       when 'list' then @listComponents payload, context
 
   listComponents: (baseDir, context) ->
+    # Allow override
+    baseDir = @transport.options.baseDir if @transport.options.baseDir
+
     loader = new noflo.ComponentLoader baseDir
     loader.listComponents (components) =>
       Object.keys(components).forEach (component) =>
