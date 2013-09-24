@@ -12,7 +12,7 @@ class ComponentProtocol
 
   listComponents: (baseDir, context) ->
     loader = new noflo.ComponentLoader baseDir
-    loader.listComponents (component) =>
+    loader.listComponents (components) =>
       Object.keys(components).forEach (component) =>
         loader.load component, (instance) =>
           unless instance.isReady()
