@@ -1,0 +1,17 @@
+{
+  "name": "noflo-runtime-base",
+  "description": "Base library for building NoFlo runtimes",
+  "author": "Henri Bergius <henri.bergius@iki.fi>",
+  "repo": "noflo/noflo-runtime-iframe",
+  "version": "0.1.0",
+  "keywords": [
+  ],
+  "dependencies": {
+    "noflo/noflo": "*"
+  },
+  "scripts": [
+    "index.js"
+  ],
+  "files": [
+  ]
+}
