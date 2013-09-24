@@ -70,7 +70,7 @@ class GraphProtocol
   addEdge: (graph, edge, context) ->
     unless edge.from or edge.to
       @send 'error', new Error('No from or to supplied'), context
-    graph.addEdge edge.from.node, edge.from.port, edge.to.node, edge.to.port
+    graph.addEdge edge.from.node, edge.from.port, edge.to.node, edge.to.port, edge.metadata
 
   removeEdge: (graph, edge, context) ->
     unless edge.from or edge.to
