@@ -1,5 +1,3 @@
-noflo = require 'noflo'
-
 protocols =
   Graph: require './protocol/Graph'
   Network: require './protocol/Network'
