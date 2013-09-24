@@ -1,7 +1,7 @@
 {
   "name": "noflo-runtime-base",
   "description": "Base library for building NoFlo runtimes",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": {
     "name": "Henri Bergius",
     "email": "henri.bergius@iki.fi"
@@ -28,5 +28,8 @@
   "scripts": {
     "test": "grunt test"
   },
-  "main": "./Base.js"
+  "main": "./Base.js",
+  "dependencies": {
+    "noflo": "~0.4.0"
+  }
 }
