@@ -26,6 +26,7 @@ prepareSocketEvent = (event) ->
 
 class NetworkProtocol
   constructor: (@transport) ->
+    @network = null
 
   send: (topic, payload, context) ->
     @transport.send 'network', topic, payload, context
@@ -34,6 +35,8 @@ class NetworkProtocol
     switch topic
       when 'start'
         @initNetwork @transport.graph.graph, context
+      when 'stop'
+        @stopNetwork @network, context
 
   initNetwork: (graph, context) ->
     unless graph
@@ -42,6 +45,7 @@ class NetworkProtocol
 
     noflo.createNetwork graph, (network) =>
       @subscribeNetwork network, context
+      @network = network
       # Run the network
       network.connect ->
         network.sendInitials()
@@ -51,7 +55,7 @@ class NetworkProtocol
 
   subscribeNetwork: (network, context) ->
     network.on 'start', (event) =>
-      @send 'start', event.start, context
+      @send 'started', event.start, context
     network.on 'connect', (event) =>
       @send 'connect', prepareSocketEvent(event), context
     network.on 'begingroup', (event) =>
@@ -62,7 +66,11 @@ class NetworkProtocol
       @send 'endgroup', prepareSocketEvent(event), context
     network.on 'disconnect', (event) =>
       @send 'disconnect', prepareSocketEvent(event), context
-    network.on 'stop', (event) =>
-      @send 'stop', event.uptime, context
+    network.on 'end', (event) =>
+      @send 'stopped', event.uptime, context
+
+  stopNetwork: (network, context) ->
+    return unless network
+    network.stop()
 
 module.exports = NetworkProtocol
