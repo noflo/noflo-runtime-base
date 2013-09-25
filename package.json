@@ -30,6 +30,6 @@
   },
   "main": "./Base.js",
   "dependencies": {
-    "noflo": "~0.4.0"
+    "noflo": "~0.4.1"
   }
 }
