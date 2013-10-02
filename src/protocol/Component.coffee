@@ -31,10 +31,12 @@ class ComponentProtocol
       inPorts.push
         id: portName
         type: port.type
+        array: port instanceof noflo.ArrayPort
     for portName, port of instance.outPorts
       outPorts.push
         id: portName
         type: port.type
+        array: port instanceof noflo.ArrayPort
     @send 'component',
       name: component
       description: instance.description
