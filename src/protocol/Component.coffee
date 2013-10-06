@@ -37,9 +37,13 @@ class ComponentProtocol
         id: portName
         type: port.type
         array: port instanceof noflo.ArrayPort
+
+    icon = if instance.getIcon then instance.getIcon() else 'blank'
+
     @send 'component',
       name: component
       description: instance.description
+      icon: icon
       inPorts: inPorts
       outPorts: outPorts
     , context
