@@ -11,6 +11,7 @@ class BaseTransport
     @graph = new protocols.Graph @
     @network = new protocols.Network @
     @component = new protocols.Component @
+    @context = null
 
   # Send a message back to the user via the transport protocol.
   #
@@ -40,6 +41,7 @@ class BaseTransport
   # @param [Object] Message payload
   # @param [Object] Message context, dependent on the transport
   receive: (protocol, topic, payload, context) ->
+    @context = context
     switch protocol
       when 'graph' then @graph.receive topic, payload, context
       when 'network' then @network.receive topic, payload, context
