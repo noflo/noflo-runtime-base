@@ -56,6 +56,8 @@ class NetworkProtocol
   subscribeNetwork: (network, context) ->
     network.on 'start', (event) =>
       @send 'started', event.start, context
+    network.on 'icon', (event) =>
+      @send 'icon', event, context
     network.on 'connect', (event) =>
       @send 'connect', prepareSocketEvent(event), context
     network.on 'begingroup', (event) =>
