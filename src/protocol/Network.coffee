@@ -1,8 +1,9 @@
 noflo = require 'noflo'
 
-prepareSocketEvent = (event) ->
+prepareSocketEvent = (event, req) ->
   payload =
     id: event.id
+    graph: req.graph
   if event.socket.from
     payload.from =
       node: event.socket.from.process.id
@@ -26,26 +27,34 @@ prepareSocketEvent = (event) ->
 
 class NetworkProtocol
   constructor: (@transport) ->
-    @network = null
+    @networks = {}
 
   send: (topic, payload, context) ->
     @transport.send 'network', topic, payload, context
 
   receive: (topic, payload, context) ->
+    graph = @resolveGraph payload, context
+    return unless graph
+
     switch topic
       when 'start'
-        @initNetwork @transport.graph.graph, context
+        @initNetwork graph, payload, context
       when 'stop'
-        @stopNetwork @network, context
+        @stopNetwork graph, payload, context
 
-  initNetwork: (graph, context) ->
-    unless graph
-      @send 'error', new Error('No graph defined'), context
+  resolveGraph: (payload, context) ->
+    unless payload.graph
+      @send 'error', new Error('No graph specified'), context
       return
+    unless @transport.graph.graphs[payload.graph]
+      @send 'error', new Error('Requested graph not found'), context
+      return
+    return @transport.graph.graphs[payload.graph]
 
+  initNetwork: (graph, payload, context) ->
     noflo.createNetwork graph, (network) =>
-      @subscribeNetwork network, context
-      @network = network
+      @networks[payload.graph] = network
+      @subscribeNetwork network, payload, context
       # Run the network
       network.connect ->
         network.sendInitials()
@@ -53,26 +62,34 @@ class NetworkProtocol
           network.sendInitials()
     , true
 
-  subscribeNetwork: (network, context) ->
+  subscribeNetwork: (network, payload, context) ->
     network.on 'start', (event) =>
-      @send 'started', event.start, context
+      @send 'started',
+        time: event.start
+        graph: payload.graph
+      , context
     network.on 'icon', (event) =>
+      event.graph = payload.graph
       @send 'icon', event, context
     network.on 'connect', (event) =>
-      @send 'connect', prepareSocketEvent(event), context
+      @send 'connect', prepareSocketEvent(event, payload), context
     network.on 'begingroup', (event) =>
-      @send 'begingroup', prepareSocketEvent(event), context
+      @send 'begingroup', prepareSocketEvent(event, payload), context
     network.on 'data', (event) =>
-      @send 'data', prepareSocketEvent(event), context
+      @send 'data', prepareSocketEvent(event, payload), context
     network.on 'endgroup', (event) =>
-      @send 'endgroup', prepareSocketEvent(event), context
+      @send 'endgroup', prepareSocketEvent(event, payload), context
     network.on 'disconnect', (event) =>
-      @send 'disconnect', prepareSocketEvent(event), context
+      @send 'disconnect', prepareSocketEvent(event, payload), context
     network.on 'end', (event) =>
-      @send 'stopped', event.uptime, context
+      @send 'stopped',
+        time: new Date
+        uptime: event.uptime
+        graph: payload.graph
+      , context
 
-  stopNetwork: (network, context) ->
-    return unless network
-    network.stop()
+  stopNetwork: (graph, payload, context) ->
+    return unless @networks[payload.graph]
+    @networks[payload.graph].stop()
 
 module.exports = NetworkProtocol
