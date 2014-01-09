@@ -63,17 +63,33 @@ class GraphProtocol
         graph: id
       , context
     graph.on 'addEdge', (edge) =>
-      edge.graph = id
-      @send 'addedge', edge, context
+      edgeData =
+        src: edge.from
+        tgt: edge.to
+        metadata: edge.metadata
+        graph: id
+      @send 'addedge', edgeData, context
     graph.on 'removeEdge', (edge) =>
-      edge.graph = id
-      @send 'removeedge', edge, context
+      edgeData =
+        src: edge.from
+        tgt: edge.to
+        metadata: edge.metadata
+        graph: id
+      @send 'removeedge', edgeData, context
     graph.on 'addInitial', (iip) =>
-      iip.graph = id
-      @send 'addinitial', iip, context
+      iipData =
+        src: iip.from
+        tgt: iip.to
+        metadata: iip.metadata
+        graph: id
+      @send 'addinitial', iipData, context
     graph.on 'removeInitial', (iip) =>
-      iip.graph = id
-      @send 'removeinitial', iip, context
+      iipData =
+        src: iip.from
+        tgt: iip.to
+        metadata: iip.metadata
+        graph: id
+      @send 'removeinitial', iipData, context
 
   addNode: (graph, node, context) ->
     unless node.id or node.component
