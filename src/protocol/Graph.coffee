@@ -91,23 +91,23 @@ class GraphProtocol
     graph.renameNode payload.from, payload.to
 
   addEdge: (graph, edge, context) ->
-    unless edge.from or edge.to
-      @send 'error', new Error('No from or to supplied'), context
-    graph.addEdge edge.from.node, edge.from.port, edge.to.node, edge.to.port, edge.metadata
+    unless edge.src or edge.tgt
+      @send 'error', new Error('No src or tgt supplied'), context
+    graph.addEdge edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata
 
   removeEdge: (graph, edge, context) ->
-    unless edge.from or edge.to
-      @send 'error', new Error('No from or to supplied'), context
-    graph.removeEdge edge.from.node, edge.from.port, edge.to.node, edge.to.port
+    unless edge.src or edge.tgt
+      @send 'error', new Error('No src or tgt supplied'), context
+    graph.removeEdge edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port
 
   addInitial: (graph, payload, context) ->
-    unless payload.from or payload.to
-      @send 'error', new Error('No from or to supplied'), context
-    graph.addInitial payload.from.data, payload.to.node, payload.to.port, payload.metadata
+    unless payload.src or payload.tgt
+      @send 'error', new Error('No src or tgt supplied'), context
+    graph.addInitial payload.src.data, payload.tgt.node, payload.tgt.port, payload.metadata
 
   removeInitial: (graph, payload, context) ->
-    unless payload.to
-      @send 'error', new Error('No to supplied'), context
-    graph.removeInitial payload.to.node, payload.to.port
+    unless payload.tgt
+      @send 'error', new Error('No tgt supplied'), context
+    graph.removeInitial payload.tgt.node, payload.tgt.port
 
 module.exports = GraphProtocol

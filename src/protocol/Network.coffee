@@ -5,11 +5,11 @@ prepareSocketEvent = (event, req) ->
     id: event.id
     graph: req.graph
   if event.socket.from
-    payload.from =
+    payload.src =
       node: event.socket.from.process.id
       port: event.socket.from.port
   if event.socket.to
-    payload.to =
+    payload.tgt =
       node: event.socket.to.process.id
       port: event.socket.to.port
   if event.group
