@@ -55,6 +55,11 @@ class NetworkProtocol
     noflo.createNetwork graph, (network) =>
       @networks[payload.graph] = network
       @subscribeNetwork network, payload, context
+
+      # Register local graphs as components
+      for id, graph of @transport.graph.graphs
+        network.loader.registerComponent '', id, graph
+
       # Run the network
       network.connect ->
         network.sendInitials()

@@ -17,12 +17,15 @@ class ComponentProtocol
     loader = new noflo.ComponentLoader baseDir
     loader.listComponents (components) =>
       Object.keys(components).forEach (component) =>
-        loader.load component, (instance) =>
-          unless instance.isReady()
-            instance.once 'ready', =>
-              @sendComponent component, instance, context
-            return
+        @processComponent loader, component
+
+  processComponent: (loader, component) ->
+    loader.load component, (instance) =>
+      unless instance.isReady()
+        instance.once 'ready', =>
           @sendComponent component, instance, context
+        return
+      @sendComponent component, instance, context
 
   sendComponent: (component, instance, context) ->
     inPorts = []
@@ -47,5 +50,20 @@ class ComponentProtocol
       inPorts: inPorts
       outPorts: outPorts
     , context
+
+  registerGraph: (id, graph) ->
+    loader = new noflo.ComponentLoader baseDir
+    loader.registerComponent '', id, graph
+    send = => @processComponent loader, id
+    # Send graph info again every time it changes so we get the updated ports
+    graph.on 'addNode', send
+    graph.on 'removeNode', send
+    graph.on 'renameNode', send
+    graph.on 'addEdge', send
+    graph.on 'removeEdge', send
+    graph.on 'addInitial', send
+    graph.on 'removeInitial', send
+    # Send initial graph info back to client
+    do send
 
 module.exports = ComponentProtocol
