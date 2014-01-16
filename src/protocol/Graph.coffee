@@ -47,6 +47,9 @@ class GraphProtocol
 
     @subscribeGraph payload.id, graph, context
 
+    # Register to component loading
+    @transport.component.registerGraph payload.id, graph, context
+
     @graphs[payload.id] = graph
 
   subscribeGraph: (id, graph, context) ->

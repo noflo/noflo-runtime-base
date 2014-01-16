@@ -57,8 +57,9 @@ class NetworkProtocol
       @subscribeNetwork network, payload, context
 
       # Register local graphs as components
-      for id, graph of @transport.graph.graphs
-        network.loader.registerComponent '', id, graph
+      for id, subgraph of @transport.graph.graphs
+        continue if subgraph is graph
+        network.loader.registerComponent '', id, subgraph
 
       # Run the network
       network.connect ->

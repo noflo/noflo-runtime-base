@@ -17,9 +17,9 @@ class ComponentProtocol
     loader = new noflo.ComponentLoader baseDir
     loader.listComponents (components) =>
       Object.keys(components).forEach (component) =>
-        @processComponent loader, component
+        @processComponent loader, component, context
 
-  processComponent: (loader, component) ->
+  processComponent: (loader, component, context) ->
     loader.load component, (instance) =>
       unless instance.isReady()
         instance.once 'ready', =>
@@ -51,10 +51,15 @@ class ComponentProtocol
       outPorts: outPorts
     , context
 
-  registerGraph: (id, graph) ->
-    loader = new noflo.ComponentLoader baseDir
-    loader.registerComponent '', id, graph
-    send = => @processComponent loader, id
+  registerGraph: (id, graph, context) ->
+    send = => @processComponent loader, id, context
+
+    loader = new noflo.ComponentLoader graph.baseDir
+    loader.listComponents (components) =>
+      loader.registerComponent '', id, graph
+      # Send initial graph info back to client
+      do send
+
     # Send graph info again every time it changes so we get the updated ports
     graph.on 'addNode', send
     graph.on 'removeNode', send
@@ -63,7 +68,5 @@ class ComponentProtocol
     graph.on 'removeEdge', send
     graph.on 'addInitial', send
     graph.on 'removeInitial', send
-    # Send initial graph info back to client
-    do send
 
 module.exports = ComponentProtocol
