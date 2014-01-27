@@ -9,6 +9,8 @@ class ComponentProtocol
   receive: (topic, payload, context) ->
     switch topic
       when 'list' then @listComponents payload, context
+      when 'getsource' then @getSource payload, context
+      when 'source' then @setSource payload, context
 
   listComponents: (baseDir, context) ->
     # Allow override
@@ -21,11 +23,13 @@ class ComponentProtocol
 
   processComponent: (loader, component, context) ->
     loader.load component, (instance) =>
+      # Ensure graphs are not run automatically when just querying their ports
       unless instance.isReady()
         instance.once 'ready', =>
           @sendComponent component, instance, context
         return
       @sendComponent component, instance, context
+    , true
 
   sendComponent: (component, instance, context) ->
     inPorts = []
