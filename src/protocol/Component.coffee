@@ -37,8 +37,10 @@ class ComponentProtocol
       unless instance.isReady()
         instance.once 'ready', =>
           @sendComponent component, instance, context
+          instance.shutdown()
         return
       @sendComponent component, instance, context
+      instance.shutdown()
     , true
 
   sendComponent: (component, instance, context) ->
