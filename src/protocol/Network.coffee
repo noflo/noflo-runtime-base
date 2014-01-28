@@ -52,14 +52,10 @@ class NetworkProtocol
     return @transport.graph.graphs[payload.graph]
 
   initNetwork: (graph, payload, context) ->
+    graph.componentLoader = @transport.component.getLoader graph.baseDir
     noflo.createNetwork graph, (network) =>
       @networks[payload.graph] = network
       @subscribeNetwork network, payload, context
-
-      # Register local graphs as components
-      for id, subgraph of @transport.graph.graphs
-        continue if subgraph is graph
-        network.loader.registerComponent '', id, subgraph
 
       # Run the network
       network.connect ->

@@ -1,6 +1,7 @@
 noflo = require 'noflo'
 
 class ComponentProtocol
+  loaders: {}
   constructor: (@transport) ->
 
   send: (topic, payload, context) ->
@@ -12,14 +13,23 @@ class ComponentProtocol
       when 'getsource' then @getSource payload, context
       when 'source' then @setSource payload, context
 
-  listComponents: (baseDir, context) ->
+  getLoader: (baseDir) ->
     # Allow override
     baseDir = @transport.options.baseDir if @transport.options.baseDir
+    unless @loaders[baseDir]
+      @loaders[baseDir] = new noflo.ComponentLoader baseDir
 
-    loader = new noflo.ComponentLoader baseDir
+    return @loaders[baseDir]
+
+  listComponents: (baseDir, context) ->
+    loader = @getLoader baseDir
     loader.listComponents (components) =>
       Object.keys(components).forEach (component) =>
         @processComponent loader, component, context
+
+  getSource: (payload, context) ->
+
+  setSource: (payload, context) ->
 
   processComponent: (loader, component, context) ->
     loader.load component, (instance) =>
@@ -57,8 +67,7 @@ class ComponentProtocol
 
   registerGraph: (id, graph, context) ->
     send = => @processComponent loader, id, context
-
-    loader = new noflo.ComponentLoader graph.baseDir
+    loader = @getLoader graph.baseDir
     loader.listComponents (components) =>
       loader.registerComponent '', id, graph
       # Send initial graph info back to client
