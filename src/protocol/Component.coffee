@@ -30,6 +30,31 @@ class ComponentProtocol
   getSource: (payload, context) ->
 
   setSource: (payload, context) ->
+    source = payload.code
+    if payload.language is 'coffeescript'
+      # See if we have a CoffeeScript compiler available
+      unless window.CoffeeScript
+        # TODO: Error message?
+        return
+      try
+        source = CoffeeScript.compile payload.code,
+          bare: true
+      catch e
+        # TODO: Error message?
+        return
+    # Quick-and-Dirty initial take before ComponentLoader does this
+    # Set the source to the loader
+    console.log source
+    implementation = eval "(function () { var exports = {}; #{source}; return exports; })()"
+    unless implementation or implementation.getComponent
+      # TODO: Error message?
+      return
+    Object.keys(@loaders).forEach (baseDir) =>
+      loader = @getLoader baseDir
+      console.log baseDir, loader.baseDir, payload.name
+      loader.listComponents (components) =>
+        loader.registerComponent '', payload.name, implementation
+        @processComponent loader, payload.name, context
 
   processComponent: (loader, component, context) ->
     loader.load component, (instance) =>
