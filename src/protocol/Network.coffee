@@ -59,7 +59,9 @@ class NetworkProtocol
   initNetwork: (graph, payload, context) ->
     graph.componentLoader = @transport.component.getLoader graph.baseDir
     noflo.createNetwork graph, (network) =>
-      @networks[payload.graph] = network
+      @networks[payload.graph] =
+        network: network
+        filters: null
       @subscribeNetwork network, payload, context
 
       # Run the network
@@ -97,6 +99,6 @@ class NetworkProtocol
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
-    @networks[payload.graph].stop()
+    @networks[payload.graph].network.stop()
 
 module.exports = NetworkProtocol
