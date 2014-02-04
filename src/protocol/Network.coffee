@@ -74,9 +74,14 @@ class NetworkProtocol
 
   updateEdgesFilter: (graph, payload, context) ->
     network = @networks[payload.graph]
-    return unless network
+    if network
+      network.filters = {}
+    else
+      network =
+        network: null
+        filters: {}
+      @networks[payload.graph] = network
 
-    network.filters = {}
     for edge in payload.edges
       signature = getEdgeSignature(edge)
       log('add signature : ' + signature)
@@ -92,9 +97,12 @@ class NetworkProtocol
   initNetwork: (graph, payload, context) ->
     graph.componentLoader = @transport.component.getLoader graph.baseDir
     noflo.createNetwork graph, (network) =>
-      @networks[payload.graph] =
-        network: network
-        filters: {}
+      if @networks[payload.graph]
+        @networks[payload.graph].network = network
+      else
+        @networks[payload.graph] =
+          network: network
+          filters: {}
       @subscribeNetwork network, payload, context
 
       # Run the network
