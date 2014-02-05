@@ -41,9 +41,8 @@ class GraphProtocol
 
     graph = new noflo.Graph payload.name
 
-    graph.baseDir = payload.baseDir
-    # Allow override
-    graph.baseDir = @transport.options.baseDir if @transport.options.baseDir
+    # Pass the project baseDir
+    graph.baseDir = @transport.options.baseDir
 
     @subscribeGraph payload.id, graph, context
 

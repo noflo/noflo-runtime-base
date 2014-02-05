@@ -14,14 +14,13 @@ class ComponentProtocol
       when 'source' then @setSource payload, context
 
   getLoader: (baseDir) ->
-    # Allow override
-    baseDir = @transport.options.baseDir if @transport.options.baseDir
     unless @loaders[baseDir]
       @loaders[baseDir] = new noflo.ComponentLoader baseDir
 
     return @loaders[baseDir]
 
-  listComponents: (baseDir, context) ->
+  listComponents: (payload, context) ->
+    baseDir = @transport.options.baseDir
     loader = @getLoader baseDir
     loader.listComponents (components) =>
       Object.keys(components).forEach (component) =>
@@ -51,7 +50,6 @@ class ComponentProtocol
       return
     Object.keys(@loaders).forEach (baseDir) =>
       loader = @getLoader baseDir
-      console.log baseDir, loader.baseDir, payload.name
       loader.listComponents (components) =>
         loader.registerComponent '', payload.name, implementation
         @processComponent loader, payload.name, context
