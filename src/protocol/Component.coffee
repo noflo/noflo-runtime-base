@@ -43,7 +43,6 @@ class ComponentProtocol
         return
     # Quick-and-Dirty initial take before ComponentLoader does this
     # Set the source to the loader
-    console.log source
     implementation = eval "(function () { var exports = {}; #{source}; return exports; })()"
     unless implementation or implementation.getComponent
       # TODO: Error message?
