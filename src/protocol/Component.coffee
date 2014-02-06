@@ -47,11 +47,14 @@ class ComponentProtocol
     unless implementation or implementation.getComponent
       # TODO: Error message?
       return
+    library = if payload.library then payload.library else ''
+    fullName = payload.name
+    fullName = "#{library}/#{fullName}" if library
     Object.keys(@loaders).forEach (baseDir) =>
       loader = @getLoader baseDir
       loader.listComponents (components) =>
-        loader.registerComponent '', payload.name, implementation
-        @processComponent loader, payload.name, context
+        loader.registerComponent library, payload.name, implementation
+        @processComponent loader, fullName, context
 
   processComponent: (loader, component, context) ->
     loader.load component, (instance) =>

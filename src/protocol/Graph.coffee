@@ -41,13 +41,18 @@ class GraphProtocol
 
     graph = new noflo.Graph payload.name
 
+    fullName = payload.id
+    if payload.library
+      graph.properties.library = payload.library
+      fullName = "#{payload.library}/#{fullName}"
+
     # Pass the project baseDir
     graph.baseDir = @transport.options.baseDir
 
     @subscribeGraph payload.id, graph, context
 
     # Register to component loading
-    @transport.component.registerGraph payload.id, graph, context
+    @transport.component.registerGraph fullName, graph, context
 
     @graphs[payload.id] = graph
 
