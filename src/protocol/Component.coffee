@@ -70,11 +70,13 @@ class ComponentProtocol
     inPorts = []
     outPorts = []
     for portName, port of instance.inPorts
+      continue if not port or typeof port is 'function' or not port.canAttach
       inPorts.push
         id: portName
         type: port.type
         array: port instanceof noflo.ArrayPort
     for portName, port of instance.outPorts
+      continue if not port or typeof port is 'function' or not port.canAttach
       outPorts.push
         id: portName
         type: port.type

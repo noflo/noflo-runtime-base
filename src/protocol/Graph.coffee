@@ -51,8 +51,9 @@ class GraphProtocol
 
     @subscribeGraph payload.id, graph, context
 
-    # Register to component loading
-    @transport.component.registerGraph fullName, graph, context
+    unless payload.main
+      # Register to component loading
+      @transport.component.registerGraph fullName, graph, context
 
     @graphs[payload.id] = graph
 
