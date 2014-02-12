@@ -19,6 +19,9 @@ prepareSocketEvent = (event, req) ->
       payload.data = event.data.toJSON()
     if event.data.toString
       payload.data = event.data.toString()
+      if payload.data is '[object Object]'
+        try
+          payload.data = JSON.parse JSON.stringify event.data
     else
       payload.data = event.data
   if event.subgraph
