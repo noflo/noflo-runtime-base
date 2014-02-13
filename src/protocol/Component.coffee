@@ -39,13 +39,13 @@ class ComponentProtocol
         source = CoffeeScript.compile payload.code,
           bare: true
       catch e
-        # TODO: Error message?
+        @send 'error', new Error("#{payload.name} L#{e.location.first_line}, C#{e.location.first_column}: #{e.message}"), context
         return
     # Quick-and-Dirty initial take before ComponentLoader does this
     # Set the source to the loader
     implementation = eval "(function () { var exports = {}; #{source}; return exports; })()"
     unless implementation or implementation.getComponent
-      # TODO: Error message?
+      @send 'error', new Error("#{payload.name}: No component implementation available"), context
       return
     library = if payload.library then payload.library else ''
     fullName = payload.name
