@@ -73,14 +73,18 @@ class ComponentProtocol
       continue if not port or typeof port is 'function' or not port.canAttach
       inPorts.push
         id: portName
-        type: port.type
-        array: port instanceof noflo.ArrayPort
+        type: port.getDataType() if port.getDataType
+        required: port.isRequired() if port.isRequired
+        addressable: port.isAddressable() if port.isAddressable
+        description: port.getDescription() if port.getDescription
     for portName, port of instance.outPorts
       continue if not port or typeof port is 'function' or not port.canAttach
       outPorts.push
         id: portName
-        type: port.type
-        array: port instanceof noflo.ArrayPort
+        type: port.getDataType() if port.getDataType
+        required: port.isRequired() if port.isRequired
+        addressable: port.isAddressable() if port.isAddressable
+        description: port.getDescription() if port.getDescription
 
     icon = if instance.getIcon then instance.getIcon() else 'blank'
 
