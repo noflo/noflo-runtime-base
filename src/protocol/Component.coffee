@@ -91,6 +91,7 @@ class ComponentProtocol
     @send 'component',
       name: component
       description: instance.description
+      subgraph: instance.isSubgraph()
       icon: icon
       inPorts: inPorts
       outPorts: outPorts
