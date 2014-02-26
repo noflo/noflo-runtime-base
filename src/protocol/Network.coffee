@@ -12,6 +12,8 @@ prepareSocketEvent = (event, req) ->
     payload.tgt =
       node: event.socket.to.process.id
       port: event.socket.to.port
+  if event.subgraph
+    payload.subgraph = event.subgraph
   if event.group
     payload.group = event.group
   if event.data
