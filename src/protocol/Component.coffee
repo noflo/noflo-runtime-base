@@ -27,34 +27,22 @@ class ComponentProtocol
         @processComponent loader, component, context
 
   getSource: (payload, context) ->
+    baseDir = @transport.options.baseDir
+    loader = @getLoader baseDir
+    loader.getSource payload.name, (err, component) =>
+      if err
+        @send 'error', err, context
+        return
+      @send 'source', component, context
 
   setSource: (payload, context) ->
-    source = payload.code
-    if payload.language is 'coffeescript'
-      # See if we have a CoffeeScript compiler available
-      unless window.CoffeeScript
-        # TODO: Error message?
+    baseDir = @transport.options.baseDir
+    loader = @getLoader baseDir
+    loader.setSource payload.library, payload.name, payload.code, payload.language, (err) =>
+      if err
+        @send 'error', err, context
         return
-      try
-        source = CoffeeScript.compile payload.code,
-          bare: true
-      catch e
-        @send 'error', new Error("#{payload.name} L#{e.location.first_line}, C#{e.location.first_column}: #{e.message}"), context
-        return
-    # Quick-and-Dirty initial take before ComponentLoader does this
-    # Set the source to the loader
-    implementation = eval "(function () { var exports = {}; #{source}; return exports; })()"
-    unless implementation or implementation.getComponent
-      @send 'error', new Error("#{payload.name}: No component implementation available"), context
-      return
-    library = if payload.library then payload.library else ''
-    fullName = payload.name
-    fullName = "#{library}/#{fullName}" if library
-    Object.keys(@loaders).forEach (baseDir) =>
-      loader = @getLoader baseDir
-      loader.listComponents (components) =>
-        loader.registerComponent library, payload.name, implementation
-        @processComponent loader, fullName, context
+      @processComponent loader, loader.normalizeName(payload.library, payload.name), context
 
   processComponent: (loader, component, context) ->
     loader.load component, (instance) =>
