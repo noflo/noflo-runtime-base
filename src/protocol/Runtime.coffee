@@ -20,6 +20,7 @@ class RuntimeProtocol
         type = 'noflo-nodejs'
     @send 'runtime',
       type: type
+      version: @transport.version
       capabilities: [
         'protocol:graph'
         'protocol:component'
