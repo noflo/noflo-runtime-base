@@ -12,7 +12,8 @@
     "src/Base.coffee",
     "src/protocol/Graph.coffee",
     "src/protocol/Network.coffee",
-    "src/protocol/Component.coffee"
+    "src/protocol/Component.coffee",
+    "src/protocol/Runtime.coffee"
   ],
   "main": "src/Base.js",
   "files": []
