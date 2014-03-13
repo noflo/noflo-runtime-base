@@ -31,3 +31,5 @@ class RuntimeProtocol
 
   receivePacket: (payload, context) ->
     @send 'error', new Error('Packets not supported yet'), context
+
+module.exports = RuntimeProtocol
