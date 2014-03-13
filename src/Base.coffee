@@ -1,4 +1,5 @@
 protocols =
+  Runtime: require './protocol/Runtime'
   Graph: require './protocol/Graph'
   Network: require './protocol/Network'
   Component: require './protocol/Component'
@@ -8,6 +9,7 @@ protocols =
 class BaseTransport
   constructor: (@options) ->
     @options = {} unless @options
+    @runtime = new protocols.Runtime @
     @graph = new protocols.Graph @
     @network = new protocols.Network @
     @component = new protocols.Component @
@@ -43,6 +45,7 @@ class BaseTransport
   receive: (protocol, topic, payload, context) ->
     @context = context
     switch protocol
+      when 'runtime' then @runtime.receive topic, payload, context
       when 'graph' then @graph.receive topic, payload, context
       when 'network' then @network.receive topic, payload, context
       when 'component' then @component.receive topic, payload, context
