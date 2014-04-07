@@ -101,5 +101,11 @@ class ComponentProtocol
     graph.on 'removeEdge', send
     graph.on 'addInitial', send
     graph.on 'removeInitial', send
+    graph.on 'addInport', send
+    graph.on 'removeInport', send
+    graph.on 'renameInport', send
+    graph.on 'addOutport', send
+    graph.on 'removeOutport', send
+    graph.on 'renameOutport', send
 
 module.exports = ComponentProtocol

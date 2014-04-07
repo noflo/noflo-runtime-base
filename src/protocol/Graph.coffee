@@ -24,8 +24,10 @@ class GraphProtocol
       when 'removeinitial' then @removeInitial graph, payload, context
       when 'addinport' then @addInport graph, payload, context
       when 'removeinport' then @removeInport graph, payload, context
+      when 'renameinport' then @renameInport graph, payload, context
       when 'addoutport' then @addOutport graph, payload, context
       when 'removeoutport' then @removeOutport graph, payload, context
+      when 'renameoutport' then @renameOutport graph, payload, context
 
   resolveGraph: (payload, context) ->
     unless payload.graph
@@ -157,6 +159,12 @@ class GraphProtocol
       return
     graph.removeInport payload.public
 
+  renameInport: (graph, payload, context) ->
+    unless payload.from or payload.to
+      @send 'error', new Error('No from or to supplied'), context
+      return
+    graph.renameInport payload.from, payload.to
+
   addOutport: (graph, payload, context) ->
     unless payload.public or payload.node or payload.port
       @send 'error', new Error('Missing exported outport information'), context
@@ -168,5 +176,11 @@ class GraphProtocol
       @send 'error', new Error('Missing exported outport name'), context
       return
     graph.removeOutport payload.public
+
+  renameOutport: (graph, payload, context) ->
+    unless payload.from or payload.to
+      @send 'error', new Error('No from or to supplied'), context
+      return
+    graph.renameOutport payload.from, payload.to
 
 module.exports = GraphProtocol
