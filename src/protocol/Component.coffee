@@ -65,6 +65,8 @@ class ComponentProtocol
         required: port.isRequired() if port.isRequired
         addressable: port.isAddressable() if port.isAddressable
         description: port.getDescription() if port.getDescription
+        values: port.options.values if port.options and port.options.values
+        default: port.options.default if port.options and port.options.default
     for portName, port of instance.outPorts
       continue if not port or typeof port is 'function' or not port.canAttach
       outPorts.push
