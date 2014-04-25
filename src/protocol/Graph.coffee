@@ -127,6 +127,10 @@ class GraphProtocol
     unless edge.src or edge.tgt
       @send 'error', new Error('No src or tgt supplied'), context
       return
+    if typeof edge.src.index is 'number' or typeof edge.tgt.index is 'number'
+      if graph.addEdgeIndex
+        graph.addEdgeIndex edge.src.node, edge.src.port, edge.src.index, edge.tgt.node, edge.tgt.port, edge.tgt.index, edge.metadata
+        return
     graph.addEdge edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata
 
   removeEdge: (graph, edge, context) ->
@@ -138,6 +142,9 @@ class GraphProtocol
   addInitial: (graph, payload, context) ->
     unless payload.src or payload.tgt
       @send 'error', new Error('No src or tgt supplied'), context
+      return
+    if graph.addInitialIndex and typeof payload.tgt.index is 'number'
+      graph.addInitialIndex payload.src.data, payload.tgt.node, payload.tgt.port, payload.tgt.index, payload.metadata
       return
     graph.addInitial payload.src.data, payload.tgt.node, payload.tgt.port, payload.metadata
 
