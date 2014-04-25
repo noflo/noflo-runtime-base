@@ -77,6 +77,8 @@ class GraphProtocol
         graph: id
       , context
     graph.on 'addEdge', (edge) =>
+      delete edge.from.index unless typeof edge.from.index is 'number'
+      delete edge.to.index unless typeof edge.to.index is 'number'
       edgeData =
         src: edge.from
         tgt: edge.to
