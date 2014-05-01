@@ -12,7 +12,7 @@ class RuntimeProtocol
       when 'packet' then @receivePacket payload, context
 
   getRuntime: (payload, context) ->
-    type = @transport.type
+    type = @transport.options.type
     unless type
       if noflo.isBrowser()
         type = 'noflo-browser'
