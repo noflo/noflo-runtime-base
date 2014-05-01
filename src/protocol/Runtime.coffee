@@ -18,16 +18,19 @@ class RuntimeProtocol
         type = 'noflo-browser'
       else
         type = 'noflo-nodejs'
-    @send 'runtime',
-      type: type
-      version: @transport.version
-      capabilities: [
+    capabilities = @transport.options.capabilities
+    unless capabilities
+      capabilities = [
         'protocol:graph'
         'protocol:component'
         'protocol:network'
         'component:setsource'
         'component:getsource'
       ]
+    @send 'runtime',
+      type: type
+      version: @transport.version
+      capabilities: capabilities
     , context
 
   receivePacket: (payload, context) ->
