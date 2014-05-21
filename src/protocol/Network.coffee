@@ -17,6 +17,10 @@ prepareSocketEvent = (event, req) ->
   if event.group
     payload.group = event.group
   if event.data
+    unless noflo.isBrowser()
+      if Buffer.isBuffer event.data
+        # Make sure we're not trying to serialize the whole buffer to JSON
+        event.data = event.data.slice 0, 20
     if event.data.toJSON
       payload.data = event.data.toJSON()
     if event.data.toString
