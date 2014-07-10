@@ -90,6 +90,10 @@ class GraphProtocol
 
     @graphs[payload.id] = graph
 
+  registerGraph: (id, graph) ->
+    @subscribeGraph id, graph, ''
+    @graphs[id] = graph
+
   subscribeGraph: (id, graph, context) ->
     graph.on 'addNode', (node) =>
       node.graph = id
