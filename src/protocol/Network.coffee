@@ -34,6 +34,20 @@ prepareSocketEvent = (event, req) ->
     payload.subgraph = event.subgraph
   payload
 
+getPortSignature = (item) ->
+  return '' unless item
+  return item.process + '(' + item.port + ')'
+
+getEdgeSignature = (edge) ->
+  return getPortSignature(edge.src) + ' -> ' + getPortSignature(edge.tgt)
+
+getConnectionSignature = (connection) ->
+  return '' unless connection
+  return connection.process.id + '(' + connection.port + ')'
+
+getSocketSignature = (socket) ->
+  return getConnectionSignature(socket.from) +  ' -> ' + getConnectionSignature(socket.to)
+
 class NetworkProtocol
   constructor: (@transport) ->
     @networks = {}
@@ -50,6 +64,8 @@ class NetworkProtocol
         @initNetwork graph, payload, context
       when 'stop'
         @stopNetwork graph, payload, context
+      when 'edges'
+        @updateEdgesFilter graph, payload, context
 
   resolveGraph: (payload, context) ->
     unless payload.graph
@@ -60,10 +76,37 @@ class NetworkProtocol
       return
     return @transport.graph.graphs[payload.graph]
 
+  updateEdgesFilter: (graph, payload, context) ->
+    network = @networks[payload.graph]
+    if network
+      network.filters = {}
+    else
+      network =
+        network: null
+        filters: {}
+      @networks[payload.graph] = network
+
+    for edge in payload.edges
+      signature = getEdgeSignature(edge)
+      log('add signature : ' + signature)
+      network.filters[signature] = true
+
+  eventFiltered: (graph, event) ->
+    sign = getSocketSignature(event.socket)
+    if @networks[graph].filters[sign]
+      log('event match for signature : ' + sign)
+    #log('event signature : ' + sign)
+    return @networks[graph].filters[sign]
+
   initNetwork: (graph, payload, context) ->
     graph.componentLoader = @transport.component.getLoader graph.baseDir
     noflo.createNetwork graph, (network) =>
-      @networks[payload.graph] = network
+      if @networks[payload.graph]
+        @networks[payload.graph].network = network
+      else
+        @networks[payload.graph] =
+          network: network
+          filters: {}
       @subscribeNetwork network, payload, context
 
       # Run the network
@@ -87,6 +130,7 @@ class NetworkProtocol
     network.on 'begingroup', (event) =>
       @send 'begingroup', prepareSocketEvent(event, payload), context
     network.on 'data', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @send 'data', prepareSocketEvent(event, payload), context
     network.on 'endgroup', (event) =>
       @send 'endgroup', prepareSocketEvent(event, payload), context
@@ -101,6 +145,6 @@ class NetworkProtocol
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
-    @networks[payload.graph].stop()
+    @networks[payload.graph].network.stop()
 
 module.exports = NetworkProtocol
