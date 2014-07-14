@@ -28,6 +28,10 @@ class GraphProtocol
       when 'addoutport' then @addOutport graph, payload, context
       when 'removeoutport' then @removeOutport graph, payload, context
       when 'renameoutport' then @renameOutport graph, payload, context
+      when 'addgroup' then @addGroup graph, payload, context
+      when 'removegroup' then @removeGroup graph, payload, context
+      when 'renamegroup' then @renameGroup graph, payload, context
+      when 'changegroup' then @changeGroup graph, payload, context
 
   resolveGraph: (payload, context) ->
     unless payload.graph
@@ -106,6 +110,30 @@ class GraphProtocol
         metadata: iip.metadata
         graph: id
       @send 'removeinitial', iipData, context
+    graph.on 'addGroup', (group) =>
+      groupData =
+        name: group.name
+        nodes: group.nodes
+        metadata: group.metadata
+        graph: id
+      @send 'addgroup', groupData, context
+    graph.on 'removeGroup', (group) =>
+      groupData =
+        name: group.name
+        graph: id
+      @send 'removegroup', groupData, context
+    graph.on 'renameGroup', (oldName, newName) =>
+      groupData =
+        from: oldName
+        to: newName
+        graph: id
+      @send 'renamegroup', groupData, context
+    graph.on 'changeGroup', (group) =>
+      groupData =
+        name: group.name
+        metadata: group.metadata
+        graph: id
+      @send 'changegroup', groupData, context
 
   addNode: (graph, node, context) ->
     unless node.id or node.component
@@ -191,5 +219,29 @@ class GraphProtocol
       @send 'error', new Error('No from or to supplied'), context
       return
     graph.renameOutport payload.from, payload.to
+
+  addGroup: (graph, payload, context) ->
+    unless payload.name or payload.nodes or payload.metadata
+      @send 'error', new Error('No name or nodes or metadata supplied'), context
+      return
+    graph.addGroup payload.name, payload.nodes, payload.metadata
+
+  removeGroup: (graph, payload, context) ->
+    unless payload.name
+      @send 'error', new Error('No name supplied'), context
+      return
+    graph.removeGroup payload.name
+
+  renameGroup: (graph, payload, context) ->
+    unless payload.from or payload.to
+      @send 'error', new Error('No from or to supplied'), context
+      return
+    graph.renameGroup payload.from, payload.to
+
+  changeGroup: (graph, payload, context) ->
+    unless payload.name or payload.metadata
+      @send 'error', new Error('No name or metadata supplied'), context
+      return
+    graph.changeGroup payload.name, payload.metadata
 
 module.exports = GraphProtocol
