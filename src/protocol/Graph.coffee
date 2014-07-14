@@ -18,6 +18,7 @@ class GraphProtocol
       when 'addnode' then @addNode graph, payload, context
       when 'removenode' then @removeNode graph, payload, context
       when 'renamenode' then @renameNode graph, payload, context
+      when 'changenode' then @changeNode graph, payload, context
       when 'addedge' then @addEdge graph, payload, context
       when 'removeedge' then @removeEdge graph, payload, context
       when 'changeedge' then @changeEdge graph, payload, context
@@ -79,6 +80,12 @@ class GraphProtocol
       @send 'renamenode',
         from: oldId
         to: newId
+        graph: id
+      , context
+    graph.on 'changeNode', (node, before) =>
+      @send 'changenode',
+        id: node.id
+        metadata: node.metadata
         graph: id
       , context
     graph.on 'addEdge', (edge) =>
@@ -160,6 +167,12 @@ class GraphProtocol
       @send 'error', new Error('No from or to supplied'), context
       return
     graph.renameNode payload.from, payload.to
+
+  changeNode: (graph, payload, context) ->
+    unless payload.id or payload.metadata
+      @send 'error', new Error('No id or metadata supplied'), context
+      return
+    graph.setNodeMetadata payload.id, payload.metadata
 
   addEdge: (graph, edge, context) ->
     unless edge.src or edge.tgt
