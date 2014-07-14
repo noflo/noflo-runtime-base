@@ -68,7 +68,7 @@ class NetworkProtocol
 
       # Run the network
       network.connect ->
-        network.sendInitials()
+        network.start()
         graph.on 'addInitial', ->
           network.sendInitials()
     , true
