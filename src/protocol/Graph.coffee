@@ -20,6 +20,7 @@ class GraphProtocol
       when 'renamenode' then @renameNode graph, payload, context
       when 'addedge' then @addEdge graph, payload, context
       when 'removeedge' then @removeEdge graph, payload, context
+      when 'changeedge' then @changeEdge graph, payload, context
       when 'addinitial' then @addInitial graph, payload, context
       when 'removeinitial' then @removeInitial graph, payload, context
       when 'addinport' then @addInport graph, payload, context
@@ -96,6 +97,13 @@ class GraphProtocol
         metadata: edge.metadata
         graph: id
       @send 'removeedge', edgeData, context
+    graph.on 'changeEdge', (edge) =>
+      edgeData =
+        src: edge.from
+        tgt: edge.to
+        metadata: edge.metadata
+        graph: id
+      @send 'changeedge', edgeData, context
     graph.on 'addInitial', (iip) =>
       iipData =
         src: iip.from
@@ -168,6 +176,12 @@ class GraphProtocol
       @send 'error', new Error('No src or tgt supplied'), context
       return
     graph.removeEdge edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port
+
+  changeEdge: (graph, edge, context) ->
+    unless edge.src or edge.tgt
+      @send 'error', new Error('No src or tgt supplied'), context
+      return
+    graph.setEdgeMetadata edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata
 
   addInitial: (graph, payload, context) ->
     unless payload.src or payload.tgt
