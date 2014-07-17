@@ -269,6 +269,6 @@ class GraphProtocol
     unless payload.name or payload.metadata
       @send 'error', new Error('No name or metadata supplied'), context
       return
-    graph.changeGroup payload.name, payload.metadata
+    graph.setEdgeMetadata payload.name, payload.metadata
 
 module.exports = GraphProtocol
