@@ -88,14 +88,11 @@ class NetworkProtocol
 
     for edge in payload.edges
       signature = getEdgeSignature(edge)
-      log('add signature : ' + signature)
       network.filters[signature] = true
 
   eventFiltered: (graph, event) ->
+    return true unless @transport.options.filterData
     sign = getSocketSignature(event.socket)
-    if @networks[graph].filters[sign]
-      log('event match for signature : ' + sign)
-    #log('event signature : ' + sign)
     return @networks[graph].filters[sign]
 
   initNetwork: (graph, payload, context) ->
