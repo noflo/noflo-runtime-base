@@ -66,6 +66,8 @@ class NetworkProtocol
         @stopNetwork graph, payload, context
       when 'edges'
         @updateEdgesFilter graph, payload, context
+      when 'debug'
+        @debugNetwork graph, payload, context
 
   resolveGraph: (payload, context) ->
     unless payload.graph
@@ -139,9 +141,15 @@ class NetworkProtocol
         uptime: event.uptime
         graph: payload.graph
       , context
+    network.on 'process-error', (event) =>
+      @send 'processerror', event, context
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
     @networks[payload.graph].network.stop()
+
+  debugNetwork: (graph, payload, context) ->
+    return unless @networks[payload.graph]
+    @networks[payload.graph].network.setDebug payload.enable
 
 module.exports = NetworkProtocol
