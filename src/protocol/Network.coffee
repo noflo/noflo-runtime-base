@@ -142,7 +142,11 @@ class NetworkProtocol
         graph: payload.graph
       , context
     network.on 'process-error', (event) =>
-      @send 'processerror', event, context
+      @send 'processerror',
+        id: event.id
+        error: event.error
+        graph: payload.graph
+      , context
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
