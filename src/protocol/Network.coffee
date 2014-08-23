@@ -56,8 +56,9 @@ class NetworkProtocol
     @transport.send 'network', topic, payload, context
 
   receive: (topic, payload, context) ->
-    graph = @resolveGraph payload, context
-    return unless graph
+    if topic isnt 'list'
+      graph = @resolveGraph payload, context
+      return unless graph
 
     switch topic
       when 'start'
@@ -68,6 +69,8 @@ class NetworkProtocol
         @updateEdgesFilter graph, payload, context
       when 'debug'
         @debugNetwork graph, payload, context
+      when 'list'
+        @listNetworks payload, context
 
   resolveGraph: (payload, context) ->
     unless payload.graph
@@ -98,6 +101,11 @@ class NetworkProtocol
     return @networks[graph].filters[sign]
 
   initNetwork: (graph, payload, context) ->
+    # Ensure we stop previous network
+    if @networks[payload.graph]
+      @networks[payload.graph].network.stop()
+      delete @networks[payload.graph]
+
     graph.componentLoader = @transport.component.getLoader graph.baseDir
     noflo.createNetwork graph, (network) =>
       if @networks[payload.graph]
@@ -155,5 +163,13 @@ class NetworkProtocol
   debugNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
     @networks[payload.graph].network.setDebug payload.enable
+
+  listNetworks: (payload, context) ->
+    for graph, network of @networks
+      @send 'network',
+        graph: graph
+        started: network.network.isStarted()
+      , context
+    @send 'networksdone', {}, context
 
 module.exports = NetworkProtocol

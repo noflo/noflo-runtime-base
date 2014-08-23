@@ -9,12 +9,14 @@ class GraphProtocol
 
   receive: (topic, payload, context) ->
     # Find locally stored graph by ID
-    if topic isnt 'clear'
+    if topic isnt 'clear' and topic isnt 'list'
       graph = @resolveGraph payload, context
       return unless graph
 
     switch topic
       when 'clear' then @initGraph payload, context
+      when 'get' then @getGraph graph, payload, context
+      when 'list' then @listGraphs payload, context
       when 'addnode' then @addNode graph, payload, context
       when 'removenode' then @removeNode graph, payload, context
       when 'renamenode' then @renameNode graph, payload, context
@@ -43,6 +45,25 @@ class GraphProtocol
       @send 'error', new Error('Requested graph not found'), context
       return
     return @graphs[payload.graph]
+
+  getLoader: (baseDir) ->
+    unless @loaders[baseDir]
+      @loaders[baseDir] = new noflo.ComponentLoader baseDir
+    return @loaders[baseDir]
+
+  sendGraph: (id, graph, context) ->
+    payload =
+      graph: id
+      description: graph.toJSON()
+    @send 'graph', payload, context
+
+  getGraph: (graph, payload, context) ->
+    @sendGraph payload.graph, graph, context
+
+  listGraphs: (payload, context) ->
+    for graphId, graph of @graphs
+      @sendGraph graphId, graph, context
+    @send 'graphsdone', {}, context
 
   initGraph: (payload, context) ->
     unless payload.id
