@@ -31,9 +31,21 @@ class ComponentProtocol
     loader = @getLoader baseDir
     loader.getSource payload.name, (err, component) =>
       if err
-        @send 'error', err, context
-        return
-      @send 'source', component, context
+        # Try one of the registered graph
+        graph = @transport.graph.graphs[payload.name]
+        unless graph?
+          @send 'error', err, context
+          return
+
+        nameParts = payload.name.split '/'
+        @send 'source',
+          name: nameParts[1]
+          library: nameParts[0]
+          code: JSON.stringify graph.toJSON()
+          language: 'json'
+        , context
+      else
+        @send 'source', component, context
 
   setSource: (payload, context) ->
     baseDir = @transport.options.baseDir
