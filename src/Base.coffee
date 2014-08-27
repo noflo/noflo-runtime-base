@@ -11,10 +11,17 @@ class BaseTransport
     @options = {} unless @options
     @version = '0.4'
     @runtime = new protocols.Runtime @
+    @component = new protocols.Component @
     @graph = new protocols.Graph @
     @network = new protocols.Network @
-    @component = new protocols.Component @
     @context = null
+
+    if @options.defaultGraph?
+      @options.defaultGraph.baseDir = @options.baseDir
+      path = 'default/main'
+      @context = 'none'
+      @graph.registerGraph path, @options.defaultGraph
+      @network.initNetwork @options.defaultGraph, { graph: path }, @context
 
   # Send a message back to the user via the transport protocol.
   #

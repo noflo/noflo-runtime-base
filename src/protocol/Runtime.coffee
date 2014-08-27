@@ -27,10 +27,15 @@ class RuntimeProtocol
         'component:setsource'
         'component:getsource'
       ]
+    graph = undefined
+    for k, v of @transport.network.networks
+      graph = k
+      break
     @send 'runtime',
       type: type
       version: @transport.version
       capabilities: capabilities
+      graph: graph
     , context
 
   receivePacket: (payload, context) ->
