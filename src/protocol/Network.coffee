@@ -150,9 +150,15 @@ class NetworkProtocol
         graph: payload.graph
       , context
     network.on 'process-error', (event) =>
+      error = event.error.message
+      # If we can get a backtrace, send 3 levels
+      if event.error.stack
+        bt = event.error.stack.split '\n'
+        for i in [0..Math.min bt.length, 3]
+          error += "\n#{bt[i]}"
       @send 'processerror',
         id: event.id
-        error: event.error
+        error: error
         graph: payload.graph
       , context
 
