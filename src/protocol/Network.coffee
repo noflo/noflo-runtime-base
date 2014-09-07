@@ -69,8 +69,6 @@ class NetworkProtocol
         @updateEdgesFilter graph, payload, context
       when 'debug'
         @debugNetwork graph, payload, context
-      when 'list'
-        @listNetworks payload, context
 
   resolveGraph: (payload, context) ->
     unless payload.graph
@@ -169,13 +167,5 @@ class NetworkProtocol
   debugNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
     @networks[payload.graph].network.setDebug payload.enable
-
-  listNetworks: (payload, context) ->
-    for graph, network of @networks
-      @send 'network',
-        graph: graph
-        started: network.network.isStarted()
-      , context
-    @send 'networksdone', {}, context
 
 module.exports = NetworkProtocol
