@@ -25,7 +25,7 @@ class BaseTransport
 
     if @options.captureOutput? and @options.captureOutput
       # Start capturing so that we can send it to the UI when it connects
-      rt.startCapture();
+      rt.startCapture()
 
   # Send a message back to the user via the transport protocol.
   #
