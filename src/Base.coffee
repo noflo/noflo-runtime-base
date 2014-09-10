@@ -23,6 +23,10 @@ class BaseTransport
       @graph.registerGraph path, @options.defaultGraph
       @network.initNetwork @options.defaultGraph, { graph: path }, @context
 
+    if @options.captureOutput? and @options.captureOutput
+      # Start capturing so that we can send it to the UI when it connects
+      rt.startCapture();
+
   # Send a message back to the user via the transport protocol.
   #
   # Each transport implementation should provide their own implementation
