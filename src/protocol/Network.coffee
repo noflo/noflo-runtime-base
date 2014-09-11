@@ -166,6 +166,10 @@ class NetworkProtocol
 
   debugNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
-    @networks[payload.graph].network.setDebug payload.enable
+    net = @networks[payload.graph].network
+    if net.setDebug?
+      net.setDebug payload.enable
+    else
+      console.log 'Warning: Network.setDebug not supported. Update to newer NoFlo'
 
 module.exports = NetworkProtocol
