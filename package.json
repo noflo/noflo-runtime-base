@@ -1,7 +1,7 @@
 {
   "name": "noflo-runtime-base",
   "description": "Base library for building NoFlo runtimes",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "author": {
     "name": "Henri Bergius",
     "email": "henri.bergius@iki.fi"
