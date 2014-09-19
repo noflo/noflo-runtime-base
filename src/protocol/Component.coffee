@@ -57,7 +57,13 @@ class ComponentProtocol
       @processComponent loader, loader.normalizeName(payload.library, payload.name), context
 
   processComponent: (loader, component, context) ->
-    loader.load component, (instance) =>
+    loader.load component, (err, instance) =>
+      unless instance
+        if err instanceof Error
+          @send 'error', err, context
+          return
+        instance = err
+
       # Ensure graphs are not run automatically when just querying their ports
       unless instance.isReady()
         instance.once 'ready', =>
