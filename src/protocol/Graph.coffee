@@ -68,6 +68,10 @@ class GraphProtocol
     if payload.library
       graph.properties.library = payload.library
       fullName = "#{payload.library}/#{fullName}"
+    if payload.icon
+      graph.properties.icon = payload.icon
+    if payload.description
+      graph.properties.description = payload.description
 
     # Pass the project baseDir
     graph.baseDir = @transport.options.baseDir
