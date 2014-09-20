@@ -66,6 +66,7 @@ class GraphProtocol
 
     fullName = payload.id
     if payload.library
+      payload.library = payload.library.replace 'noflo-', ''
       graph.properties.library = payload.library
       fullName = "#{payload.library}/#{fullName}"
     if payload.icon
