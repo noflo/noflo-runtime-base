@@ -27,11 +27,10 @@ module.exports = ->
         ext: '.js'
 
     # Browser version building
-    exec:
-      install:
-        command: './node_modules/.bin/component install'
+    noflo_browser:
       build:
-        command: './node_modules/.bin/component build -u component-json,component-coffee -o browser -n noflo-runtime-base -c'
+        files:
+          'browser/noflo-runtime-base.js': ['component.json']
 
     # Automated recompilation and testing when developing
     watch:
@@ -64,7 +63,7 @@ module.exports = ->
 
   # Grunt plugins used for building
   @loadNpmTasks 'grunt-contrib-coffee'
-  @loadNpmTasks 'grunt-exec'
+  @loadNpmTasks 'grunt-noflo-browser'
 
   # Grunt plugins used for testing
   @loadNpmTasks 'grunt-contrib-watch'
@@ -78,14 +77,14 @@ module.exports = ->
       @task.run 'coffee:src'
       @task.run 'coffee:protocol'
     if target is 'all' or target is 'browser'
-      @task.run 'exec'
+      @task.run 'noflo_browser'
 
   @registerTask 'test', 'Build NoFlo and run automated tests', (target = 'all') =>
     @task.run 'coffeelint'
     if target is 'all' or target is 'nodejs'
       @task.run 'cafemocha'
     if target is 'all' or target is 'browser'
-      @task.run 'exec'
+      @task.run 'noflo_browser'
       @task.run 'coffee:spec'
       @task.run 'mocha_phantomjs'
 
