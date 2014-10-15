@@ -10,10 +10,10 @@ class BaseTransport
   constructor: (@options) ->
     @options = {} unless @options
     @version = '0.4'
-    @runtime = new protocols.Runtime @
     @component = new protocols.Component @
     @graph = new protocols.Graph @
     @network = new protocols.Network @
+    @runtime = new protocols.Runtime @
     @context = null
 
     if @options.defaultGraph?

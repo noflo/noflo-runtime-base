@@ -1,4 +1,5 @@
 noflo = require 'noflo'
+EventEmitter = if noflo.isBrowser() then require('emitter') else require('events').EventEmitter
 
 prepareSocketEvent = (event, req) ->
   payload =
@@ -48,7 +49,7 @@ getConnectionSignature = (connection) ->
 getSocketSignature = (socket) ->
   return getConnectionSignature(socket.from) +  ' -> ' + getConnectionSignature(socket.to)
 
-class NetworkProtocol
+class NetworkProtocol extends EventEmitter
   constructor: (@transport) ->
     @networks = {}
 
@@ -99,10 +100,13 @@ class NetworkProtocol
     return @networks[graph].filters[sign]
 
   initNetwork: (graph, payload, context) ->
+
     # Ensure we stop previous network
     if @networks[payload.graph]
-      @networks[payload.graph].network.stop()
+      network = @networks[payload.graph].network
+      network.stop()
       delete @networks[payload.graph]
+      @emit 'removenetwork', network, @networks
 
     graph.componentLoader = @transport.component.getLoader graph.baseDir
     noflo.createNetwork graph, (network) =>
@@ -112,6 +116,7 @@ class NetworkProtocol
         @networks[payload.graph] =
           network: network
           filters: {}
+      @emit 'addnetwork', network, @networks
       @subscribeNetwork network, payload, context
 
       # Run the network

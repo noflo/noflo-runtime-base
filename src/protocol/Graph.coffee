@@ -8,6 +8,7 @@ class GraphProtocol
     @transport.send 'graph', topic, payload, context
 
   receive: (topic, payload, context) ->
+
     # Find locally stored graph by ID
     if topic isnt 'clear'
       graph = @resolveGraph payload, context
@@ -79,13 +80,17 @@ class GraphProtocol
 
     @subscribeGraph payload.id, graph, context
 
-    unless payload.main
+    if payload.main
+      # Register for runtime exported ports
+      @transport.runtime.setMainGraph fullName, graph, context
+    else
       # Register to component loading
       @transport.component.registerGraph fullName, graph, context
 
     @graphs[payload.id] = graph
 
   registerGraph: (id, graph) ->
+    @transport.runtime.setMainGraph fullName, graph if id == 'default/main'
     @subscribeGraph id, graph, ''
     @graphs[id] = graph
 
