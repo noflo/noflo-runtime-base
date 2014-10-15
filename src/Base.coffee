@@ -42,6 +42,12 @@ class BaseTransport
   # @param [Object] Message context, dependent on the transport
   send: (protocol, topic, payload, context) ->
    
+  # Send a message to *all users*  via the transport protocol
+  #
+  # Like send() only it sends to all.
+  # @param [Object] Message context, can be null
+  sendAll: (protocol, topic, payload, context) ->
+
   # This is the entry-point to actual protocol handlers. When receiving
   # a message, the runtime should call this to make the requested actions
   # happen
