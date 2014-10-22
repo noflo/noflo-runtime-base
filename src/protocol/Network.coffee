@@ -184,7 +184,7 @@ class NetworkProtocol extends EventEmitter
     return unless network
     @send 'status',
         graph: payload.graph
-        running: network.isStarted()
+        running: network.network.isStarted()
     , context
 
 module.exports = NetworkProtocol
