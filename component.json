@@ -6,7 +6,8 @@
   "version": "0.2.10",
   "keywords": [],
   "dependencies": {
-    "noflo/noflo": "*"
+    "noflo/noflo": "*",
+    "bergie/emitter": "*"
   },
   "remotes": [
     "https://raw.githubusercontent.com"
