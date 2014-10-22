@@ -193,9 +193,13 @@ class NetworkProtocol extends EventEmitter
   getStatus: (graph, payload, context) ->
     network = @networks[payload.graph]
     return unless network
+    if network.network.isRunning
+      isRunning = network.network.isRunning()
+    else
+      isRunning = network.network.isStarted() and network.network.connectionCount > 0
     @send 'status',
         graph: payload.graph
-        running: network.network.isStarted()
+        running: isRunning
     , context
 
 module.exports = NetworkProtocol
