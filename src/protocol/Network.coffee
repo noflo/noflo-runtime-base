@@ -1,5 +1,5 @@
 noflo = require 'noflo'
-EventEmitter = if noflo.isBrowser() then require('emitter') else require('events').EventEmitter
+EventEmitter = require('events').EventEmitter
 
 prepareSocketEvent = (event, req) ->
   payload =
