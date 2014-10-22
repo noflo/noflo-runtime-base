@@ -56,6 +56,9 @@ class NetworkProtocol extends EventEmitter
   send: (topic, payload, context) ->
     @transport.send 'network', topic, payload, context
 
+  sendAll: (topic, payload) ->
+    @transport.sendAll 'network', topic, payload
+
   receive: (topic, payload, context) ->
     if topic isnt 'list'
       graph = @resolveGraph payload, context
@@ -130,13 +133,19 @@ class NetworkProtocol extends EventEmitter
 
   subscribeNetwork: (network, payload, context) ->
     network.on 'start', (event) =>
-      @send 'started',
+      @sendAll 'started',
         time: event.start
+        graph: payload.graph
+      , context
+    network.on 'end', (event) =>
+      @sendAll 'stopped',
+        time: new Date
+        uptime: event.uptime
         graph: payload.graph
       , context
     network.on 'icon', (event) =>
       event.graph = payload.graph
-      @send 'icon', event, context
+      @sendAll 'icon', event, context
     network.on 'connect', (event) =>
       @send 'connect', prepareSocketEvent(event, payload), context
     network.on 'begingroup', (event) =>
@@ -148,12 +157,7 @@ class NetworkProtocol extends EventEmitter
       @send 'endgroup', prepareSocketEvent(event, payload), context
     network.on 'disconnect', (event) =>
       @send 'disconnect', prepareSocketEvent(event, payload), context
-    network.on 'end', (event) =>
-      @send 'stopped',
-        time: new Date
-        uptime: event.uptime
-        graph: payload.graph
-      , context
+
     network.on 'process-error', (event) =>
       error = event.error.message
       # If we can get a backtrace, send 3 levels
