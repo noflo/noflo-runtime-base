@@ -63,7 +63,7 @@ class NetworkProtocol extends EventEmitter
 
     switch topic
       when 'start'
-        @initNetwork graph, payload, context
+        @startNetwork graph, payload, context
       when 'stop'
         @stopNetwork graph, payload, context
       when 'edges'
@@ -166,6 +166,13 @@ class NetworkProtocol extends EventEmitter
         error: error
         graph: payload.graph
       , context
+
+  startNetwork: (graph, payload, context) ->
+    network = @networks[payload.graph]
+    if network
+      network.network.start()
+    else
+      @initNetwork graph, payload, context
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
