@@ -70,6 +70,8 @@ class NetworkProtocol extends EventEmitter
         @updateEdgesFilter graph, payload, context
       when 'debug'
         @debugNetwork graph, payload, context
+      when 'getstatus'
+        @getStatus graph, payload, context
 
   resolveGraph: (payload, context) ->
     unless payload.graph
@@ -176,5 +178,13 @@ class NetworkProtocol extends EventEmitter
       net.setDebug payload.enable
     else
       console.log 'Warning: Network.setDebug not supported. Update to newer NoFlo'
+
+  getStatus: (graph, payload, context) ->
+    network = @networks[payload.graph]
+    return unless network
+    @send 'status',
+        graph: payload.graph
+        running: network.isStarted()
+    , context
 
 module.exports = NetworkProtocol
