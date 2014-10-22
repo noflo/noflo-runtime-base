@@ -10,12 +10,12 @@ class RuntimeProtocol
       network.on 'start', () =>
         # processes don't exist until started
         network = @getMainNetwork()
-        @updateOutportSubscription network     
+        @updateOutportSubscription network
       network.on 'data', (event) =>
         # TODO: use this instead of manually subscribing to output ports
     @transport.network.on 'removenetwork', () =>
-        network = @getMainNetwork()
-        @updateOutportSubscription network
+      network = @getMainNetwork()
+      @updateOutportSubscription network
 
   send: (topic, payload, context) ->
     @transport.send 'runtime', topic, payload, context if context != null
@@ -74,7 +74,7 @@ class RuntimeProtocol
           addressable: false
           required: false
 
-    @send 'ports', 
+    @send 'ports',
       graph: name
       inPorts: inports
       outPorts: outports
@@ -99,7 +99,7 @@ class RuntimeProtocol
     ]
     if @mainGraph
       for d in dependencies
-        @mainGraph.removeListener d, checkExportedPorts    
+        @mainGraph.removeListener d, checkExportedPorts
     @mainGraph = graph
     for d in dependencies
       @mainGraph.on d, checkExportedPorts
@@ -150,7 +150,7 @@ class RuntimeProtocol
     socket = noflo.internalSocket.createSocket()
     port = component.inPorts[internal.port]
     port.attach socket
-    switch payload.event 
+    switch payload.event
       when 'connect' then socket.connect()
       when 'disconnect' then socket.disconnect()
       when 'begingroup' then socket.beginGroup payload.payload
