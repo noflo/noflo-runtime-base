@@ -90,7 +90,7 @@ class GraphProtocol
     @graphs[payload.id] = graph
 
   registerGraph: (id, graph) ->
-    @transport.runtime.setMainGraph fullName, graph if id == 'default/main'
+    @transport.runtime.setMainGraph id, graph if id == 'default/main'
     @subscribeGraph id, graph, ''
     @graphs[id] = graph
 
