@@ -136,12 +136,16 @@ class NetworkProtocol extends EventEmitter
       @sendAll 'started',
         time: event.start
         graph: payload.graph
+        running: true
+        started: network.isStarted()
       , context
     network.on 'end', (event) =>
       @sendAll 'stopped',
         time: new Date
         uptime: event.uptime
         graph: payload.graph
+        running: false
+        started: network.isStarted()
       , context
     network.on 'icon', (event) =>
       event.graph = payload.graph
@@ -200,6 +204,7 @@ class NetworkProtocol extends EventEmitter
     @send 'status',
         graph: payload.graph
         running: isRunning
+        started: network.network.isStarted()
     , context
 
 module.exports = NetworkProtocol
