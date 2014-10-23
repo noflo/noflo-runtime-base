@@ -18,7 +18,10 @@ class RuntimeProtocol
       @updateOutportSubscription network
 
   send: (topic, payload, context) ->
-    @transport.send 'runtime', topic, payload, context if context != null
+    @transport.send 'runtime', topic, payload, context
+
+  sendAll: (topic, payload) ->
+    @transport.sendAll 'runtime', topic, payload
 
   receive: (topic, payload, context) ->
     switch topic
@@ -74,7 +77,7 @@ class RuntimeProtocol
           addressable: false
           required: false
 
-    @send 'ports',
+    @sendAll 'ports',
       graph: name
       inPorts: inports
       outPorts: outports
@@ -130,7 +133,7 @@ class RuntimeProtocol
       component.outPorts[internal.port].attach socket
       sendFunc = (event) =>
         (payload) =>
-          @transport.sendAll? 'runtime', 'packet',
+          @sendAll 'runtime', 'packet',
             port: pub
             event: event
             graph: graphName

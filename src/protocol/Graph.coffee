@@ -7,6 +7,9 @@ class GraphProtocol
   send: (topic, payload, context) ->
     @transport.send 'graph', topic, payload, context
 
+  sendAll: (topic, payload) ->
+    @transport.sendAll 'graph', topic, payload
+
   receive: (topic, payload, context) ->
 
     # Find locally stored graph by ID
@@ -89,7 +92,7 @@ class GraphProtocol
 
     @graphs[payload.id] = graph
 
-    @send 'clear', payload, context
+    @sendAll 'clear', payload, context
 
   registerGraph: (id, graph) ->
     @transport.runtime.setMainGraph id, graph if id == 'default/main'
@@ -99,18 +102,18 @@ class GraphProtocol
   subscribeGraph: (id, graph, context) ->
     graph.on 'addNode', (node) =>
       node.graph = id
-      @send 'addnode', node, context
+      @sendAll 'addnode', node, context
     graph.on 'removeNode', (node) =>
       node.graph = id
-      @send 'removenode', node, context
+      @sendAll 'removenode', node, context
     graph.on 'renameNode', (oldId, newId) =>
-      @send 'renamenode',
+      @sendAll 'renamenode',
         from: oldId
         to: newId
         graph: id
       , context
     graph.on 'changeNode', (node, before) =>
-      @send 'changenode',
+      @sendAll 'changenode',
         id: node.id
         metadata: node.metadata
         graph: id
@@ -123,59 +126,59 @@ class GraphProtocol
         tgt: edge.to
         metadata: edge.metadata
         graph: id
-      @send 'addedge', edgeData, context
+      @sendAll 'addedge', edgeData, context
     graph.on 'removeEdge', (edge) =>
       edgeData =
         src: edge.from
         tgt: edge.to
         metadata: edge.metadata
         graph: id
-      @send 'removeedge', edgeData, context
+      @sendAll 'removeedge', edgeData, context
     graph.on 'changeEdge', (edge) =>
       edgeData =
         src: edge.from
         tgt: edge.to
         metadata: edge.metadata
         graph: id
-      @send 'changeedge', edgeData, context
+      @sendAll 'changeedge', edgeData, context
     graph.on 'addInitial', (iip) =>
       iipData =
         src: iip.from
         tgt: iip.to
         metadata: iip.metadata
         graph: id
-      @send 'addinitial', iipData, context
+      @sendAll 'addinitial', iipData, context
     graph.on 'removeInitial', (iip) =>
       iipData =
         src: iip.from
         tgt: iip.to
         metadata: iip.metadata
         graph: id
-      @send 'removeinitial', iipData, context
+      @sendAll 'removeinitial', iipData, context
     graph.on 'addGroup', (group) =>
       groupData =
         name: group.name
         nodes: group.nodes
         metadata: group.metadata
         graph: id
-      @send 'addgroup', groupData, context
+      @sendAll 'addgroup', groupData, context
     graph.on 'removeGroup', (group) =>
       groupData =
         name: group.name
         graph: id
-      @send 'removegroup', groupData, context
+      @sendAll 'removegroup', groupData, context
     graph.on 'renameGroup', (oldName, newName) =>
       groupData =
         from: oldName
         to: newName
         graph: id
-      @send 'renamegroup', groupData, context
+      @sendAll 'renamegroup', groupData, context
     graph.on 'changeGroup', (group) =>
       groupData =
         name: group.name
         metadata: group.metadata
         graph: id
-      @send 'changegroup', groupData, context
+      @sendAll 'changegroup', groupData, context
 
   addNode: (graph, node, context) ->
     unless node.id or node.component
@@ -183,7 +186,7 @@ class GraphProtocol
       return
     graph.addNode node.id, node.component, node.metadata
 
-  removeNode: (graph, payload) ->
+  removeNode: (graph, payload, context) ->
     unless payload.id
       @send 'error', new Error('No ID supplied'), context
       return

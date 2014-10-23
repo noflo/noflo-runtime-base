@@ -29,21 +29,43 @@ describe 'Graph protocol', ->
       payload =
         id: 'mygraph'
         main: true
-      client.on 'message', (msg) ->
+      client.once 'message', (msg) ->
         chai.expect(msg.protocol).to.equal 'graph'
         chai.expect(msg.command).to.equal 'clear'
         chai.expect(msg.payload).to.include.keys 'id'
         chai.expect(msg.payload.id).to.equal payload.id
         done()
       client.send 'graph', 'clear', payload
-    it.skip 'should send to all clients', (done) ->
+    it 'should send to all clients', (done) ->
       payload =
         id: 'mygraph'
         main: true
-      client2.on 'message', (msg) ->
+      client2.once 'message', (msg) ->
         chai.expect(msg.protocol).to.equal 'graph'
         chai.expect(msg.command).to.equal 'clear'
         chai.expect(msg.payload).to.include.keys 'id'
         chai.expect(msg.payload.id).to.equal payload.id
         done()
       client.send 'graph', 'clear', payload
+
+  describe 'sending graph:addnode', ->
+    graph = 'graphwithnodes'
+    payload =
+      id: 'node1'
+      component: 'Component1'
+      graph: graph
+      metadata: {}
+    checkAddNode = (msg, done) ->
+      return if msg.command != 'addnode'
+      chai.expect(msg.protocol).to.equal 'graph'
+      chai.expect(msg.command).to.equal 'addnode'
+      chai.expect(msg.payload).to.deep.equal payload
+      done()
+    it 'should respond with graph:addnode', (done) ->
+      client.on 'message', (msg) -> checkAddNode msg, done
+      client.send 'graph', 'clear', { id: graph, main: true }
+      client.send 'graph', 'addnode', payload
+    it 'should send to all clients', (done) ->
+      client2.on 'message', (msg) -> checkAddNode msg, done
+      client.send 'graph', 'clear', { id: graph, main: true }
+      client.send 'graph', 'addnode', payload
