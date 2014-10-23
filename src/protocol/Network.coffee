@@ -151,16 +151,16 @@ class NetworkProtocol extends EventEmitter
       event.graph = payload.graph
       @sendAll 'icon', event, context
     network.on 'connect', (event) =>
-      @send 'connect', prepareSocketEvent(event, payload), context
+      @sendAll 'connect', prepareSocketEvent(event, payload), context
     network.on 'begingroup', (event) =>
-      @send 'begingroup', prepareSocketEvent(event, payload), context
+      @sendAll 'begingroup', prepareSocketEvent(event, payload), context
     network.on 'data', (event) =>
       return unless @eventFiltered(payload.graph, event)
-      @send 'data', prepareSocketEvent(event, payload), context
+      @sendAll 'data', prepareSocketEvent(event, payload), context
     network.on 'endgroup', (event) =>
-      @send 'endgroup', prepareSocketEvent(event, payload), context
+      @sendAll 'endgroup', prepareSocketEvent(event, payload), context
     network.on 'disconnect', (event) =>
-      @send 'disconnect', prepareSocketEvent(event, payload), context
+      @sendAll 'disconnect', prepareSocketEvent(event, payload), context
 
     network.on 'process-error', (event) =>
       error = event.error.message
@@ -169,7 +169,7 @@ class NetworkProtocol extends EventEmitter
         bt = event.error.stack.split '\n'
         for i in [0..Math.min bt.length, 3]
           error += "\n#{bt[i]}"
-      @send 'processerror',
+      @sendAll 'processerror',
         id: event.id
         error: error
         graph: payload.graph
