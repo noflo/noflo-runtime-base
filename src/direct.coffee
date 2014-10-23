@@ -8,15 +8,15 @@ else
 EventEmitter = require('events').EventEmitter
 
 class DirectRuntime extends Base
-  constructor: () ->
-    super()
+  constructor: (options) ->
+    super options
     @clients = []
 
   _connect: (client) ->
     @clients.push client
     client.on 'send', (msg) =>
       # Capture context
-      @receive msg, { client: client }
+      @_receive msg, { client: client }
 
   _disconnect: (client) ->
     return if (@clients.indexOf(client) == -1)
@@ -25,7 +25,7 @@ class DirectRuntime extends Base
 
   _receive: (msg, context) ->
     # Forward to Base
-    @receive msg.protocol, msg.command
+    @receive msg.protocol, msg.command, msg.payload, context
 
   send: (protocol, topic, payload, context) ->
     return if not context.client
@@ -45,9 +45,10 @@ class DirectRuntime extends Base
     
 # Mostly used for testing
 class DirectClient extends EventEmitter
-  constructor: (runtime) ->
+  constructor: (runtime, @name) ->
     super()
     @runtime = runtime
+    @name = 'Unnamed client' if not @name
 
   connect: () ->
     @runtime._connect this

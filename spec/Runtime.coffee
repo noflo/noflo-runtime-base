@@ -19,11 +19,12 @@ describe 'Runtime protocol', ->
     client = null
     runtime = null
 
-  describe 'sending getruntime', ->
-    it 'should respond with runtime', () ->
-      client.on 'message', (msg) ->
+  describe 'sending runtime:getruntime', ->
+    it 'should respond with runtime:runtime', (done) ->
+      client.once 'message', (msg) ->
         chai.expect(msg.protocol).to.equal 'runtime'
         chai.expect(msg.command).to.equal 'runtime'
-        chai.expect(msg.type).to.equal 'noflo'
-        chai.expect(msg.capabilities).keys.to.include 'protocol:graph'
+        chai.expect(msg.payload.type).to.have.string 'noflo'
+        chai.expect(msg.payload.capabilities).to.include 'protocol:graph'
+        done()
       client.send 'runtime', 'getruntime', null
