@@ -1,4 +1,5 @@
 noflo = require 'noflo'
+_ = require 'underscore'
 
 class ComponentProtocol
   loaders: {}
@@ -106,7 +107,8 @@ class ComponentProtocol
     , context
 
   registerGraph: (id, graph, context) ->
-    send = => @processComponent loader, id, context
+    sender = => @processComponent loader, id, context
+    send = _.debounce sender, 10
     loader = @getLoader graph.baseDir
     loader.listComponents (components) =>
       loader.registerComponent '', id, graph
