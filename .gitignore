@@ -5,3 +5,5 @@
 Base.js
 protocol/*.js
 *~
+spec/result.xml
+spec/*.js
