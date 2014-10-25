@@ -127,8 +127,6 @@ class NetworkProtocol extends EventEmitter
       # Run the network
       network.connect ->
         network.start()
-        graph.on 'addInitial', ->
-          network.sendInitials()
     , true
 
   subscribeNetwork: (network, payload, context) ->
