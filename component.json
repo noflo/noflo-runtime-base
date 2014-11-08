@@ -3,7 +3,7 @@
   "description": "Base library for building NoFlo runtimes",
   "author": "Henri Bergius <henri.bergius@iki.fi>",
   "repo": "noflo/noflo-runtime-base",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "keywords": [],
   "dependencies": {
     "noflo/noflo": "*",
