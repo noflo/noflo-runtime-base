@@ -84,7 +84,9 @@ class RuntimeProtocol
     , context
 
   getMainNetwork: () ->
-    network = @transport.network.networks['echoNoflo'] # FIXME: hardcoded name
+    return null if not @mainGraph
+    graphName = @mainGraph.name or @mainGraph.properties.id
+    network = @transport.network.networks[graphName]
     return null if not network
     network = network.network
     return network
