@@ -1,10 +1,7 @@
 isBrowser = ->
   !(typeof process isnt 'undefined' and process.execPath and process.execPath.indexOf('node') isnt -1)
 
-if isBrowser()
-  Base = require 'noflo-runtime/src/Base'
-else
-  Base = require './Base'
+Base = require './Base'
 EventEmitter = require('events').EventEmitter
 
 class DirectRuntime extends Base
