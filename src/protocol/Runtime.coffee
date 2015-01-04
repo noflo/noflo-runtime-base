@@ -149,6 +149,7 @@ class RuntimeProtocol
     graphName = @mainGraph.name or @mainGraph.properties.id
 
     network = @getMainNetwork()
+    return @send 'error', new Error('No main network'), context if not network
     internal = @mainGraph.inports[payload.port]
     component = network.processes[internal.process].component
 
