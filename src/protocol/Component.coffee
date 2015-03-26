@@ -24,8 +24,13 @@ class ComponentProtocol
     baseDir = @transport.options.baseDir
     loader = @getLoader baseDir
     loader.listComponents (components) =>
-      Object.keys(components).forEach (component) =>
-        @processComponent loader, component, context
+      componentNames = Object.keys components
+      processed = 0
+      componentNames.forEach (component) =>
+        @processComponent loader, component, context, (err) =>
+          processed++
+          return if processed < componentNames.length
+          @send 'componentsready', processed, context
 
   getSource: (payload, context) ->
     baseDir = @transport.options.baseDir
@@ -57,20 +62,25 @@ class ComponentProtocol
         return
       @processComponent loader, loader.normalizeName(payload.library, payload.name), context
 
-  processComponent: (loader, component, context) ->
+  processComponent: (loader, component, context, callback) ->
+    unless callback
+      callback = ->
+
     loader.load component, (err, instance) =>
       unless instance
         if err instanceof Error
           @send 'error', err, context
-          return
+          return callback err
         instance = err
 
       # Ensure graphs are not run automatically when just querying their ports
       unless instance.isReady()
         instance.once 'ready', =>
           @sendComponent component, instance, context
+          callback null
         return
       @sendComponent component, instance, context
+      callback null
     , true
 
   sendComponent: (component, instance, context) ->
