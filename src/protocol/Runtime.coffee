@@ -92,7 +92,7 @@ class RuntimeProtocol
       outPorts: outports
     , context
 
-  getMainNetwork: () ->
+  getMainNetwork: ->
     return null if not @mainGraph
     graphName = @mainGraph.name or @mainGraph.properties.id
     network = @transport.network.networks[graphName]

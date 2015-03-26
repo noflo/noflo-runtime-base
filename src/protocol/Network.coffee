@@ -111,7 +111,7 @@ class NetworkProtocol extends EventEmitter
   initNetwork: (graph, payload, context) ->
 
     # Ensure we stop previous network
-    if @networks[payload.graph]
+    if @networks[payload.graph] and @networks[payload.graph].network
       network = @networks[payload.graph].network
       network.stop()
       delete @networks[payload.graph]
@@ -119,7 +119,7 @@ class NetworkProtocol extends EventEmitter
 
     graph.componentLoader = @transport.component.getLoader graph.baseDir
     noflo.createNetwork graph, (network) =>
-      if @networks[payload.graph]
+      if @networks[payload.graph] and @networks[payload.graph].network
         @networks[payload.graph].network = network
       else
         @networks[payload.graph] =
@@ -179,7 +179,7 @@ class NetworkProtocol extends EventEmitter
 
   startNetwork: (graph, payload, context) ->
     network = @networks[payload.graph]
-    if network
+    if network and network.network
       network.network.start()
     else
       @initNetwork graph, payload, context
