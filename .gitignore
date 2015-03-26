@@ -3,6 +3,7 @@
 /browser
 /npm-debug.log
 Base.js
+direct.js
 protocol/*.js
 *~
 spec/result.xml
