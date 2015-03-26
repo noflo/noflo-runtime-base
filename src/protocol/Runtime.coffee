@@ -5,7 +5,6 @@ class RuntimeProtocol
     @mainGraph = null
     @outputSockets = {} # publicPort -> noflo.Socket
 
-
     @transport.network.on 'addnetwork', (network) =>
       network.on 'start', () =>
         # processes don't exist until started
@@ -24,6 +23,10 @@ class RuntimeProtocol
     @transport.sendAll 'runtime', topic, payload
 
   receive: (topic, payload, context) ->
+    if topic is 'packet' and not @transport.canDo 'protocol:runtime', payload.secret
+      @send 'error', "#{topic} not permitted", context
+      return
+
     switch topic
       when 'getruntime' then @getRuntime payload, context
       when 'packet' then @receivePacket payload, context
@@ -35,6 +38,7 @@ class RuntimeProtocol
         type = 'noflo-browser'
       else
         type = 'noflo-nodejs'
+
     capabilities = @transport.options.capabilities
     unless capabilities
       capabilities = [
@@ -45,6 +49,10 @@ class RuntimeProtocol
         'component:setsource'
         'component:getsource'
       ]
+
+    permittedCapabilities = capabilities.filter (capability) =>
+      @transport.canDo capability, payload.secret
+
     graph = undefined
     for k, v of @transport.network.networks
       graph = k
@@ -52,7 +60,8 @@ class RuntimeProtocol
     @send 'runtime',
       type: type
       version: @transport.version
-      capabilities: capabilities
+      capabilities: permittedCapabilities
+      allCapabilities: capabilities
       graph: graph
     , context
     graphInstance = @transport.graph.graphs[graph]

@@ -60,6 +60,10 @@ class NetworkProtocol extends EventEmitter
     @transport.sendAll 'network', topic, payload
 
   receive: (topic, payload, context) ->
+    unless @transport.canDo 'protocol:network', payload.secret
+      @send 'error', "#{topic} not permitted", context
+      return
+
     if topic isnt 'list'
       graph = @resolveGraph payload, context
       return unless graph

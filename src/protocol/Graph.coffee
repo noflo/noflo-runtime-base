@@ -11,6 +11,9 @@ class GraphProtocol
     @transport.sendAll 'graph', topic, payload
 
   receive: (topic, payload, context) ->
+    unless @transport.canDo 'protocol:graph', payload.secret
+      @send 'error', "#{topic} not permitted", context
+      return
 
     # Find locally stored graph by ID
     if topic isnt 'clear'

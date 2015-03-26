@@ -9,7 +9,7 @@ protocols =
 class BaseTransport
   constructor: (@options) ->
     @options = {} unless @options
-    @version = '0.4'
+    @version = '0.5'
     @component = new protocols.Component @
     @graph = new protocols.Graph @
     @network = new protocols.Network @
@@ -26,6 +26,33 @@ class BaseTransport
     if @options.captureOutput? and @options.captureOutput
       # Start capturing so that we can send it to the UI when it connects
       @startCapture()
+
+    unless @options.defaultPermissions
+      # Default: no capabilities granted for anonymous users
+      @options.defaultPermissions = []
+
+    unless @options.permissions
+      @options.permissions = {}
+
+  # Check if a given user is authorized for a given capability
+  #
+  # @param [String] Capability to check
+  # @param [String] Secret provided by user
+  canDo: (capability, secret) ->
+    permitted = @getPermitted secret
+    if permitted.indexOf(capability) isnt -1
+      return true
+    false
+
+  # Get enabled capabilities for a user
+  #
+  # @param [String] Secret provided by user
+  getPermitted: (secret) ->
+    unless secret
+      return @options.defaultPermissions
+    unless @options.permissions[secret]
+      return []
+    @options.permissions[secret]
 
   # Send a message back to the user via the transport protocol.
   #
@@ -44,6 +71,9 @@ class BaseTransport
    
   # Send a message to *all users*  via the transport protocol
   #
+  # The transport should verify that the recipients are authorized to receive
+  # the message by using the `canDo` method.
+  #
   # Like send() only it sends to all.
   # @param [Object] Message context, can be null
   sendAll: (protocol, topic, payload, context) ->
@@ -61,6 +91,7 @@ class BaseTransport
   # @param [Object] Message payload
   # @param [Object] Message context, dependent on the transport
   receive: (protocol, topic, payload, context) ->
+    payload = {} unless payload
     @context = context
     switch protocol
       when 'runtime' then @runtime.receive topic, payload, context
