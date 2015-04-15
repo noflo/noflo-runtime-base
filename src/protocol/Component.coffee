@@ -13,11 +13,11 @@ class ComponentProtocol
       @send 'error', "#{topic} not permitted", context
       return
 
-    if topic is 'source' and not @transport.canDo 'component:setsource'
+    if topic is 'source' and not @transport.canDo 'component:setsource', payload.secret
       @send 'error', "#{topic} not permitted", context
       return
 
-    if topic is 'getsource' and not @transport.canDo 'component:getsource'
+    if topic is 'getsource' and not @transport.canDo 'component:getsource', payload.secret
       @send 'error', "#{topic} not permitted", context
       return
 
