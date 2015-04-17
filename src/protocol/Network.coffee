@@ -61,7 +61,7 @@ class NetworkProtocol extends EventEmitter
 
   receive: (topic, payload, context) ->
     unless @transport.canDo 'protocol:network', payload.secret
-      @send 'error', "#{topic} not permitted", context
+      @send 'error', new Error("#{topic} not permitted"), context
       return
 
     if topic isnt 'list'

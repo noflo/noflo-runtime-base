@@ -24,7 +24,7 @@ class RuntimeProtocol
 
   receive: (topic, payload, context) ->
     if topic is 'packet' and not @transport.canDo 'protocol:runtime', payload.secret
-      @send 'error', "#{topic} not permitted", context
+      @send 'error', new Error("#{topic} not permitted"), context
       return
 
     switch topic
