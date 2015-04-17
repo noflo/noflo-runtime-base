@@ -10,15 +10,15 @@ class ComponentProtocol
 
   receive: (topic, payload, context) ->
     unless @transport.canDo 'protocol:component', payload.secret
-      @send 'error', "#{topic} not permitted", context
+      @send 'error', new Error("#{topic} not permitted"), context
       return
 
     if topic is 'source' and not @transport.canDo 'component:setsource', payload.secret
-      @send 'error', "#{topic} not permitted", context
+      @send 'error', new Error("#{topic} not permitted"), context
       return
 
     if topic is 'getsource' and not @transport.canDo 'component:getsource', payload.secret
-      @send 'error', "#{topic} not permitted", context
+      @send 'error', new Error("#{topic} not permitted"), context
       return
 
     switch topic
