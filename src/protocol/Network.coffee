@@ -122,7 +122,9 @@ class NetworkProtocol extends EventEmitter
       delete @networks[payload.graph]
       @emit 'removenetwork', network, @networks
 
-    graph.componentLoader = @transport.component.getLoader graph.baseDir
+    graph.componentLoader = @transport.component.getLoader graph.baseDir, @transport.options
+    opts = JSON.parse JSON.stringify @transport.options
+    opts.delay = true
     noflo.createNetwork graph, (network) =>
       if @networks[payload.graph] and @networks[payload.graph].network
         @networks[payload.graph].network = network
@@ -136,7 +138,7 @@ class NetworkProtocol extends EventEmitter
       # Run the network
       network.connect ->
         network.start()
-    , true
+    , opts
 
   subscribeNetwork: (network, payload, context) ->
     network.on 'start', (event) =>

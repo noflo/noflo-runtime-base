@@ -26,15 +26,15 @@ class ComponentProtocol
       when 'getsource' then @getSource payload, context
       when 'source' then @setSource payload, context
 
-  getLoader: (baseDir) ->
+  getLoader: (baseDir, options = {}) ->
     unless @loaders[baseDir]
-      @loaders[baseDir] = new noflo.ComponentLoader baseDir
+      @loaders[baseDir] = new noflo.ComponentLoader baseDir, options
 
     return @loaders[baseDir]
 
   listComponents: (payload, context) ->
     baseDir = @transport.options.baseDir
-    loader = @getLoader baseDir
+    loader = @getLoader baseDir, @transport.options
     loader.listComponents (components) =>
       componentNames = Object.keys components
       processed = 0
@@ -46,7 +46,7 @@ class ComponentProtocol
 
   getSource: (payload, context) ->
     baseDir = @transport.options.baseDir
-    loader = @getLoader baseDir
+    loader = @getLoader baseDir, @transport.options
     loader.getSource payload.name, (err, component) =>
       if err
         # Try one of the registered graph
@@ -67,7 +67,7 @@ class ComponentProtocol
 
   setSource: (payload, context) ->
     baseDir = @transport.options.baseDir
-    loader = @getLoader baseDir
+    loader = @getLoader baseDir, @transport.options
     loader.setSource payload.library, payload.name, payload.code, payload.language, (err) =>
       if err
         @send 'error', err, context
@@ -131,7 +131,7 @@ class ComponentProtocol
   registerGraph: (id, graph, context) ->
     sender = => @processComponent loader, id, context
     send = _.debounce sender, 10
-    loader = @getLoader graph.baseDir
+    loader = @getLoader graph.baseDir, @transport.options
     loader.listComponents (components) =>
       loader.registerComponent '', id, graph
       # Send initial graph info back to client

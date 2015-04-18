@@ -52,9 +52,7 @@ class GraphProtocol
     return @graphs[payload.graph]
 
   getLoader: (baseDir) ->
-    unless @loaders[baseDir]
-      @loaders[baseDir] = new noflo.ComponentLoader baseDir
-    return @loaders[baseDir]
+    @transport.component.getLoader baseDir, @transport.options
 
   sendGraph: (id, graph, context) ->
     payload =
