@@ -31,6 +31,11 @@ prepareSocketEvent = (event, req) ->
           payload.data = JSON.parse JSON.stringify event.data
     else
       payload.data = event.data
+
+    if event.metadata?.secure
+      # Don't send actual payload for private connections
+      payload.data = 'DATA'
+
   if event.subgraph
     payload.subgraph = event.subgraph
   payload
