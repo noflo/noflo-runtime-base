@@ -28,7 +28,7 @@ class ComponentProtocol
 
   getLoader: (baseDir) ->
     unless @loaders[baseDir]
-      @loaders[baseDir] = new noflo.ComponentLoader baseDir
+      @loaders[baseDir] = new noflo.ComponentLoader baseDir, @transport.options
 
     return @loaders[baseDir]
 
