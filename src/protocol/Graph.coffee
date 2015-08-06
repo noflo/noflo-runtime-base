@@ -180,6 +180,22 @@ class GraphProtocol
         metadata: group.metadata
         graph: id
       @sendAll 'changegroup', groupData, context
+    graph.on 'addInport', (publicName, port) =>
+      data =
+        public: publicName
+        node: port.process
+        port: port.port
+        metadata: port.metadata
+        graph: id
+      @sendAll 'addinport', data, context
+    graph.on 'addOutport', (publicName, port) =>
+      data =
+        public: publicName
+        node: port.process
+        port: port.port
+        metadata: port.metadata
+        graph: id
+      @sendAll 'addoutport', data, context
 
   addNode: (graph, node, context) ->
     unless node.id or node.component
