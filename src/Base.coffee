@@ -21,7 +21,7 @@ class BaseTransport
       path = 'default/main'
       @context = 'none'
       @graph.registerGraph path, @options.defaultGraph
-      @network.initNetwork @options.defaultGraph, { graph: path }, @context, () ->
+      @network.startNetwork @options.defaultGraph, { graph: path }, @context
 
     if @options.captureOutput? and @options.captureOutput
       # Start capturing so that we can send it to the UI when it connects
