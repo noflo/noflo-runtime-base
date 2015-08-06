@@ -54,6 +54,14 @@ getConnectionSignature = (connection) ->
 getSocketSignature = (socket) ->
   return getConnectionSignature(socket.from) +  ' -> ' + getConnectionSignature(socket.to)
 
+networkIsRunning = (net) ->
+  # compat with old NoFlo
+  if net.isRunning
+    isRunning = net.isRunning()
+  else
+    isRunning = net.isStarted() and net.connectionCount > 0
+  return isRunning
+
 class NetworkProtocol extends EventEmitter
   constructor: (@transport) ->
     @networks = {}
@@ -113,7 +121,7 @@ class NetworkProtocol extends EventEmitter
     sign = getSocketSignature(event.socket)
     return @networks[graph].filters[sign]
 
-  initNetwork: (graph, payload, context) ->
+  initNetwork: (graph, payload, context, callback) ->
 
     # Ensure we stop previous network
     if @networks[payload.graph] and @networks[payload.graph].network
@@ -137,7 +145,7 @@ class NetworkProtocol extends EventEmitter
 
       # Run the network
       network.connect ->
-        network.start()
+        return callback null
     , opts
 
   subscribeNetwork: (network, payload, context) ->
@@ -185,11 +193,31 @@ class NetworkProtocol extends EventEmitter
       , context
 
   startNetwork: (graph, payload, context) ->
+    doStart = (net) =>
+      net.start()
+      if net.isStarted()
+        @sendAll 'started',
+          time: new Date
+          graph: payload.graph
+          running: networkIsRunning net
+          started: true
+        , context
+      else
+        @sendAll 'stopped',
+          time: new Date
+          graph: payload.graph
+          running: networkIsRunning net
+          started: false
+        , context
+
     network = @networks[payload.graph]
     if network and network.network
-      network.network.start()
+      # already initialized
+      doStart network.network
     else
-      @initNetwork graph, payload, context
+      @initNetwork graph, payload, context, () =>
+        network = @networks[payload.graph]
+        doStart network.network
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
@@ -206,13 +234,9 @@ class NetworkProtocol extends EventEmitter
   getStatus: (graph, payload, context) ->
     network = @networks[payload.graph]
     return unless network
-    if network.network.isRunning
-      isRunning = network.network.isRunning()
-    else
-      isRunning = network.network.isStarted() and network.network.connectionCount > 0
     @send 'status',
         graph: payload.graph
-        running: isRunning
+        running: networkIsRunning network.network
         started: network.network.isStarted()
     , context
 
