@@ -1,20 +1,60 @@
 noflo = require 'noflo'
 
+sendToInport = (component, portName, event, payload) ->
+  socket = noflo.internalSocket.createSocket()
+  port = component.inPorts[portName]
+  port.attach socket
+  switch event
+    when 'connect' then socket.connect()
+    when 'disconnect' then socket.disconnect()
+    when 'begingroup' then socket.beginGroup payload
+    when 'endgroup' then socket.endGroup payload
+    when 'data' then socket.send payload
+  port.detach socket
+
+portsPayload = (name, graph) ->
+  inports = []
+  outports = []
+  if graph
+    for pub, internal of graph.inports
+      inports.push
+        id: pub
+        type: 'any' # TODO: lookup on internal
+        description: internal.metadata?.description
+        addressable: false
+        required: false
+    for pub, internal of graph.outports
+      outports.push
+        id: pub
+        type: 'any' # TODO: lookup on internal
+        description: internal.metadata?.description
+        addressable: false
+        required: false
+  payload =
+    graph: name
+    inPorts: inports
+    outPorts: outports
+
 class RuntimeProtocol
   constructor: (@transport) ->
+    @outputSockets = {} # graphName -> publicPort -> noflo.Socket
     @mainGraph = null
-    @outputSockets = {} # publicPort -> noflo.Socket
 
-    @transport.network.on 'addnetwork', (network) =>
+    @transport.network.on 'addnetwork', (network, name) =>
+      @subscribeExportedPorts name, network.graph, true
+      @sendPorts name, network.graph
+
       network.on 'start', () =>
         # processes don't exist until started
-        network = @getMainNetwork()
-        @updateOutportSubscription network
+        @subscribeOutdata name, network, true
+
       network.on 'data', (event) =>
         # TODO: use this instead of manually subscribing to output ports
-    @transport.network.on 'removenetwork', () =>
-      network = @getMainNetwork()
-      @updateOutportSubscription network
+
+    @transport.network.on 'removenetwork', (network, name) =>
+      @subscribeOutdata name, network, false
+      @subscribeExportedPorts name, network.graph, false
+      @sendPorts name, null
 
   send: (topic, payload, context) ->
     @transport.send 'runtime', topic, payload, context
@@ -53,73 +93,41 @@ class RuntimeProtocol
     permittedCapabilities = capabilities.filter (capability) =>
       @transport.canDo capability, payload.secret
 
-    graph = undefined
-    for k, v of @transport.network.networks
-      graph = k
-      break
-    @send 'runtime',
+    payload =
       type: type
       version: @transport.version
       capabilities: permittedCapabilities
       allCapabilities: capabilities
-      graph: graph
-    , context
-    graphInstance = @transport.graph.graphs[graph]
-    @sendPorts graph, graphInstance, context
+      graph: @mainGraph
 
-  sendPorts: (name, graph, context) ->
-    inports = []
-    outports = []
-    if graph
-      for pub, internal of graph.inports
-        inports.push
-          id: pub
-          type: 'any' # TODO: lookup on internal
-          description: internal.metadata?.description
-          addressable: false
-          required: false
-      for pub, internal of graph.outports
-        outports.push
-          id: pub
-          type: 'any' # TODO: lookup on internal
-          description: internal.metadata?.description
-          addressable: false
-          required: false
+    @send 'runtime', payload, context
 
-    @sendAll 'ports',
-      graph: name
-      inPorts: inports
-      outPorts: outports
-    , context
+  sendPorts: (name, graph) ->
+    payload = portsPayload name, graph
+    @sendAll 'ports', payload
 
-  getMainNetwork: ->
-    return null if not @mainGraph
-    graphName = @mainGraph.name or @mainGraph.properties.id
-    network = @transport.network.networks[graphName]
-    return null if not network
-    network = network.network
-    return network
+  setMainGraph: (id) ->
+    @mainGraph = id
+    # XXX: should send updated runtime info?
 
-  setMainGraph: (id, graph, context) ->
-    checkExportedPorts = (name, process, port, metadata) =>
-      # don't care what changed, just resend all
-      @sendPorts id, graph, context
-      @updateOutportSubscription @getMainNetwork()
+  subscribeExportedPorts: (name, graph, add) ->
+    sendExportedPorts = () =>
+      @sendPorts name, graph
+
     dependencies = [
       'addInport'
       'addOutport'
       'removeInport'
       'removeOutport'
     ]
-    if @mainGraph
-      for d in dependencies
-        @mainGraph.removeListener d, checkExportedPorts
-    @mainGraph = graph
     for d in dependencies
-      @mainGraph.on d, checkExportedPorts
+      graph.removeListener d, sendExportedPorts
 
-  updateOutportSubscription: (network) ->
-    return if not network
+    if add
+      for d in dependencies
+        graph.on d, sendExportedPorts
+
+  subscribeOutdata: (graphName, network, add) ->
 
     events = [
       'data'
@@ -130,16 +138,18 @@ class RuntimeProtocol
     ]
 
     # Unsubscribe all
-    for pub, socket of @outputSockets
+    @outputSockets[graphName] = {} if not @outputSockets[graphName]
+    graphSockets = @outputSockets[graphName]
+    for pub, socket of graphSockets
       for event in events
         socket.removeAllListeners event
-    @outputSockets = {}
+    graphSockets[graphName] = {}
 
+    return if not add
     # Subscribe new
-    graphName = network.graph.name or network.graph.properties.id
     for pub, internal of network.graph.outports
       socket = noflo.internalSocket.createSocket()
-      @outputSockets[pub] = socket
+      graphSockets[pub] = socket
       component = network.processes[internal.process].component
       component.outPorts[internal.port].attach socket
       sendFunc = (event) =>
@@ -153,24 +163,14 @@ class RuntimeProtocol
         socket.on event, sendFunc event
 
   receivePacket: (payload, context) ->
-    return @send 'error', new Error('No main graph'), context if not @mainGraph
+    graph = @transport.graph.graphs[payload.graph]
+    network = @transport.network.networks[payload.graph]
+    return @send 'error', new Error("Cannot find network for graph #{payload.graph}") if not network
 
-    graphName = @mainGraph.name or @mainGraph.properties.id
+    internal = graph.inports[payload.port]
+    component = network.network.getNode(internal?.process)?.component
+    return @send 'error', new Error("Cannot find internal port for #{payload.port}") if not internal and component
 
-    network = @getMainNetwork()
-    return @send 'error', new Error('No main network'), context if not network
-    internal = @mainGraph.inports[payload.port]
-    component = network.processes[internal.process].component
-
-    socket = noflo.internalSocket.createSocket()
-    port = component.inPorts[internal.port]
-    port.attach socket
-    switch payload.event
-      when 'connect' then socket.connect()
-      when 'disconnect' then socket.disconnect()
-      when 'begingroup' then socket.beginGroup payload.payload
-      when 'endgroup' then socket.endGroup payload.payload
-      when 'data' then socket.send payload.payload
-    port.detach socket
+    sendToInport component, internal.port, payload.event, payload.payload
 
 module.exports = RuntimeProtocol
