@@ -144,7 +144,7 @@ class RuntimeProtocol
       component.outPorts[internal.port].attach socket
       sendFunc = (event) =>
         (payload) =>
-          @sendAll 'runtime', 'packet',
+          @sendAll 'packet',
             port: pub
             event: event
             graph: graphName
