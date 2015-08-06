@@ -128,7 +128,7 @@ class NetworkProtocol extends EventEmitter
       network = @networks[payload.graph].network
       network.stop()
       delete @networks[payload.graph]
-      @emit 'removenetwork', network, @networks
+      @emit 'removenetwork', network, payload.graph, @networks
 
     graph.componentLoader = @transport.component.getLoader graph.baseDir, @transport.options
     opts = JSON.parse JSON.stringify @transport.options
@@ -140,7 +140,7 @@ class NetworkProtocol extends EventEmitter
         @networks[payload.graph] =
           network: network
           filters: {}
-      @emit 'addnetwork', network, @networks
+      @emit 'addnetwork', network, payload.graph, @networks
       @subscribeNetwork network, payload, context
 
       # Run the network
