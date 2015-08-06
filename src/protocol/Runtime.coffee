@@ -143,7 +143,7 @@ class RuntimeProtocol
     for pub, socket of graphSockets
       for event in events
         socket.removeAllListeners event
-    graphSockets[graphName] = {}
+    graphSockets = {}
 
     return if not add
     # Subscribe new
