@@ -101,7 +101,7 @@ class RuntimeProtocol
       version: @transport.version
       capabilities: permittedCapabilities
       allCapabilities: capabilities
-      graph: @mainGraph
+    payload.graph = @mainGraph if @mainGraph
 
     @send 'runtime', payload, context
     # send port info about currently set up networks
