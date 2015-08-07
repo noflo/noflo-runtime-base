@@ -62,6 +62,9 @@ class RuntimeProtocol
   sendAll: (topic, payload) ->
     @transport.sendAll 'runtime', topic, payload
 
+  sendError: (message, context) ->
+    @send 'error', new Error(message), context
+
   receive: (topic, payload, context) ->
     if topic is 'packet' and not @transport.canDo 'protocol:runtime', payload.secret
       @send 'error', new Error("#{topic} not permitted"), context
@@ -165,11 +168,11 @@ class RuntimeProtocol
   receivePacket: (payload, context) ->
     graph = @transport.graph.graphs[payload.graph]
     network = @transport.network.networks[payload.graph]
-    return @send 'error', new Error("Cannot find network for graph #{payload.graph}") if not network
+    return @sendError "Cannot find network for graph #{payload.graph}", context if not network
 
     internal = graph.inports[payload.port]
     component = network.network.getNode(internal?.process)?.component
-    return @send 'error', new Error("Cannot find internal port for #{payload.port}") if not internal and component
+    return @sendError "Cannot find internal port for #{payload.port}", context if not (internal and component)
 
     sendToInport component, internal.port, payload.event, payload.payload
 
