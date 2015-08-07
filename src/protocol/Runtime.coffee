@@ -104,10 +104,16 @@ class RuntimeProtocol
       graph: @mainGraph
 
     @send 'runtime', payload, context
+    # send port info about currently set up networks
+    for name, network of @transport.network.networks
+      @sendPorts name, network.graph, context
 
-  sendPorts: (name, graph) ->
+  sendPorts: (name, graph, context) ->
     payload = portsPayload name, graph
-    @sendAll 'ports', payload
+    if not context
+      @sendAll 'ports', payload
+    else
+      @send 'ports', payload, context
 
   setMainGraph: (id) ->
     @mainGraph = id
