@@ -42,6 +42,7 @@ class RuntimeProtocol
 
     @transport.network.on 'addnetwork', (network, name) =>
       @subscribeExportedPorts name, network.graph, true
+      @subscribeOutPorts name, network
       @sendPorts name, network.graph
 
       network.on 'start', () =>
@@ -53,6 +54,7 @@ class RuntimeProtocol
 
     @transport.network.on 'removenetwork', (network, name) =>
       @subscribeOutdata name, network, false
+      @subscribeOutPorts name, network
       @subscribeExportedPorts name, network.graph, false
       @sendPorts name, null
 
@@ -135,6 +137,20 @@ class RuntimeProtocol
     if add
       for d in dependencies
         graph.on d, sendExportedPorts
+
+  subscribeOutPorts: (name, network, add) ->
+    portRemoved = () =>
+      @subscribeOutdata name, network, false
+    portAdded = () =>
+      @subscribeOutdata name, network, true
+
+    graph = network.graph
+    graph.removeListener 'addOutport', portAdded
+    graph.removeListener 'removeOutport', portRemoved
+
+    if add
+      graph.on 'addOutport', portAdded
+      graph.on 'removeOutport', portRemoved
 
   subscribeOutdata: (graphName, network, add) ->
 
