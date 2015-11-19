@@ -16,6 +16,7 @@
   "scripts": [
     "src/Base.coffee",
     "src/direct.coffee",
+    "src/trace.coffee",
     "src/protocol/Graph.coffee",
     "src/protocol/Network.coffee",
     "src/protocol/Component.coffee",

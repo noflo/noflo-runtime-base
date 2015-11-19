@@ -100,3 +100,4 @@ class BaseTransport
       when 'component' then @component.receive topic, payload, context
 
 module.exports = BaseTransport
+module.exports.trace = require './trace'
