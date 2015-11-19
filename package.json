@@ -33,6 +33,7 @@
   "main": "./Base.js",
   "dependencies": {
     "noflo": "0.5.14",
+    "temp": "^0.8.3",
     "underscore": "1.8.3"
   }
 }
