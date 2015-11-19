@@ -3,3 +3,11 @@ node_js:
 - '0.10'
 before_script:
 - npm install -g grunt-cli
+deploy:
+  provider: npm
+  email: jononor@gmail.com
+  api_key:
+    secure: iHQD5QHFqzXoFnhfWlAGWRgpaovucD/ceBms5f6VgYHLzi+GREVhjENyVfiEzStIN9+HDqxpuvCyffkqfF5DNTP/zZEUlQsAkGGV+tNo9fjuCneN2ve8z2Wb3PBnAe7EkHblEFVeF7Uy8MBmjyM2qgqbQD8A6JKM9vpRvS+Hjig=
+  on:
+    tags: true
+    repo: noflo/noflo-runtime-base
