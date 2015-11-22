@@ -1,11 +1,5 @@
 
-# TODO: move this file into NoFlo itself, so it can be reused in all runtimes
-
-if process?.env.DEBUG
-  debug = console.log
-else
-  debug = () ->
-    # ignore
+debug = require('debug')('noflo-runtime-base:trace')
 
 class TraceBuffer
   constructor: () ->
@@ -23,7 +17,7 @@ class TraceBuffer
 # Convert to flowtrace/FBP-protocol format http://noflojs.org/documentation/protocol/
 networkToTraceEvent = (networkId, type, data) ->
 
-  debug 'event', networkId, type, data.id
+  debug 'event', networkId, type, "'#{data.id}'"
   socket = data.socket
 
   # XXX: wasteful to have the network thing in each event?
