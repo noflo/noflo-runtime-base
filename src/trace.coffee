@@ -91,7 +91,7 @@ class Tracer
       trace =
         header: @header
         events: events
-      return callback err, JSON.stringify trace, null, 2
+      return callback err, jsonStringify trace, null, 2
 
   # node.js only
   dumpFile: (filepath, callback) ->
