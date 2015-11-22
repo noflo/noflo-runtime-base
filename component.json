@@ -8,6 +8,7 @@
   "dependencies": {
     "noflo/noflo": "*",
     "bergie/emitter": "*",
+    "visionmedia/debug": "*",
     "jashkenas/underscore": "*"
   },
   "remotes": [
