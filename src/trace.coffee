@@ -1,5 +1,10 @@
 
 debug = require('debug')('noflo-runtime-base:trace')
+jsonStringify = JSON.stringify
+try
+  jsonStringify = require 'json-stringify-safe'
+catch e
+  console.log "WARN: failed to load json-stringify-safe, circular objects may cause fail.\n#{e.message}"
 
 class TraceBuffer
   constructor: () ->
