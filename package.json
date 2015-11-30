@@ -35,7 +35,7 @@
   "dependencies": {
     "debug": "^2.2.0",
     "json-stringify-safe": "^5.0.1",
-    "noflo": "0.5.14",
+    "noflo": "0.5.19",
     "temp": "^0.8.3",
     "underscore": "1.8.3"
   }
