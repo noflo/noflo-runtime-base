@@ -6,12 +6,16 @@ try
 catch e
   console.log "WARN: failed to load json-stringify-safe, circular objects may cause fail.\n#{e.message}"
 
+clone = (obj) ->
+  s = jsonStringify obj
+  return JSON.parse s
+
 class TraceBuffer
   constructor: () ->
     @events = [] # PERF: use a linked-list variety instead
 
   add: (event) ->
-    # FIXME: respect a (configurable) limit on size. Time/ramusage est
+    # FIXME: respect a (configurable) limit on size https://github.com/noflo/noflo-runtime-base/issues/34
     @events.push event
 
   getAll: (consumeFunc, doneFunc) ->
@@ -32,6 +36,7 @@ networkToTraceEvent = (networkId, type, data) ->
     payload:
       time: new Date().toISOString()
       graph: networkId
+      error: null # used to indicate tracing errors
       src:
         node: socket.from?.process.id
         port: socket.from?.port
@@ -41,16 +46,29 @@ networkToTraceEvent = (networkId, type, data) ->
       id: undefined # deprecated
       subgraph: undefined # TODO: implement
 
+  serializeGroup = (p) ->
+    try
+      p.group = data.group.toString()
+    catch e
+      debug 'group serialization error', e
+      p.error = e.message
+
   p = event.payload
   switch type
     when 'connect' then null
     when 'disconnect' then null
-    when 'begingroup' then p.group = data.group
-    when 'endgroup' then p.group = data.group
-    when 'data' then p.data = data.data
+    when 'begingroup' then serializeGroup event.payload
+    when 'endgroup' then serializeGroup event.payload
+    when 'data'
+      try
+        p.data = clone data.data
+      catch e
+        debug 'data serialization error', e
+        p.error = e.message
     else
       throw new Error "trace: Unknown event type #{type}"
 
+  debug 'event done', networkId, type, "'#{data.id}'"
   return event
 
 # Can be attached() to a NoFlo network, and keeps a circular buffer of events
@@ -91,7 +109,7 @@ class Tracer
       trace =
         header: @header
         events: events
-      return callback err, jsonStringify trace, null, 2
+      return callback err, JSON.stringify trace, null, 2
 
   # node.js only
   dumpFile: (filepath, callback) ->
@@ -107,9 +125,27 @@ class Tracer
 
     openFile (err, info) =>
       return callback err if err
-      @dumpString (err, data) ->
-        fs.write info.fd, data, { encoding: 'utf-8' }, (err) ->
-          return callback err, info.path
+
+      # HACKY json streaming serialization
+      events = 0
+      write = (data, cb) ->
+        fs.write info.fd, data, { encoding: 'utf-8' }, cb
+      writeEvent = (e) ->
+        s = if events then ',' else ''
+        events += 1
+        s += JSON.stringify e, null, 2
+        write s, (err) ->
+          # FIXME: handle, wait
+
+      debug 'streaming to file', info.path
+      header = JSON.stringify @header, null, 2
+      write "{\n \"header\": #{header}\n, \"events\":\n[", (err) =>
+        @buffer.getAll writeEvent, (err) ->
+          return callback err if err
+          debug "streamed #{events} events"
+          write ']\n }', (err) ->
+            debug "completed stream", info.path
+            return callback err, info.path
 
 
 module.exports.Tracer = Tracer
