@@ -1,4 +1,5 @@
 
+noflo = require 'noflo'
 debug = require('debug')('noflo-runtime-base:trace')
 jsonStringify = JSON.stringify
 try
@@ -9,6 +10,7 @@ catch e
 clone = (obj) ->
   s = jsonStringify obj
   return JSON.parse s
+
 
 class TraceBuffer
   constructor: () ->
@@ -22,6 +24,30 @@ class TraceBuffer
     for e in @events
       consumeFunc e
     return doneFunc null
+
+subscribeExportedOutports = (network, networkId, eventNames, subscribeFunc) ->
+  graphSockets = {}
+
+  # Basically same as code in runtime:data protocol handling
+  for pub, internal of network.graph.outports
+    socket = noflo.internalSocket.createSocket()
+    graphSockets[pub] = socket
+    component = network.processes[internal.process].component
+    component.outPorts[internal.port].attach socket
+    sendFunc = (event) ->
+      return (payload) ->
+        data =
+          id: "EXPORT: #{networkId} #{pub.toUpperCase()} ->" # just for debugging
+          payload: payload
+          socket:
+            to:
+              process: { id: networkId }
+              port: pub
+        subscribeFunc event, data
+
+    for event in eventNames
+      socket.on event, sendFunc(event)
+  return graphSockets
 
 # Convert to flowtrace/FBP-protocol format http://noflojs.org/documentation/protocol/
 networkToTraceEvent = (networkId, type, data) ->
@@ -90,10 +116,16 @@ class Tracer
       'endgroup'
       'disconnect'
     ]
+    # internal network events
     eventNames.forEach (event) =>
       network.on event, (data) =>
         payload = networkToTraceEvent netId, event, data
         @buffer.add payload
+    # exported outport
+    sockets = subscribeExportedOutports network, netId, eventNames, (event, data) =>
+      payload = networkToTraceEvent netId, event, data
+      @buffer.add payload
+
     @header.graphs[netId] = network.graph.toJSON()
 
   detach: (network) ->
