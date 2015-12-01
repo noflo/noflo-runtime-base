@@ -67,9 +67,9 @@ class Tracer
     debug 'attach', netId
     eventNames = [
       'connect'
-      'beginGroup'
+      'begingroup'
       'data'
-      'endGroup'
+      'endgroup'
       'disconnect'
     ]
     eventNames.forEach (event) =>
