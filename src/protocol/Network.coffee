@@ -133,7 +133,8 @@ class NetworkProtocol extends EventEmitter
     graph.componentLoader = @transport.component.getLoader graph.baseDir, @transport.options
     opts = JSON.parse JSON.stringify @transport.options
     opts.delay = true
-    noflo.createNetwork graph, (network) =>
+    noflo.createNetwork graph, (err, network) =>
+      return @send 'error', err, context if err
       if @networks[payload.graph] and @networks[payload.graph].network
         @networks[payload.graph].network = network
       else
