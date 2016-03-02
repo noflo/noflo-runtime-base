@@ -172,7 +172,8 @@ class RuntimeProtocol
 
     return if not add
     # Subscribe new
-    for pub, internal of network.graph.outports
+    Object.keys(network.graph.outports).forEach (pub) =>
+      internal = network.graph.outports[pub]
       socket = noflo.internalSocket.createSocket()
       graphSockets[pub] = socket
       component = network.processes[internal.process].component
