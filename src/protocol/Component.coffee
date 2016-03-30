@@ -49,7 +49,7 @@ class ComponentProtocol
     loader = @getLoader baseDir, @transport.options
     loader.getSource payload.name, (err, component) =>
       if err
-        # Try one of the registered graph
+        # Try one of the registered graphs
         graph = @transport.graph.graphs[payload.name]
         unless graph?
           @send 'error', err, context
