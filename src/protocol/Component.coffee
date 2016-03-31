@@ -35,7 +35,10 @@ class ComponentProtocol
   listComponents: (payload, context) ->
     baseDir = @transport.options.baseDir
     loader = @getLoader baseDir, @transport.options
-    loader.listComponents (components) =>
+    loader.listComponents (err, components) =>
+      if err
+        @send 'error', err, context
+        return
       componentNames = Object.keys components
       processed = 0
       componentNames.forEach (component) =>
@@ -132,7 +135,10 @@ class ComponentProtocol
     sender = => @processComponent loader, id, context
     send = _.debounce sender, 10
     loader = @getLoader graph.baseDir, @transport.options
-    loader.listComponents (components) =>
+    loader.listComponents (err, components) =>
+      if err
+        @send 'error', err, context
+        return
       loader.registerComponent '', id, graph
       # Send initial graph info back to client
       do send
