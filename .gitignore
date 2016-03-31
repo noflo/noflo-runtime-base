@@ -5,6 +5,7 @@
 Base.js
 direct.js
 protocol/*.js
+trace.js
 *~
 spec/result.xml
 spec/*.js
