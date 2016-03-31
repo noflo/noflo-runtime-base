@@ -8,6 +8,7 @@ deploy:
   email: henri.bergius@iki.fi
   api_key:
     secure: YwFAskC/71SlL3tl7VlwDw7IrN+oO0zzR5C9ZN9o2LCAsOXz1OvsjMQL1YkxkVZZaRP9B/yUKMMzsqVwiFg8ME/gPUgaqbXDG/vXC551tCTXErI5XgQzGV18UZqhE2eUvvG6nPIHT9X99H/TsyH17pPoEZKnMHZkYSqxkpm/05U=
+  skip_cleanup: true
   on:
     tags: true
     repo: noflo/noflo-runtime-base
