@@ -134,7 +134,7 @@ class NetworkProtocol extends EventEmitter
     opts = JSON.parse JSON.stringify @transport.options
     opts.delay = true
     noflo.createNetwork graph, (err, network) =>
-      return @send 'error', err, context if err
+      return callback err if err
       if @networks[payload.graph] and @networks[payload.graph].network
         @networks[payload.graph].network = network
       else
@@ -145,8 +145,7 @@ class NetworkProtocol extends EventEmitter
       @subscribeNetwork network, payload, context
 
       # Run the network
-      network.connect ->
-        return callback null
+      network.connect callback
     , opts
 
   subscribeNetwork: (network, payload, context) ->
@@ -216,7 +215,8 @@ class NetworkProtocol extends EventEmitter
       # already initialized
       doStart network.network
     else
-      @initNetwork graph, payload, context, () =>
+      @initNetwork graph, payload, context, (err) =>
+        return @send 'error', err, context if err
         network = @networks[payload.graph]
         doStart network.network
 
