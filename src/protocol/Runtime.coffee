@@ -45,12 +45,12 @@ class RuntimeProtocol
       @subscribeOutPorts name, network
       @sendPorts name, network.graph
 
+      if network.isStarted()
+        # processes don't exist until started
+        @subscribeOutdata name, network, true
       network.on 'start', () =>
         # processes don't exist until started
         @subscribeOutdata name, network, true
-
-      network.on 'data', (event) =>
-        # TODO: use this instead of manually subscribing to output ports
 
     @transport.network.on 'removenetwork', (network, name) =>
       @subscribeOutdata name, network, false
