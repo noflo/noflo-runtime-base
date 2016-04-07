@@ -122,7 +122,6 @@ class NetworkProtocol extends EventEmitter
     return @networks[graph].filters[sign]
 
   initNetwork: (graph, payload, context, callback) ->
-
     # Ensure we stop previous network
     if @networks[payload.graph] and @networks[payload.graph].network
       network = @networks[payload.graph].network
@@ -194,35 +193,47 @@ class NetworkProtocol extends EventEmitter
 
   startNetwork: (graph, payload, context) ->
     doStart = (net) =>
-      net.start()
-      if net.isStarted()
-        @sendAll 'started',
-          time: new Date
-          graph: payload.graph
-          running: networkIsRunning net
-          started: true
-        , context
-      else
-        @sendAll 'stopped',
-          time: new Date
-          graph: payload.graph
-          running: networkIsRunning net
-          started: false
-        , context
+      net.start (err) =>
+        return @send 'error', err, content if err
+        if net.isStarted()
+          @sendAll 'started',
+            time: new Date
+            graph: payload.graph
+            running: networkIsRunning net
+            started: true
+          , context
+        else
+          @sendAll 'stopped',
+            time: new Date
+            graph: payload.graph
+            running: networkIsRunning net
+            started: false
+          , context
 
     network = @networks[payload.graph]
     if network and network.network
       # already initialized
       doStart network.network
-    else
-      @initNetwork graph, payload, context, (err) =>
-        return @send 'error', err, context if err
-        network = @networks[payload.graph]
-        doStart network.network
+      return
+
+    @initNetwork graph, payload, context, (err) =>
+      return @send 'error', err, context if err
+      network = @networks[payload.graph]
+      doStart network.network
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
-    @networks[payload.graph].network.stop()
+    net = @networks[payload.graph]
+    if net.isStarted()
+      @networks[payload.graph].network.stop()
+      return
+    # Was already stopped, just send the confirmation
+    @send 'stopped',
+      time: new Date
+      graph: payload.graph
+      running: networkIsRunning net
+      started: false
+    , context
 
   debugNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
