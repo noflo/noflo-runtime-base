@@ -223,7 +223,8 @@ class NetworkProtocol extends EventEmitter
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
-    net = @networks[payload.graph]
+    net = @networks[payload.graph].network
+    return unless net
     if net.isStarted()
       @networks[payload.graph].network.stop()
       return
@@ -238,18 +239,20 @@ class NetworkProtocol extends EventEmitter
   debugNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
     net = @networks[payload.graph].network
+    return unless net
     if net.setDebug?
       net.setDebug payload.enable
     else
       console.log 'Warning: Network.setDebug not supported. Update to newer NoFlo'
 
   getStatus: (graph, payload, context) ->
-    network = @networks[payload.graph]
-    return unless network
+    return unless @networks[payload.graph]
+    net = @networks[payload.graph].network
+    return unless net
     @send 'status',
         graph: payload.graph
-        running: networkIsRunning network.network
-        started: network.network.isStarted()
+        running: networkIsRunning net
+        started: net.isStarted()
     , context
 
 module.exports = NetworkProtocol
