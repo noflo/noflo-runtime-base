@@ -9,7 +9,7 @@ sendToInport = (component, portName, event, payload) ->
     when 'disconnect' then socket.disconnect()
     when 'begingroup' then socket.beginGroup payload
     when 'endgroup' then socket.endGroup payload
-    when 'data' then socket.send payload
+    when 'data' then socket.post payload
   port.detach socket
 
 portsPayload = (name, graph) ->
