@@ -3,6 +3,7 @@ protocols =
   Graph: require './protocol/Graph'
   Network: require './protocol/Network'
   Component: require './protocol/Component'
+  Trace: require './protocol/Trace'
 
 # This is the class all NoFlo runtime implementations can extend to easily wrap
 # into any transport protocol.
@@ -14,6 +15,7 @@ class BaseTransport
     @graph = new protocols.Graph @
     @network = new protocols.Network @
     @runtime = new protocols.Runtime @
+    @trace = new protocols.Trace @
     @context = null
 
     if @options.defaultGraph?
@@ -98,6 +100,7 @@ class BaseTransport
       when 'graph' then @graph.receive topic, payload, context
       when 'network' then @network.receive topic, payload, context
       when 'component' then @component.receive topic, payload, context
+      when 'trace' then @trace.receive topic, payload, context
 
 module.exports = BaseTransport
 module.exports.trace = require './trace'

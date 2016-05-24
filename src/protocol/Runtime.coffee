@@ -91,6 +91,7 @@ class RuntimeProtocol
         'protocol:component'
         'protocol:network'
         'protocol:runtime'
+        'protocol:trace'
         'component:setsource'
         'component:getsource'
       ]
