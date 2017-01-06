@@ -1,7 +1,7 @@
 noflo = require 'noflo'
 
 if noflo.isBrowser()
-  direct = require 'noflo-runtime-base/src/direct'
+  direct = require('noflo-runtime-base').direct
 else
   chai = require 'chai' unless chai
   direct = require '../src/direct'

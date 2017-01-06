@@ -29,6 +29,10 @@ module.exports = ->
     # Browser version building
     noflo_browser:
       build:
+        options:
+          exposed_modules:
+            noflo: 'noflo'
+            'noflo-runtime-base': './Base.js'
         files:
           'browser/noflo-runtime-base.js': ['component.json']
 

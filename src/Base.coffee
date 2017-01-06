@@ -101,3 +101,4 @@ class BaseTransport
 
 module.exports = BaseTransport
 module.exports.trace = require './trace'
+module.exports.direct = require './direct'
