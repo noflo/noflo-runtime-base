@@ -1,12 +1,13 @@
 noflo = require 'noflo'
-{ Tracer } = require '../src/trace'
 
 if noflo.isBrowser()
-  direct = require 'noflo-runtime-base/src/direct'
+  direct = require('noflo-runtime-base').direct
+  { Tracer } = require('noflo-runtime-base').trace
   baseDir = '/noflo-runtime-base'
 else
   chai = require 'chai' unless chai
   direct = require '../src/direct'
+  { Tracer } = require '../src/trace'
   path = require 'path'
   baseDir = path.resolve __dirname, '../'
 
