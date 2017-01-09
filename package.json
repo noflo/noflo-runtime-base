@@ -34,10 +34,10 @@
   },
   "main": "./Base.js",
   "dependencies": {
-    "debug": "^2.2.0",
+    "debug": "^2.4.0",
     "json-stringify-safe": "^5.0.1",
     "noflo": "~0.7.5",
     "temp": "^0.8.3",
-    "underscore": "1.8.3"
+    "underscore": "^1.8.3"
   }
 }
