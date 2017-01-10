@@ -93,6 +93,8 @@ class GraphProtocol
 
     @graphs[payload.id] = graph
 
+    @sendAll 'clear', payload, context
+
   registerGraph: (id, graph) ->
     @transport.runtime.setMainGraph id, graph if id == 'default/main'
     @subscribeGraph id, graph, ''
