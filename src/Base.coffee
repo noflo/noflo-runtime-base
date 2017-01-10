@@ -4,6 +4,11 @@ protocols =
   Network: require './protocol/Network'
   Component: require './protocol/Component'
 
+debugMessagingReceive = require('debug') 'noflo-runtime-base:messaging:receive'
+debugMessagingReceivePayload = require('debug') 'noflo-runtime-base:messaging:receive:payload'
+debugMessagingSend = require('debug') 'noflo-runtime-base:messaging:send'
+debugMessagingSendPayload = require('debug') 'noflo-runtime-base:messaging:send:payload'
+
 # This is the class all NoFlo runtime implementations can extend to easily wrap
 # into any transport protocol.
 class BaseTransport
@@ -68,6 +73,8 @@ class BaseTransport
   # @param [Object] Message payload
   # @param [Object] Message context, dependent on the transport
   send: (protocol, topic, payload, context) ->
+    debugMessagingSend "#{protocol} #{topic}"
+    debugMessagingSendPayload payload
    
   # Send a message to *all users*  via the transport protocol
   #
@@ -92,6 +99,8 @@ class BaseTransport
   # @param [Object] Message context, dependent on the transport
   receive: (protocol, topic, payload, context) ->
     payload = {} unless payload
+    debugMessagingReceive "#{protocol} #{topic}"
+    debugMessagingReceivePayload payload
     @context = context
     switch protocol
       when 'runtime' then @runtime.receive topic, payload, context
