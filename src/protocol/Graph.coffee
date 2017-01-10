@@ -93,32 +93,43 @@ class GraphProtocol
 
     @graphs[payload.id] = graph
 
-    @sendAll 'clear', payload, context
-
   registerGraph: (id, graph) ->
     @transport.runtime.setMainGraph id, graph if id == 'default/main'
     @subscribeGraph id, graph, ''
     @graphs[id] = graph
 
   subscribeGraph: (id, graph, context) ->
+    buffered = []
+    graph.on 'startTransaction', ->
+      buffered = []
+    graph.on 'endTransaction', =>
+      for event in buffered
+        @sendAll event.type, event.payload, context
+      buffered = []
     graph.on 'addNode', (node) =>
       node.graph = id
-      @sendAll 'addnode', node, context
+      buffered.push
+        type: 'addnode'
+        payload: node
     graph.on 'removeNode', (node) =>
       node.graph = id
-      @sendAll 'removenode', node, context
+      buffered.push
+        type: 'removenode'
+        payload: node
     graph.on 'renameNode', (oldId, newId) =>
-      @sendAll 'renamenode',
-        from: oldId
-        to: newId
-        graph: id
-      , context
+      buffered.push
+        type: 'renamenode'
+        payload:
+          from: oldId
+          to: newId
+          graph: id
     graph.on 'changeNode', (node, before) =>
-      @sendAll 'changenode',
-        id: node.id
-        metadata: node.metadata
-        graph: id
-      , context
+      buffered.push
+        type: 'changenode'
+        payload:
+          id: node.id
+          metadata: node.metadata
+          graph: id
     graph.on 'addEdge', (edge) =>
       delete edge.from.index unless typeof edge.from.index is 'number'
       delete edge.to.index unless typeof edge.to.index is 'number'
@@ -127,59 +138,77 @@ class GraphProtocol
         tgt: edge.to
         metadata: edge.metadata
         graph: id
-      @sendAll 'addedge', edgeData, context
+      buffered.push
+        type: 'addedge'
+        payload: edgeData
     graph.on 'removeEdge', (edge) =>
       edgeData =
         src: edge.from
         tgt: edge.to
         metadata: edge.metadata
         graph: id
-      @sendAll 'removeedge', edgeData, context
+      buffered.push
+        type: 'removeedge'
+        payload: edgeData
     graph.on 'changeEdge', (edge) =>
       edgeData =
         src: edge.from
         tgt: edge.to
         metadata: edge.metadata
         graph: id
-      @sendAll 'changeedge', edgeData, context
+      buffered.push
+        type: 'changeedge'
+        payload: edgeData
     graph.on 'addInitial', (iip) =>
       iipData =
         src: iip.from
         tgt: iip.to
         metadata: iip.metadata
         graph: id
-      @sendAll 'addinitial', iipData, context
+      buffered.push
+        type: 'addinitial'
+        payload: iipData
     graph.on 'removeInitial', (iip) =>
       iipData =
         src: iip.from
         tgt: iip.to
         metadata: iip.metadata
         graph: id
-      @sendAll 'removeinitial', iipData, context
+      buffered.push
+        type: 'removeinitial'
+        payload: iipData
     graph.on 'addGroup', (group) =>
       groupData =
         name: group.name
         nodes: group.nodes
         metadata: group.metadata
         graph: id
-      @sendAll 'addgroup', groupData, context
+      buffered.push
+        type: 'addgroup'
+        payload: groupData
     graph.on 'removeGroup', (group) =>
       groupData =
         name: group.name
         graph: id
-      @sendAll 'removegroup', groupData, context
+      buffered.push
+        type: 'removegroup'
+        payload: groupData
     graph.on 'renameGroup', (oldName, newName) =>
       groupData =
         from: oldName
         to: newName
         graph: id
-      @sendAll 'renamegroup', groupData, context
+      buffered.push
+        type: 'renamegroup'
+        payload: groupData
     graph.on 'changeGroup', (group) =>
       groupData =
         name: group.name
         metadata: group.metadata
         graph: id
-      @sendAll 'changegroup', groupData, context
+      buffered.push
+        type: 'changeegroup'
+        payload: groupData
     graph.on 'addInport', (publicName, port) =>
       data =
         public: publicName
@@ -187,7 +216,9 @@ class GraphProtocol
         port: port.port
         metadata: port.metadata
         graph: id
-      @sendAll 'addinport', data, context
+      buffered.push
+        type: 'addinport'
+        payload: data
     graph.on 'addOutport', (publicName, port) =>
       data =
         public: publicName
@@ -195,7 +226,9 @@ class GraphProtocol
         port: port.port
         metadata: port.metadata
         graph: id
-      @sendAll 'addoutport', data, context
+      buffered.push
+        type: 'addoutport'
+        payload: data
     graph.on 'removeInport', (publicName, port) =>
       data =
         public: publicName
@@ -203,7 +236,9 @@ class GraphProtocol
         #node: port.process
         #port: port.port
         #metadata: port.metadata
-      @sendAll 'removeinport', data, context
+      buffered.push
+        type: 'removeinport'
+        payload: data
     graph.on 'removeOutport', (publicName, port) =>
       data =
         public: publicName
@@ -211,7 +246,9 @@ class GraphProtocol
         #node: port.process
         #port: port.port
         #metadata: port.metadata
-      @sendAll 'removeoutport', data, context
+      buffered.push
+        type: 'removeoutport'
+        payload: data
 
   addNode: (graph, node, context) ->
     unless node.id or node.component
