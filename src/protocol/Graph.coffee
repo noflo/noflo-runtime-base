@@ -100,13 +100,26 @@ class GraphProtocol
     @subscribeGraph id, graph, ''
     @graphs[id] = graph
 
+  sendGraphBuffer: (buffer, context) ->
+    eventsToSend = buffer.filter (event, idx) ->
+      if event.type is 'changenode'
+        nextEvent = buffer[idx + 1]
+        return true unless nextEvent
+        return false if nextEvent.type is 'removenode' and nextEvent.id is event.id
+      if event.type is 'changeedge'
+        nextEvent = buffer[idx + 1]
+        return true unless nextEvent
+        return false if nextEvent.type is 'removeedge' and nextEvent.id is event.id
+      return true
+    for event in eventsToSend
+      @sendAll event.type, event.payload, context
+
   subscribeGraph: (id, graph, context) ->
     buffered = []
     graph.on 'startTransaction', ->
       buffered = []
     graph.on 'endTransaction', =>
-      for event in buffered
-        @sendAll event.type, event.payload, context
+      @sendGraphBuffer buffered, context
       buffered = []
     graph.on 'addNode', (node) =>
       node.graph = id

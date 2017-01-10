@@ -84,3 +84,22 @@ describe 'Graph protocol', ->
       client2.on 'message', (msg) -> checkAddNode msg, done
       client.send 'graph', 'clear', { id: graph, main: true, secret: 'foo' }
       client.send 'graph', 'addnode', authenticatedPayload
+  describe 'sending graph:removenode', ->
+    graph = 'graphwithnodes'
+    payload =
+      id: 'node1'
+      component: 'Component1'
+      graph: graph
+      metadata: {}
+    authenticatedPayload = JSON.parse JSON.stringify payload
+    authenticatedPayload.secret = 'foo'
+    checkRemoveNode = (msg, done) ->
+      chai.expect(msg.protocol).to.equal 'graph'
+      chai.expect(msg.command).to.equal 'removenode'
+      chai.expect(msg.payload).to.deep.equal payload
+      done()
+    it 'should respond with graph:removenode', (done) ->
+      client.send 'graph', 'clear', { id: graph, main: true, secret: 'foo'}
+      client.send 'graph', 'addnode', authenticatedPayload
+      client.on 'message', (msg) -> checkRemoveNode msg, done
+      client.send 'graph', 'removenode', authenticatedPayload
