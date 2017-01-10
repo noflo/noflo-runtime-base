@@ -105,8 +105,10 @@ class GraphProtocol
       node.graph = id
       @sendAll 'addnode', node, context
     graph.on 'removeNode', (node) =>
-      node.graph = id
-      @sendAll 'removenode', node, context
+      nodeData =
+        id: node.id
+        graph: id
+      @sendAll 'removenode', nodeData, context
     graph.on 'renameNode', (oldId, newId) =>
       @sendAll 'renamenode',
         from: oldId
@@ -132,7 +134,6 @@ class GraphProtocol
       edgeData =
         src: edge.from
         tgt: edge.to
-        metadata: edge.metadata
         graph: id
       @sendAll 'removeedge', edgeData, context
     graph.on 'changeEdge', (edge) =>
@@ -153,7 +154,6 @@ class GraphProtocol
       iipData =
         src: iip.from
         tgt: iip.to
-        metadata: iip.metadata
         graph: id
       @sendAll 'removeinitial', iipData, context
     graph.on 'addGroup', (group) =>
