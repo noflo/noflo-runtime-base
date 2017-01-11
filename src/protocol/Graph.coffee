@@ -92,8 +92,14 @@ class GraphProtocol
       @transport.component.registerGraph fullName, graph, context
 
     @graphs[payload.id] = graph
-
-    @sendAll 'clear', payload, context
+    @sendAll 'clear',
+      id: payload.id
+      name: payload.name
+      library: payload.library
+      main: payload.main
+      icon: payload.icon
+      description: payload.description
+    , context
 
   registerGraph: (id, graph) ->
     @transport.runtime.setMainGraph id, graph if id == 'default/main'
