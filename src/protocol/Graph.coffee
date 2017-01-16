@@ -18,7 +18,9 @@ class GraphProtocol
     # Find locally stored graph by ID
     if topic isnt 'clear'
       graph = @resolveGraph payload, context
-      return unless graph
+      unless graph
+        @send 'error', new Error("Graph '#{payload.graph}' not found"), context
+        return
 
     switch topic
       when 'clear' then @initGraph payload, context
