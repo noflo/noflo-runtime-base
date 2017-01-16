@@ -61,7 +61,9 @@ class DirectClient extends EventEmitter
     @emit 'send', m
 
   _receive: (message) ->
-    @emit 'message', message
+    setTimeout =>
+      @emit 'message', message
+    , 1
 
 exports.Client = DirectClient
 exports.Runtime = DirectRuntime
