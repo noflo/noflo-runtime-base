@@ -48,6 +48,13 @@ module.exports = ->
         options:
           reporter: 'spec'
 
+    # Generate runner.html
+    noflo_browser_mocha:
+      all:
+        options:
+          scripts: ["../browser/<%=pkg.name%>.js"]
+        files:
+          'spec/runner.html': ['spec/*.js']
     # BDD tests on browser
     mocha_phantomjs:
       options:
@@ -91,6 +98,7 @@ module.exports = ->
       @task.run 'mochaTest'
     if target is 'all' or target is 'browser'
       @task.run 'coffee:spec'
+      @task.run 'noflo_browser_mocha'
       @task.run 'mocha_phantomjs'
 
   @registerTask 'default', ['test']

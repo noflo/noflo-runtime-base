@@ -9,3 +9,4 @@ trace.js
 *~
 spec/result.xml
 spec/*.js
+spec/runner.html
