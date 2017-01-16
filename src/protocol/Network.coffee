@@ -54,14 +54,6 @@ getConnectionSignature = (connection) ->
 getSocketSignature = (socket) ->
   return getConnectionSignature(socket.from) +  ' -> ' + getConnectionSignature(socket.to)
 
-networkIsRunning = (net) ->
-  # compat with old NoFlo
-  if net.isRunning
-    isRunning = net.isRunning()
-  else
-    isRunning = net.isStarted() and net.connectionCount > 0
-  return isRunning
-
 class NetworkProtocol extends EventEmitter
   constructor: (@transport) ->
     @networks = {}
@@ -155,7 +147,7 @@ class NetworkProtocol extends EventEmitter
       @sendAll 'started',
         time: event.start
         graph: payload.graph
-        running: true
+        running: network.isRunning()
         started: network.isStarted()
       , context
     network.on 'end', (event) =>
@@ -163,7 +155,7 @@ class NetworkProtocol extends EventEmitter
         time: new Date
         uptime: event.uptime
         graph: payload.graph
-        running: false
+        running: network.isRunning()
         started: network.isStarted()
       , context
     network.on 'icon', (event) =>
@@ -221,8 +213,8 @@ class NetworkProtocol extends EventEmitter
     @send 'stopped',
       time: new Date
       graph: payload.graph
-      running: networkIsRunning net
-      started: false
+      running: net.isRunning()
+      started: net.isStarted()
     , context
 
   debugNetwork: (graph, payload, context) ->
@@ -240,7 +232,7 @@ class NetworkProtocol extends EventEmitter
     return unless net
     @send 'status',
         graph: payload.graph
-        running: networkIsRunning net
+        running: net.isRunning()
         started: net.isStarted()
     , context
 
