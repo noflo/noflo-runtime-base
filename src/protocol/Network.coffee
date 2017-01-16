@@ -198,21 +198,6 @@ class NetworkProtocol extends EventEmitter
     doStart = (net) =>
       net.start (err) =>
         return @send 'error', err, content if err
-        if net.isStarted()
-          @sendAll 'started',
-            time: new Date
-            graph: payload.graph
-            running: networkIsRunning net
-            started: true
-          , context
-        else
-          @sendAll 'stopped',
-            time: new Date
-            graph: payload.graph
-            running: networkIsRunning net
-            started: false
-          , context
-
     network = @networks[payload.graph]
     if network and network.network
       # already initialized
