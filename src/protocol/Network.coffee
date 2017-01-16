@@ -125,9 +125,12 @@ class NetworkProtocol extends EventEmitter
     # Ensure we stop previous network
     if @networks[payload.graph] and @networks[payload.graph].network
       network = @networks[payload.graph].network
-      network.stop()
-      delete @networks[payload.graph]
-      @emit 'removenetwork', network, payload.graph, @networks
+      network.stop (err) =>
+        return callback err if err
+        delete @networks[payload.graph]
+        @emit 'removenetwork', network, payload.graph, @networks
+        @initNetwork graph, payload, context, callback
+      return
 
     graph.componentLoader = @transport.component.getLoader graph.baseDir, @transport.options
     opts = JSON.parse JSON.stringify @transport.options
@@ -226,7 +229,8 @@ class NetworkProtocol extends EventEmitter
     net = @networks[payload.graph].network
     return unless net
     if net.isStarted()
-      @networks[payload.graph].network.stop()
+      @networks[payload.graph].network.stop (err) =>
+        return @send 'error', err, context if err
       return
     # Was already stopped, just send the confirmation
     @send 'stopped',
