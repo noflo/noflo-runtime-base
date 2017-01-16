@@ -70,7 +70,7 @@ module.exports = ->
           src: ['src/*.coffee', 'src/**/*.coffee']
         options:
           max_line_length:
-            value: 80
+            value: 120
             level: 'warn'
 
   # Grunt plugins used for building
