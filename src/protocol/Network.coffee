@@ -107,6 +107,10 @@ class NetworkProtocol extends EventEmitter
     for edge in payload.edges
       signature = getEdgeSignature(edge)
       network.filters[signature] = true
+    @send 'edges',
+      graph: payload.graph
+      edges: payload.edges
+    , context
 
   eventFiltered: (graph, event) ->
     return true unless @transport.options.filterData
