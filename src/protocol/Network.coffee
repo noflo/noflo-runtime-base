@@ -162,15 +162,19 @@ class NetworkProtocol extends EventEmitter
       event.graph = payload.graph
       @sendAll 'icon', event, context
     network.on 'connect', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @sendAll 'connect', prepareSocketEvent(event, payload), context
     network.on 'begingroup', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @sendAll 'begingroup', prepareSocketEvent(event, payload), context
     network.on 'data', (event) =>
       return unless @eventFiltered(payload.graph, event)
       @sendAll 'data', prepareSocketEvent(event, payload), context
     network.on 'endgroup', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @sendAll 'endgroup', prepareSocketEvent(event, payload), context
     network.on 'disconnect', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @sendAll 'disconnect', prepareSocketEvent(event, payload), context
 
     network.on 'process-error', (event) =>
