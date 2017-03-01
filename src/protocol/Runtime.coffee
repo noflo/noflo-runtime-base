@@ -9,7 +9,7 @@ sendToInport = (component, portName, event, payload) ->
     when 'disconnect' then socket.disconnect()
     when 'begingroup' then socket.beginGroup payload
     when 'endgroup' then socket.endGroup payload
-    when 'data' then socket.post payload
+    when 'data' then socket.send payload
   port.detach socket
 
 portsPayload = (name, graph) ->
@@ -196,7 +196,6 @@ class RuntimeProtocol
     internal = graph.inports[payload.port]
     component = network.network.getNode(internal?.process)?.component
     return @sendError "Cannot find internal port for #{payload.port}", context if not (internal and component)
-
     sendToInport component, internal.port, payload.event, payload.payload
 
 module.exports = RuntimeProtocol
