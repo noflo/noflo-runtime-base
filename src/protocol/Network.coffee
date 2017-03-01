@@ -35,9 +35,6 @@ prepareSocketEvent = (event, req) ->
     if event.metadata?.secure
       # Don't send actual payload for private connections
       payload.data = 'DATA'
-
-  if event.subgraph
-    payload.subgraph = event.subgraph
   payload
 
 getPortSignature = (item) ->
@@ -168,15 +165,24 @@ class NetworkProtocol extends EventEmitter
     network.on 'connect', (event) =>
       return unless @eventFiltered(payload.graph, event)
       @sendAll 'connect', prepareSocketEvent(event, payload), context
-    network.on 'begingroup', (event) =>
+    network.on 'ip', (event) =>
       return unless @eventFiltered(payload.graph, event)
-      @sendAll 'begingroup', prepareSocketEvent(event, payload), context
-    network.on 'data', (event) =>
-      return unless @eventFiltered(payload.graph, event)
-      @sendAll 'data', prepareSocketEvent(event, payload), context
-    network.on 'endgroup', (event) =>
-      return unless @eventFiltered(payload.graph, event)
-      @sendAll 'endgroup', prepareSocketEvent(event, payload), context
+      protocolEvent =
+        id: event.id
+        socket: event.socket
+        subgraph: event.subgraph
+        metadata: event.metadata
+      switch event.type
+        when 'openBracket'
+          protocolEvent.type = 'begingroup'
+          protocolEvent.group = event.data
+        when 'data'
+          protocolEvent.type = 'data'
+          protocolEvent.data = event.data
+        when 'closeBracket'
+          protocolEvent.type = 'endgroup'
+          protocolEvent.group = event.data
+      @sendAll protocolEvent.type, prepareSocketEvent(protocolEvent, payload), context
     network.on 'disconnect', (event) =>
       return unless @eventFiltered(payload.graph, event)
       @sendAll 'disconnect', prepareSocketEvent(event, payload), context
