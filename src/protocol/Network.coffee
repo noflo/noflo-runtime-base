@@ -54,14 +54,6 @@ getConnectionSignature = (connection) ->
 getSocketSignature = (socket) ->
   return getConnectionSignature(socket.from) +  ' -> ' + getConnectionSignature(socket.to)
 
-networkIsRunning = (net) ->
-  # compat with old NoFlo
-  if net.isRunning
-    isRunning = net.isRunning()
-  else
-    isRunning = net.isStarted() and net.connectionCount > 0
-  return isRunning
-
 class NetworkProtocol extends EventEmitter
   constructor: (@transport) ->
     @networks = {}
@@ -115,6 +107,10 @@ class NetworkProtocol extends EventEmitter
     for edge in payload.edges
       signature = getEdgeSignature(edge)
       network.filters[signature] = true
+    @send 'edges',
+      graph: payload.graph
+      edges: payload.edges
+    , context
 
   eventFiltered: (graph, event) ->
     return true unless @transport.options.filterData
@@ -125,9 +121,12 @@ class NetworkProtocol extends EventEmitter
     # Ensure we stop previous network
     if @networks[payload.graph] and @networks[payload.graph].network
       network = @networks[payload.graph].network
-      network.stop()
-      delete @networks[payload.graph]
-      @emit 'removenetwork', network, payload.graph, @networks
+      network.stop (err) =>
+        return callback err if err
+        delete @networks[payload.graph]
+        @emit 'removenetwork', network, payload.graph, @networks
+        @initNetwork graph, payload, context, callback
+      return
 
     graph.componentLoader = @transport.component.getLoader graph.baseDir, @transport.options
     opts = JSON.parse JSON.stringify @transport.options
@@ -152,7 +151,7 @@ class NetworkProtocol extends EventEmitter
       @sendAll 'started',
         time: event.start
         graph: payload.graph
-        running: true
+        running: network.isRunning()
         started: network.isStarted()
       , context
     network.on 'end', (event) =>
@@ -160,22 +159,26 @@ class NetworkProtocol extends EventEmitter
         time: new Date
         uptime: event.uptime
         graph: payload.graph
-        running: false
+        running: network.isRunning()
         started: network.isStarted()
       , context
     network.on 'icon', (event) =>
       event.graph = payload.graph
       @sendAll 'icon', event, context
     network.on 'connect', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @sendAll 'connect', prepareSocketEvent(event, payload), context
     network.on 'begingroup', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @sendAll 'begingroup', prepareSocketEvent(event, payload), context
     network.on 'data', (event) =>
       return unless @eventFiltered(payload.graph, event)
       @sendAll 'data', prepareSocketEvent(event, payload), context
     network.on 'endgroup', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @sendAll 'endgroup', prepareSocketEvent(event, payload), context
     network.on 'disconnect', (event) =>
+      return unless @eventFiltered(payload.graph, event)
       @sendAll 'disconnect', prepareSocketEvent(event, payload), context
 
     network.on 'process-error', (event) =>
@@ -195,21 +198,6 @@ class NetworkProtocol extends EventEmitter
     doStart = (net) =>
       net.start (err) =>
         return @send 'error', err, content if err
-        if net.isStarted()
-          @sendAll 'started',
-            time: new Date
-            graph: payload.graph
-            running: networkIsRunning net
-            started: true
-          , context
-        else
-          @sendAll 'stopped',
-            time: new Date
-            graph: payload.graph
-            running: networkIsRunning net
-            started: false
-          , context
-
     network = @networks[payload.graph]
     if network and network.network
       # already initialized
@@ -226,14 +214,15 @@ class NetworkProtocol extends EventEmitter
     net = @networks[payload.graph].network
     return unless net
     if net.isStarted()
-      @networks[payload.graph].network.stop()
+      @networks[payload.graph].network.stop (err) =>
+        return @send 'error', err, context if err
       return
     # Was already stopped, just send the confirmation
     @send 'stopped',
       time: new Date
       graph: payload.graph
-      running: networkIsRunning net
-      started: false
+      running: net.isRunning()
+      started: net.isStarted()
     , context
 
   debugNetwork: (graph, payload, context) ->
@@ -251,7 +240,7 @@ class NetworkProtocol extends EventEmitter
     return unless net
     @send 'status',
         graph: payload.graph
-        running: networkIsRunning net
+        running: net.isRunning()
         started: net.isStarted()
     , context
 
