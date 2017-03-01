@@ -72,10 +72,10 @@ describe 'Network protocol', ->
       expects = [
         'started'
         'connect'
+        'data'
         'connect'
         'data'
         'disconnect'
-        'data'
         'disconnect'
         'stopped'
       ]
