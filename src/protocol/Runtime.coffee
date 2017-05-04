@@ -105,6 +105,11 @@ class RuntimeProtocol
       allCapabilities: capabilities
     payload.graph = @mainGraph if @mainGraph
 
+    # Add project metadata if available
+    payload.namespace = @transport.options.namespace if @transport.options.namespace
+    payload.repository = @transport.options.repository if @transport.options.repository
+    payload.repositoryVersion = @transport.options.repositoryVersion if @transport.options.repositoryVersion
+
     @send 'runtime', payload, context
     # send port info about currently set up networks
     for name, network of @transport.network.networks
