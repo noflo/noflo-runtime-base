@@ -106,6 +106,8 @@ class RuntimeProtocol
     payload.graph = @mainGraph if @mainGraph
 
     # Add project metadata if available
+    payload.id = @transport.options.id if @transport.options.id
+    payload.label = @transport.options.label if @transport.options.label
     payload.namespace = @transport.options.namespace if @transport.options.namespace
     payload.repository = @transport.options.repository if @transport.options.repository
     payload.repositoryVersion = @transport.options.repositoryVersion if @transport.options.repositoryVersion
