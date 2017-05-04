@@ -108,7 +108,7 @@ class RuntimeProtocol
     # Add project metadata if available
     payload.namespace = @transport.options.namespace if @transport.options.namespace
     payload.repository = @transport.options.repository if @transport.options.repository
-    payload.repositoryVersion = @transport.options.repository if @transport.options.repositoryVersion
+    payload.repositoryVersion = @transport.options.repositoryVersion if @transport.options.repositoryVersion
 
     @send 'runtime', payload, context
     # send port info about currently set up networks
