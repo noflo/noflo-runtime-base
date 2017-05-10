@@ -17,7 +17,7 @@ prepareSocketEvent = (event, req) ->
     payload.subgraph = event.subgraph
   if event.group
     payload.group = event.group
-  if event.data
+  if typeof event.data isnt 'undefined'
     unless noflo.isBrowser()
       if Buffer.isBuffer event.data
         # Make sure we're not trying to serialize the whole buffer to JSON
