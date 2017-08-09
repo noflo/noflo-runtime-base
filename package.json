@@ -35,7 +35,7 @@
   },
   "main": "./Base.js",
   "dependencies": {
-    "debug": "^2.4.0",
+    "debug": "^3.0.0",
     "json-stringify-safe": "^5.0.1",
     "noflo": "^0.8.0",
     "temp": "^0.8.3",
