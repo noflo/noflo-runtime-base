@@ -21,8 +21,8 @@ findPort = (network, name, inPort) ->
   return unless internal?.process
   component = network.getNode(internal.process)?.component
   return unless component
-  return component.inPorts[name] if inPort
-  return component.outPorts[name]
+  return component.inPorts[internal.port] if inPort
+  return component.outPorts[internal.port]
 
 portToPayload = (pub, internal, network, inPort) ->
   def =
