@@ -48,15 +48,11 @@ class RuntimeProtocol extends EventEmitter
 
       if network.isStarted()
         # processes don't exist until started
-        @emit 'ports',
-          graph: name
-          ports: portsPayload network.graph
+        @emit 'ports', portsPayload name, network.graph
         @subscribeOutdata name, network, true
       network.on 'start', () =>
         # processes don't exist until started
-        @emit 'ports',
-          graph: name
-          ports: portsPayload network.graph
+        @emit 'ports', portsPayload name, network.graph
         @subscribeOutdata name, network, true
 
     @transport.network.on 'removenetwork', (network, name) =>
@@ -64,9 +60,7 @@ class RuntimeProtocol extends EventEmitter
       @subscribeOutPorts name, network
       @subscribeExportedPorts name, network.graph, false
       @sendPorts name, null
-      @emit 'ports',
-        graph: name
-        ports: portsPayload network.graph
+      @emit 'ports', portsPayload name, network.graph
 
   send: (topic, payload, context) ->
     @transport.send 'runtime', topic, payload, context
@@ -200,12 +194,12 @@ class RuntimeProtocol extends EventEmitter
       component.outPorts[internal.port].attach socket
       sendFunc = (event) =>
         (payload) =>
-          @sendAll 'packet',
+          @emit 'packet',
             port: pub
             event: event
             graph: graphName
             payload: payload
-          @emit 'packet',
+          @sendAll 'packet',
             port: pub
             event: event
             graph: graphName
