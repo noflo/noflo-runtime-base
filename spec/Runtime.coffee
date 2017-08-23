@@ -49,6 +49,7 @@ describe 'Runtime protocol', ->
       client.send 'runtime', 'getruntime',
         secret: 'super-secret'
   describe 'with a graph containing exported ports', ->
+    ports = null
     before ->
       runtime = new direct.Runtime
         permissions:
@@ -61,6 +62,7 @@ describe 'Runtime protocol', ->
       client = null
       runtime = null
       runtime = new direct.Runtime
+      ports = null
     it 'should be possible to upload graph', (done) ->
       client.on 'error', (err) ->
         done err
@@ -108,8 +110,11 @@ describe 'Runtime protocol', ->
       client.on 'error', (err) ->
         done err
       client.on 'message', (msg) ->
+        return unless msg.protocol is 'network'
         return unless msg.command is 'started'
         done()
+      runtime.runtime.on 'ports', (emittedPorts) ->
+        ports = emittedPorts
       client.send 'network', 'start',
         graph: 'bar'
         secret: 'second-secret'
@@ -118,15 +123,35 @@ describe 'Runtime protocol', ->
         hello: 'World'
       client.on 'error', (err) ->
         done err
-      client.on 'message', (msg) ->
+      messageListener = (msg) ->
         return unless msg.protocol is 'runtime'
         return unless msg.command is 'packet'
         return unless msg.payload.event is 'data'
         chai.expect(msg.payload.payload).to.eql payload
+        client.removeListener 'message', messageListener
         done()
+      client.on 'message', messageListener
       client.send 'runtime', 'packet',
         graph: 'bar'
         port: 'in'
         event: 'data'
         payload: payload
         secret: 'second-secret'
+    it 'should have emitted ports via JS API', ->
+      chai.expect(ports.inPorts.length).to.equal 1
+      chai.expect(ports.outPorts.length).to.equal 1
+    it 'packets sent via JS API to IN should be received at OUT', (done) ->
+      payload =
+        hello: 'JavaScript'
+      runtime.runtime.on 'packet', (msg) ->
+        return unless msg.event is 'data'
+        chai.expect(msg.payload).to.eql payload
+        done()
+      runtime.runtime.receivePacket
+        graph: 'bar'
+        port: 'in'
+        event: 'data'
+        payload: payload
+        secret: 'second-secret'
+      , (err) ->
+        return done err if err
