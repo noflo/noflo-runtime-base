@@ -148,7 +148,7 @@ describe 'Runtime protocol', ->
         return unless msg.event is 'data'
         chai.expect(msg.payload).to.eql payload
         done()
-      runtime.runtime.receivePacket
+      runtime.runtime.sendPacket
         graph: 'bar'
         port: 'in'
         event: 'data'

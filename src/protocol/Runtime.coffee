@@ -95,7 +95,7 @@ class RuntimeProtocol extends EventEmitter
 
     switch topic
       when 'getruntime' then @getRuntime payload, context
-      when 'packet' then @receivePacket payload, (err) =>
+      when 'packet' then @sendPacket payload, (err) =>
         if err
           @sendError err.message, context
         return
@@ -224,7 +224,7 @@ class RuntimeProtocol extends EventEmitter
       for event in events
         socket.on event, sendFunc event
 
-  receivePacket: (payload, callback) ->
+  sendPacket: (payload, callback) ->
     network = @transport.network.networks[payload.graph]
     return callback new Error "Cannot find network for graph #{payload.graph}" if not network
     port = findPort network.network, payload.port, true
