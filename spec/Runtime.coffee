@@ -101,8 +101,8 @@ describe 'Runtime protocol', ->
         graph: 'bar'
         secret: 'second-secret'
       client.send 'graph', 'addoutport',
-        public: 'in'
-        node: 'Hello'
+        public: 'out'
+        node: 'World'
         port: 'out'
         graph: 'bar'
         secret: 'second-secret'
@@ -126,6 +126,7 @@ describe 'Runtime protocol', ->
       messageListener = (msg) ->
         return unless msg.protocol is 'runtime'
         return unless msg.command is 'packet'
+        return unless msg.payload.port is 'out'
         return unless msg.payload.event is 'data'
         chai.expect(msg.payload.payload).to.eql payload
         client.removeListener 'message', messageListener
