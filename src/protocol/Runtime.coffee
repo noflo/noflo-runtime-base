@@ -1,4 +1,5 @@
 noflo = require 'noflo'
+EventEmitter = require('events').EventEmitter
 
 sendToInport = (component, portName, event, payload) ->
   socket = noflo.internalSocket.createSocket()
@@ -35,7 +36,7 @@ portsPayload = (name, graph) ->
     inPorts: inports
     outPorts: outports
 
-class RuntimeProtocol
+class RuntimeProtocol extends EventEmitter
   constructor: (@transport) ->
     @outputSockets = {} # graphName -> publicPort -> noflo.Socket
     @mainGraph = null
@@ -47,9 +48,15 @@ class RuntimeProtocol
 
       if network.isStarted()
         # processes don't exist until started
+        @emit 'ports',
+          graph: name
+          ports: portsPayload network.graph
         @subscribeOutdata name, network, true
       network.on 'start', () =>
         # processes don't exist until started
+        @emit 'ports',
+          graph: name
+          ports: portsPayload network.graph
         @subscribeOutdata name, network, true
 
     @transport.network.on 'removenetwork', (network, name) =>
@@ -57,6 +64,9 @@ class RuntimeProtocol
       @subscribeOutPorts name, network
       @subscribeExportedPorts name, network.graph, false
       @sendPorts name, null
+      @emit 'ports',
+        graph: name
+        ports: portsPayload network.graph
 
   send: (topic, payload, context) ->
     @transport.send 'runtime', topic, payload, context
@@ -74,7 +84,10 @@ class RuntimeProtocol
 
     switch topic
       when 'getruntime' then @getRuntime payload, context
-      when 'packet' then @receivePacket payload, context
+      when 'packet' then @receivePacket payload, (err) =>
+        if err
+          @sendError err.message, context
+        return
 
   getRuntime: (payload, context) ->
     type = @transport.options.type
@@ -192,17 +205,22 @@ class RuntimeProtocol
             event: event
             graph: graphName
             payload: payload
+          @emit 'packet',
+            port: pub
+            event: event
+            graph: graphName
+            payload: payload
       for event in events
         socket.on event, sendFunc event
 
-  receivePacket: (payload, context) ->
+  receivePacket: (payload, callback) ->
     graph = @transport.graph.graphs[payload.graph]
     network = @transport.network.networks[payload.graph]
-    return @sendError "Cannot find network for graph #{payload.graph}", context if not network
+    return callback new Error "Cannot find network for graph #{payload.graph}" if not network
 
     internal = graph.inports[payload.port]
     component = network.network.getNode(internal?.process)?.component
-    return @sendError "Cannot find internal port for #{payload.port}", context if not (internal and component)
+    return callback new Error "Cannot find internal port for #{payload.port}" if not (internal and component)
     sendToInport component, internal.port, payload.event, payload.payload
 
 module.exports = RuntimeProtocol
