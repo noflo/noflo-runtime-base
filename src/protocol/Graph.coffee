@@ -103,8 +103,8 @@ class GraphProtocol
       description: payload.description
     , context
 
-  registerGraph: (id, graph) ->
-    @transport.runtime.setMainGraph id, graph if id == 'default/main'
+  registerGraph: (id, graph, mainGraph) ->
+    @transport.runtime.setMainGraph id, graph if mainGraph
     @subscribeGraph id, graph, ''
     @graphs[id] = graph
 

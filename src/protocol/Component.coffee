@@ -58,10 +58,13 @@ class ComponentProtocol
           @send 'error', err, context
           return
 
-        nameParts = payload.name.split '/'
+        [library, name] = payload.name.split '/'
+        if not name
+          name = library
+          library = null
         @send 'source',
-          name: nameParts[1]
-          library: nameParts[0]
+          name: name
+          library: library
           code: JSON.stringify graph.toJSON()
           language: 'json'
         , context
