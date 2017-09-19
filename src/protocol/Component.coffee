@@ -106,6 +106,7 @@ class ComponentProtocol
       inPorts.push
         id: portName
         type: port.getDataType() if port.getDataType
+        schema: port.getSchema() if port.getSchema
         required: port.isRequired() if port.isRequired
         addressable: port.isAddressable() if port.isAddressable
         description: port.getDescription() if port.getDescription
@@ -116,6 +117,7 @@ class ComponentProtocol
       outPorts.push
         id: portName
         type: port.getDataType() if port.getDataType
+        schema: port.getSchema() if port.getSchema
         required: port.isRequired() if port.isRequired
         addressable: port.isAddressable() if port.isAddressable
         description: port.getDescription() if port.getDescription

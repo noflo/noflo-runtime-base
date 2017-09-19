@@ -36,6 +36,7 @@ portToPayload = (pub, internal, network, inPort) ->
   # we don't have full component info
   return def unless port
   def.type = port.getDataType()
+  def.schema = port.getSchema() if port.getSchema
   def.description = internal.metadata?.description or port.getDescription()
   def.addressable = port.isAddressable()
   def.required = port.isRequired()
