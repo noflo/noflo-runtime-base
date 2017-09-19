@@ -17,6 +17,10 @@ prepareSocketEvent = (event, req) ->
     payload.subgraph = event.subgraph
   if event.group
     payload.group = event.group
+  if event.datatype
+    payload.type = event.datatype
+  if event.schema
+    payload.schema = event.schema
   if typeof event.data isnt 'undefined'
     unless noflo.isBrowser()
       if Buffer.isBuffer event.data
@@ -179,6 +183,8 @@ class NetworkProtocol extends EventEmitter
         when 'data'
           protocolEvent.type = 'data'
           protocolEvent.data = event.data
+          protocolEvent.datatype = event.datatype
+          protocolEvent.schema = event.schema
         when 'closeBracket'
           protocolEvent.type = 'endgroup'
           protocolEvent.group = event.data
