@@ -26,9 +26,9 @@ prepareSocketEvent = (event, req) ->
       if Buffer.isBuffer event.data
         # Make sure we're not trying to serialize the whole buffer to JSON
         event.data = event.data.slice 0, 20
-    if event.data.toJSON
+    if event.data?.toJSON
       payload.data = event.data.toJSON()
-    if event.data.toString
+    if event.data?.toString
       payload.data = event.data.toString()
       if payload.data is '[object Object]'
         try
