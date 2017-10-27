@@ -166,9 +166,6 @@ class NetworkProtocol extends EventEmitter
     network.on 'icon', (event) =>
       event.graph = payload.graph
       @sendAll 'icon', event, context
-    network.on 'connect', (event) =>
-      return unless @eventFiltered(payload.graph, event)
-      @sendAll 'connect', prepareSocketEvent(event, payload), context
     network.on 'ip', (event) =>
       return unless @eventFiltered(payload.graph, event)
       protocolEvent =
@@ -189,10 +186,6 @@ class NetworkProtocol extends EventEmitter
           protocolEvent.type = 'endgroup'
           protocolEvent.group = event.data
       @sendAll protocolEvent.type, prepareSocketEvent(protocolEvent, payload), context
-    network.on 'disconnect', (event) =>
-      return unless @eventFiltered(payload.graph, event)
-      @sendAll 'disconnect', prepareSocketEvent(event, payload), context
-
     network.on 'process-error', (event) =>
       error = event.error.message
       # If we can get a backtrace, send 3 levels

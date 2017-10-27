@@ -71,12 +71,8 @@ describe 'Network protocol', ->
     it 'should process the nodes and stop when it completes', (done) ->
       expects = [
         'started'
-        'connect'
         'data'
-        'connect'
         'data'
-        'disconnect'
-        'disconnect'
         'stopped'
       ]
       client.on 'error', (err) ->
