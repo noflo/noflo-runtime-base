@@ -5,8 +5,6 @@ sendToInport = (port, event, payload) ->
   socket = noflo.internalSocket.createSocket()
   port.attach socket
   switch event
-    when 'connect' then socket.connect()
-    when 'disconnect' then socket.disconnect()
     when 'begingroup' then socket.beginGroup payload
     when 'endgroup' then socket.endGroup payload
     when 'data' then socket.send payload
@@ -183,15 +181,6 @@ class RuntimeProtocol extends EventEmitter
       graph.on 'removeOutport', portRemoved
 
   subscribeOutdata: (graphName, network, add) ->
-
-    events = [
-      'data'
-      'begingroup'
-      'endgroup'
-      'connect'
-      'disconnect'
-    ]
-
     # Unsubscribe all
     @outputSockets[graphName] = {} if not @outputSockets[graphName]
     graphSockets = @outputSockets[graphName]
@@ -208,20 +197,24 @@ class RuntimeProtocol extends EventEmitter
       graphSockets[pub] = socket
       component = network.processes[internal.process].component
       component.outPorts[internal.port].attach socket
-      sendFunc = (event) =>
-        (payload) =>
-          @emit 'packet',
-            port: pub
-            event: event
-            graph: graphName
-            payload: payload
-          @sendAll 'packet',
-            port: pub
-            event: event
-            graph: graphName
-            payload: payload
-      for event in events
-        socket.on event, sendFunc event
+      socket.on 'ip', (ip) =>
+        switch ip.type
+          when 'openBracket'
+            event = 'begingroup'
+          when 'closeBracket'
+            event = 'endgroup'
+          else
+            event = ip.type
+        @emit 'packet',
+          port: pub
+          event: event
+          graph: graphName
+          payload: ip.data
+        @sendAll 'packet',
+          port: pub
+          event: event
+          graph: graphName
+          payload: ip.data
 
   sendPacket: (payload, callback) ->
     network = @transport.network.networks[payload.graph]
