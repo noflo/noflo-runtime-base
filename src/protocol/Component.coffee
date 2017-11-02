@@ -1,5 +1,6 @@
 noflo = require 'noflo'
 _ = require 'underscore'
+utils = require '../utils'
 
 class ComponentProtocol
   loaders: {}
@@ -58,10 +59,10 @@ class ComponentProtocol
           @send 'error', err, context
           return
 
-        nameParts = payload.name.split '/'
+        nameParts = utils.parseName payload.name
         @send 'source',
-          name: nameParts[1]
-          library: nameParts[0]
+          name: nameParts.name
+          library: nameParts.library
           code: JSON.stringify graph.toJSON()
           language: 'json'
         , context
