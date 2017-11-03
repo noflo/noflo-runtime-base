@@ -56,7 +56,9 @@ getSocketSignature = (socket) ->
   return getConnectionSignature(socket.from) +  ' -> ' + getConnectionSignature(socket.to)
 
 class NetworkProtocol extends EventEmitter
-  constructor: (@transport) ->
+  constructor: (transport) ->
+    super()
+    @transport = transport
     @networks = {}
 
   send: (topic, payload, context) ->

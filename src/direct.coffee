@@ -42,8 +42,9 @@ class DirectRuntime extends Base
     
 # Mostly used for testing
 class DirectClient extends EventEmitter
-  constructor: (runtime, @name) ->
+  constructor: (runtime, name) ->
     super()
+    @name = name
     @runtime = runtime
     @name = 'Unnamed client' if not @name
 
