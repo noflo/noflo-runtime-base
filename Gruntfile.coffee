@@ -6,12 +6,20 @@ module.exports = ->
     # CoffeeScript compilation
     coffee:
       src:
+        options:
+          transpile:
+            presets: ['es2015']
+          bare: true
         expand: true
         cwd: 'src'
         src: ['**.coffee']
         dest: ''
         ext: '.js'
       protocol:
+        options:
+          transpile:
+            presets: ['es2015']
+          bare: true
         expand: true
         cwd: 'src/protocol'
         src: ['**.coffee']
@@ -19,6 +27,8 @@ module.exports = ->
         ext: '.js'
       spec:
         options:
+          transpile:
+            presets: ['es2015']
           bare: true
         expand: true
         cwd: 'spec'
