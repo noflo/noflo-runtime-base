@@ -53,7 +53,9 @@ portsPayload = (name, network) ->
   return payload
 
 class RuntimeProtocol extends EventEmitter
-  constructor: (@transport) ->
+  constructor: (transport) ->
+    super()
+    @transport = transport
     @outputSockets = {} # graphName -> publicPort -> noflo.Socket
     @mainGraph = null
 
