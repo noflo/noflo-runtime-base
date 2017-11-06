@@ -1,5 +1,5 @@
 noflo = require 'noflo'
-_ = require 'underscore'
+debounce = require 'debounce'
 utils = require '../utils'
 
 class ComponentProtocol
@@ -136,7 +136,7 @@ class ComponentProtocol
 
   registerGraph: (id, graph, context) ->
     sender = => @processComponent loader, id, context
-    send = _.debounce sender, 10
+    send = debounce sender, 10
     loader = @getLoader graph.baseDir, @transport.options
     loader.listComponents (err, components) =>
       if err
