@@ -7,8 +7,6 @@ module.exports = ->
     coffee:
       src:
         options:
-          transpile:
-            presets: ['es2015']
           bare: true
         expand: true
         cwd: 'src'
@@ -17,8 +15,6 @@ module.exports = ->
         ext: '.js'
       protocol:
         options:
-          transpile:
-            presets: ['es2015']
           bare: true
         expand: true
         cwd: 'src/protocol'
