@@ -17,17 +17,6 @@ describe 'Extending the runtime baseclass', ->
       rt = new MyRuntime
       rt.send()
       rt.canDo('protocol:graph')
-  describe.skip 'with ES5 Reflect', ->
-    MyRuntime = null
-    it 'should work', ->
-      MyRuntime = (options) ->
-        Reflect.construct(Base, arguments, MyRuntime)
-      Reflect.setPrototypeOf(MyRuntime.prototype, Base.prototype)
-      Reflect.setPrototypeOf(MyRuntime, Base)
-    it 'should be possible to instantiate', ->
-      rt = new MyRuntime
-      rt.send()
-      rt.canDo('protocol:graph')
   describe.skip 'with ES5-style extending', ->
     MyRuntime = null
     it 'should work', ->
