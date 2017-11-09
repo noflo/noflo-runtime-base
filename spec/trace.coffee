@@ -6,8 +6,8 @@ if noflo.isBrowser()
   baseDir = '/noflo-runtime-base'
 else
   chai = require 'chai' unless chai
-  direct = require '../src/direct'
-  { Tracer } = require '../src/trace'
+  direct = require '../direct'
+  { Tracer } = require '../trace'
   path = require 'path'
   baseDir = path.resolve __dirname, '../'
 
