@@ -21,13 +21,14 @@
     "grunt-mocha-test": "^0.13.2",
     "grunt-noflo-browser": "^1.5.1",
     "mocha": "^4.0.0",
-    "noflo-core": ">= 0.4.0"
+    "noflo-core": ">= 0.4.0",
+    "nyc": "^11.3.0"
   },
   "keywords": [
     "noflo"
   ],
   "scripts": {
-    "test": "grunt test"
+    "test": "nyc grunt test"
   },
   "main": "./Base.js",
   "dependencies": {
@@ -36,5 +37,11 @@
     "json-stringify-safe": "^5.0.1",
     "noflo": "^1.0.0",
     "temp": "^0.8.3"
+  },
+  "nyc": {
+    "include": [
+      "*.js",
+      "protocol/*.js"
+    ]
   }
 }
