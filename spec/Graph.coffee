@@ -4,7 +4,7 @@ if noflo.isBrowser()
   direct = require('noflo-runtime-base').direct
 else
   chai = require 'chai' unless chai
-  direct = require '../src/direct'
+  direct = require '../direct'
 
 describe 'Graph protocol', ->
   runtime = null
