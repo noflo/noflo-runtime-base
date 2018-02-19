@@ -1,10 +1,10 @@
 noflo = require 'noflo'
 EventEmitter = require('events').EventEmitter
 
-prepareSocketEvent = (event, req) ->
+prepareSocketEvent = (event, graphName) ->
   payload =
     id: event.id
-    graph: req.graph
+    graph: graphName
   if event.socket.from
     payload.src =
       node: event.socket.from.process.id
@@ -120,15 +120,15 @@ class NetworkProtocol extends EventEmitter
     sign = getSocketSignature(event.socket)
     return @networks[graph].filters[sign]
 
-  initNetwork: (graph, payload, context, callback) ->
+  initNetwork: (graph, graphName, context, callback) ->
     # Ensure we stop previous network
-    if @networks[payload.graph] and @networks[payload.graph].network
-      network = @networks[payload.graph].network
+    if @networks[graphName] and @networks[graphName].network
+      network = @networks[graphName].network
       network.stop (err) =>
         return callback err if err
-        delete @networks[payload.graph]
-        @emit 'removenetwork', network, payload.graph, @networks
-        @initNetwork graph, payload, context, callback
+        delete @networks[graphName]
+        @emit 'removenetwork', network, graphName, @networks
+        @initNetwork graph, graphName, context, callback
       return
 
     graph.componentLoader = @transport.component.getLoader graph.baseDir, @transport.options
@@ -136,24 +136,24 @@ class NetworkProtocol extends EventEmitter
     opts.delay = true
     noflo.createNetwork graph, (err, network) =>
       return callback err if err
-      if @networks[payload.graph] and @networks[payload.graph].network
-        @networks[payload.graph].network = network
+      if @networks[graphName] and @networks[graphName].network
+        @networks[graphName].network = network
       else
-        @networks[payload.graph] =
+        @networks[graphName] =
           network: network
           filters: {}
-      @emit 'addnetwork', network, payload.graph, @networks
-      @subscribeNetwork network, payload, context
+      @emit 'addnetwork', network, graphName, @networks
+      @subscribeNetwork network, graphName, context
 
       # Run the network
       network.connect callback
     , opts
 
-  subscribeNetwork: (network, payload, context) ->
+  subscribeNetwork: (network, graphName, context) ->
     network.on 'start', (event) =>
       @sendAll 'started',
         time: event.start
-        graph: payload.graph
+        graph: graphName
         running: network.isRunning()
         started: network.isStarted()
       , context
@@ -161,15 +161,15 @@ class NetworkProtocol extends EventEmitter
       @sendAll 'stopped',
         time: new Date
         uptime: event.uptime
-        graph: payload.graph
+        graph: graphName
         running: network.isRunning()
         started: network.isStarted()
       , context
     network.on 'icon', (event) =>
-      event.graph = payload.graph
+      event.graph = graphName
       @sendAll 'icon', event, context
     network.on 'ip', (event) =>
-      return unless @eventFiltered(payload.graph, event)
+      return unless @eventFiltered(graphName, event)
       protocolEvent =
         id: event.id
         socket: event.socket
@@ -187,7 +187,7 @@ class NetworkProtocol extends EventEmitter
         when 'closeBracket'
           protocolEvent.type = 'endgroup'
           protocolEvent.group = event.data
-      @sendAll protocolEvent.type, prepareSocketEvent(protocolEvent, payload), context
+      @sendAll protocolEvent.type, prepareSocketEvent(protocolEvent, graphName), context
     network.on 'process-error', (event) =>
       error = event.error.message
       # If we can get a backtrace, send 3 levels
@@ -198,23 +198,28 @@ class NetworkProtocol extends EventEmitter
       @sendAll 'processerror',
         id: event.id
         error: error
-        graph: payload.graph
+        graph: graphName
       , context
 
-  startNetwork: (graph, payload, context) ->
+  _startNetwork: (graph, graphName, context, callback) -> 
     doStart = (net) =>
       net.start (err) =>
-        return @send 'error', err, content if err
-    network = @networks[payload.graph]
+        return callback err
+
+    network = @networks[graphName]
     if network and network.network
       # already initialized
-      doStart network.network
-      return
+      return doStart network.network
 
-    @initNetwork graph, payload, context, (err) =>
-      return @send 'error', err, context if err
-      network = @networks[payload.graph]
-      doStart network.network
+    @initNetwork graph, graphName, context, (err) =>
+      return callback err if err
+      network = @networks[graphName]
+      return doStart network.network
+
+  startNetwork: (graph, payload, context) ->
+    @_startNetwork graph, payload.graph, context, (err) ->
+      @send 'error', err, context if err
+      return
 
   stopNetwork: (graph, payload, context) ->
     return unless @networks[payload.graph]
