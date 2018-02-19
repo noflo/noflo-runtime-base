@@ -23,10 +23,11 @@ class BaseTransport
 
     if @options.defaultGraph?
       @options.defaultGraph.baseDir = @options.baseDir
-      path = 'default/main'
+      graphName = 'default/main'
       @context = 'none'
-      @graph.registerGraph path, @options.defaultGraph
-      @network.startNetwork @options.defaultGraph, { graph: path }, @context
+      @graph.registerGraph graphName, @options.defaultGraph
+      @network._startNetwork @options.defaultGraph, graphName, @context, (err) ->
+        throw err if err
 
     if @options.captureOutput? and @options.captureOutput
       # Start capturing so that we can send it to the UI when it connects
