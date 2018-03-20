@@ -96,6 +96,7 @@ class RuntimeProtocol extends EventEmitter
       when 'packet' then @sendPacket payload, (err) =>
         if err
           @sendError err.message, context
+        # TODO: Ack packet send
         return
 
   getRuntime: (payload, context) ->
