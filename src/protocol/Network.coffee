@@ -217,7 +217,7 @@ class NetworkProtocol extends EventEmitter
       return doStart network.network
 
   startNetwork: (graph, payload, context) ->
-    @_startNetwork graph, payload.graph, context, (err) ->
+    @_startNetwork graph, payload.graph, context, (err) =>
       @send 'error', err, context if err
       return
 
