@@ -199,6 +199,8 @@ class RuntimeProtocol extends EventEmitter
       socket = noflo.internalSocket.createSocket()
       graphSockets[pub] = socket
       component = network.processes[internal.process].component
+      unless component?.outPorts[internal.port]
+        throw new Error "Exported outport #{internal.port} in node #{internal.process} not found"
       component.outPorts[internal.port].attach socket
       socket.on 'ip', (ip) =>
         switch ip.type
