@@ -222,12 +222,25 @@ class NetworkProtocol extends EventEmitter
       return
 
   stopNetwork: (graph, payload, context) ->
-    return unless @networks[payload.graph]
+    unless @networks[payload.graph]
+      @send 'error', new Error("Network #{payload.graph} not found"), context
+      return
     net = @networks[payload.graph].network
-    return unless net
+    unless net
+      @send 'error', new Error("Network #{payload.graph} not found"), context
+      return
     if net.isStarted()
       @networks[payload.graph].network.stop (err) =>
-        return @send 'error', err, context if err
+        if err
+          @send 'error', err, context
+          return
+        @send 'stopped',
+          time: new Date
+          graph: payload.graph
+          running: net.isRunning()
+          started: net.isStarted()
+        , context
+        return
       return
     # Was already stopped, just send the confirmation
     @send 'stopped',
@@ -238,22 +251,30 @@ class NetworkProtocol extends EventEmitter
     , context
 
   debugNetwork: (graph, payload, context) ->
-    return unless @networks[payload.graph]
+    unless @networks[payload.graph]
+      @send 'error', new Error("Network #{payload.graph} not found"), context
+      return
     net = @networks[payload.graph].network
-    return unless net
-    if net.setDebug?
-      net.setDebug payload.enable
-    else
-      console.log 'Warning: Network.setDebug not supported. Update to newer NoFlo'
+    unless net
+      @send 'error', new Error("Network #{payload.graph} not found"), context
+      return
+    net.setDebug payload.enable
+    @send 'setdebug',
+      enable: payload.enable
+    return
 
   getStatus: (graph, payload, context) ->
-    return unless @networks[payload.graph]
+    unless @networks[payload.graph]
+      @send 'error', new Error("Network #{payload.graph} not found"), context
+      return
     net = @networks[payload.graph].network
-    return unless net
+    unless net
+      @send 'error', new Error("Network #{payload.graph} not found"), context
+      return
     @send 'status',
-        graph: payload.graph
-        running: net.isRunning()
-        started: net.isStarted()
+      graph: payload.graph
+      running: net.isRunning()
+      started: net.isStarted()
     , context
 
 module.exports = NetworkProtocol
