@@ -96,7 +96,13 @@ class RuntimeProtocol extends EventEmitter
       when 'packet' then @sendPacket payload, (err) =>
         if err
           @sendError err.message, context
-        # TODO: Ack packet send
+          return
+        @send 'packetsent',
+          port: payload.port
+          event: payload.event
+          graph: payload.graph
+          payload: payload.payload
+        , context
         return
 
   getRuntime: (payload, context) ->
@@ -227,5 +233,6 @@ class RuntimeProtocol extends EventEmitter
     port = findPort network.network, payload.port, true
     return callback new Error "Cannot find internal port for #{payload.port}" if not port
     sendToInport port, payload.event, payload.payload
+    callback()
 
 module.exports = RuntimeProtocol
