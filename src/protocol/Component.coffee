@@ -99,31 +99,36 @@ class ComponentProtocol
       callback null
     , true
 
+  processPort: (portName, port) ->
+    # Required port properties
+    portDef =
+      id: portName
+      type: if port.getDataType then port.getDataType() else 'all'
+    if port.getSchema?()
+      portDef.schema = port.getSchema()
+    if port.isRequired
+      portDef.required = port.isRequired()
+    if port.isAddressable
+      portDef.addressable = port.isAddressable()
+    if port.getDescription
+      portDef.description = port.getDescription()
+    if port.options?.values
+      portDef.values = port.options.values
+    if port.hasDefault?()
+      portDef.default = port.options.default
+    return portDef
+
   sendComponent: (component, instance, context) ->
     inPorts = []
     outPorts = []
     for portName, port of instance.inPorts
       continue if not port or typeof port is 'function' or not port.canAttach
-      inPorts.push
-        id: portName
-        type: port.getDataType() if port.getDataType
-        schema: port.getSchema() if port.getSchema
-        required: port.isRequired() if port.isRequired
-        addressable: port.isAddressable() if port.isAddressable
-        description: port.getDescription() if port.getDescription
-        values: port.options.values if port.options and port.options.values
-        default: port.options.default if port.options and port.options.default
+      inPorts.push @processPort portName, port
     for portName, port of instance.outPorts
       continue if not port or typeof port is 'function' or not port.canAttach
-      outPorts.push
-        id: portName
-        type: port.getDataType() if port.getDataType
-        schema: port.getSchema() if port.getSchema
-        required: port.isRequired() if port.isRequired
-        addressable: port.isAddressable() if port.isAddressable
-        description: port.getDescription() if port.getDescription
+      outPorts.push @processPort portName, port
 
-    icon = if instance.getIcon then instance.getIcon() else 'blank'
+    icon = if instance.getIcon then instance.getIcon() else 'gear'
 
     @send 'component',
       name: component
