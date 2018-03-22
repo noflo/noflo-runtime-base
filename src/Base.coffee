@@ -41,6 +41,10 @@ class BaseTransport
         'protocol:runtime'
         'component:setsource'
         'component:getsource'
+        'graph:readonly'
+        'network:data'
+        'network:control'
+        'network:status'
       ]
 
     unless @options.defaultPermissions

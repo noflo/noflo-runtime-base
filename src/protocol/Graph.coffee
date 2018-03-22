@@ -12,7 +12,7 @@ class GraphProtocol
 
   receive: (topic, payload, context) ->
     unless @transport.canDo 'protocol:graph', payload.secret
-      @send 'error', new Error("#{topic} not permitted"), context
+      @send 'error', new Error("graph:#{topic} not permitted"), context
       return
 
     # Find locally stored graph by ID

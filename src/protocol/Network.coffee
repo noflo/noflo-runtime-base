@@ -68,14 +68,8 @@ class NetworkProtocol extends EventEmitter
     @transport.sendAll 'network', topic, payload
 
   receive: (topic, payload, context) ->
-    unless @transport.canDo 'protocol:network', payload.secret
-      @send 'error', new Error("#{topic} not permitted"), context
-      return
-
-    if topic isnt 'list'
-      graph = @resolveGraph payload, context
-      return unless graph
-
+    graph = @resolveGraph payload, context
+    return unless graph
     switch topic
       when 'start'
         @startNetwork graph, payload, context
@@ -98,6 +92,9 @@ class NetworkProtocol extends EventEmitter
     return @transport.graph.graphs[payload.graph]
 
   updateEdgesFilter: (graph, payload, context) ->
+    unless @transport.canDo ['network:data', 'protocol:network'], payload.secret
+      @send 'error', new Error("network:edges not permitted"), context
+      return
     network = @networks[payload.graph]
     if network
       network.filters = {}
@@ -217,11 +214,18 @@ class NetworkProtocol extends EventEmitter
       return doStart network.network
 
   startNetwork: (graph, payload, context) ->
+    unless @transport.canDo ['network:control', 'protocol:network'], payload.secret
+      @send 'error', new Error("network:start not permitted"), context
+      return
+    network = @networks[payload.graph]
     @_startNetwork graph, payload.graph, context, (err) =>
       @send 'error', err, context if err
       return
 
   stopNetwork: (graph, payload, context) ->
+    unless @transport.canDo ['network:control', 'protocol:network'], payload.secret
+      @send 'error', new Error("network:stop not permitted"), context
+      return
     unless @networks[payload.graph]
       @send 'error', new Error("Network #{payload.graph} not found"), context
       return
@@ -251,6 +255,9 @@ class NetworkProtocol extends EventEmitter
     , context
 
   debugNetwork: (graph, payload, context) ->
+    unless @transport.canDo ['network:control', 'protocol:network'], payload.secret
+      @send 'error', new Error("network:debug not permitted"), context
+      return
     unless @networks[payload.graph]
       @send 'error', new Error("Network #{payload.graph} not found"), context
       return
@@ -264,6 +271,9 @@ class NetworkProtocol extends EventEmitter
     return
 
   getStatus: (graph, payload, context) ->
+    unless @transport.canDo ['network:status', 'network:control', 'protocol:network'], payload.secret
+      @send 'error', new Error("network:getstatus not permitted"), context
+      return
     unless @networks[payload.graph]
       @send 'error', new Error("Network #{payload.graph} not found"), context
       return
