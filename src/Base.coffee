@@ -14,7 +14,7 @@ debugMessagingSendPayload = require('debug') 'noflo-runtime-base:messaging:send:
 class BaseTransport
   constructor: (@options) ->
     @options = {} unless @options
-    @version = '0.6'
+    @version = '0.7'
     @component = new protocols.Component @
     @graph = new protocols.Graph @
     @network = new protocols.Network @
