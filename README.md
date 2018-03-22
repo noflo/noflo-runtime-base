@@ -5,9 +5,14 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
-* 0.9.4 (git master)
+* 0.10.0 (March 22nd 2018)
+  - Added support for FBP Protocol 0.7
   - Changed the `component:component` message to conform with the FBP protocol schema
   - Ensured all graph protocol messages get a response
+  - Added support for the `network:control`, `network:status`, and `network:data` capabilities
+  - Added `runtime:packetsent` response to `runtime:packet` requests
+  - Added error responses for unsupported subprotocols and commands
+  - Improved error handling when trying to receive packets from unavailable exported outports
 
 * 0.9.3 (February 19th 2018)
   - Improved error handling when starting a new network
