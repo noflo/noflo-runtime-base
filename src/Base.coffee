@@ -69,6 +69,25 @@ class BaseTransport
       return true
     false
 
+  # Check if a given user is authorized to send a given message
+  canInput: (protocol, topic, secret) ->
+    if protocol is 'graph'
+      # All graph messages are under the same capability
+      return @canDo ['protocol:graph'], secret
+    message = "#{protocol}:#{topic}"
+    switch message
+      when 'component:list' then return @canDo ['protocol:component'], secret
+      when 'component:getsource' then return @canDo ['component:getsource'], secret
+      when 'component:source' then return @canDo ['component:setsource'], secret
+      when 'network:edges' then return @canDo ['network:data', 'protocol:network'], secret
+      when 'network:start' then return @canDo ['network:control', 'protocol:network'], secret
+      when 'network:stop' then return @canDo ['network:control', 'protocol:network'], secret
+      when 'network:debug' then return @canDo ['network:control', 'protocol:network'], secret
+      when 'network:getstatus' then return @canDo ['network:status', 'network:control', 'protocol:network'], secret
+      when 'runtime:getruntime' then return true
+      when 'runtime:packet' then return @canDo ['protocol:runtime'], secret
+    return false
+
   # Get enabled capabilities for a user
   #
   # @param [String] Secret provided by user
@@ -121,6 +140,11 @@ class BaseTransport
     payload = {} unless payload
     debugMessagingReceive "#{protocol} #{topic}"
     debugMessagingReceivePayload payload
+
+    unless @canInput protocol, topic, payload.secret
+      @send protocol, 'error', new Error("#{protocol}:#{topic} is not permitted"), context
+      return
+
     @context = context
     switch protocol
       when 'runtime' then @runtime.receive topic, payload, context

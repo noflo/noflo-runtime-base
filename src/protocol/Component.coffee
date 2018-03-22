@@ -23,9 +23,6 @@ class ComponentProtocol
     return @loaders[baseDir]
 
   listComponents: (payload, context) ->
-    unless @transport.canDo ['protocol:component'], payload.secret
-      @send 'error', new Error("component:list not permitted"), context
-      return
     baseDir = @transport.options.baseDir
     loader = @getLoader baseDir, @transport.options
     loader.listComponents (err, components) =>
@@ -41,9 +38,6 @@ class ComponentProtocol
           @send 'componentsready', processed, context
 
   getSource: (payload, context) ->
-    unless @transport.canDo ['component:getsource'], payload.secret
-      @send 'error', new Error("component:getsource not permitted"), context
-      return
     baseDir = @transport.options.baseDir
     loader = @getLoader baseDir, @transport.options
     loader.getSource payload.name, (err, component) =>
@@ -65,9 +59,6 @@ class ComponentProtocol
         @send 'source', component, context
 
   setSource: (payload, context) ->
-    unless @transport.canDo ['component:setsource'], payload.secret
-      @send 'error', new Error("component:setsource not permitted"), context
-      return
     baseDir = @transport.options.baseDir
     loader = @getLoader baseDir, @transport.options
     loader.setSource payload.library, payload.name, payload.code, payload.language, (err) =>

@@ -90,9 +90,6 @@ class RuntimeProtocol extends EventEmitter
     switch topic
       when 'getruntime' then @getRuntime payload, context
       when 'packet'
-        unless @transport.canDo 'protocol:runtime', payload.secret
-          @send 'error', new Error("runtime:packet not permitted"), context
-          return
         @sendPacket payload, (err) =>
           if err
             @sendError err.message, context
