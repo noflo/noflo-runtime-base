@@ -81,6 +81,7 @@ class NetworkProtocol extends EventEmitter
         @debugNetwork graph, payload, context
       when 'getstatus'
         @getStatus graph, payload, context
+      else @send 'error', new Error("network:#{topic} not supported"), context
 
   resolveGraph: (payload, context) ->
     unless payload.graph

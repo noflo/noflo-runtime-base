@@ -41,6 +41,7 @@ class GraphProtocol
       when 'removegroup' then @removeGroup graph, payload, context
       when 'renamegroup' then @renameGroup graph, payload, context
       when 'changegroup' then @changeGroup graph, payload, context
+      else @send 'error', new Error("graph:#{topic} not supported"), context
 
   resolveGraph: (payload, context) ->
     unless payload.graph

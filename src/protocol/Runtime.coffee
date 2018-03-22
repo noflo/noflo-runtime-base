@@ -87,23 +87,24 @@ class RuntimeProtocol extends EventEmitter
     @send 'error', new Error(message), context
 
   receive: (topic, payload, context) ->
-    if topic is 'packet' and not @transport.canDo 'protocol:runtime', payload.secret
-      @send 'error', new Error("#{topic} not permitted"), context
-      return
-
     switch topic
       when 'getruntime' then @getRuntime payload, context
-      when 'packet' then @sendPacket payload, (err) =>
-        if err
-          @sendError err.message, context
+      when 'packet'
+        unless @transport.canDo 'protocol:runtime', payload.secret
+          @send 'error', new Error("runtime:packet not permitted"), context
           return
-        @send 'packetsent',
-          port: payload.port
-          event: payload.event
-          graph: payload.graph
-          payload: payload.payload
-        , context
-        return
+        @sendPacket payload, (err) =>
+          if err
+            @sendError err.message, context
+            return
+          @send 'packetsent',
+            port: payload.port
+            event: payload.event
+            graph: payload.graph
+            payload: payload.payload
+          , context
+          return
+      else @send 'error', new Error("runtime:#{topic} not supported"), context
 
   getRuntime: (payload, context) ->
     type = @transport.options.type
