@@ -127,6 +127,7 @@ class BaseTransport
       when 'graph' then @graph.receive topic, payload, context
       when 'network' then @network.receive topic, payload, context
       when 'component' then @component.receive topic, payload, context
+      else @send protocol, 'error', new Error("Protocol #{protocol} is not supported"), context
 
 module.exports = BaseTransport
 module.exports.trace = require './trace'
