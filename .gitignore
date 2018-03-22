@@ -2,6 +2,7 @@
 /node_modules
 /browser
 /npm-debug.log
+/package-lock.json
 /.nyc_output
 Base.js
 direct.js
