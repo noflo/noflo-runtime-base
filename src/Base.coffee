@@ -52,11 +52,16 @@ class BaseTransport
 
   # Check if a given user is authorized for a given capability
   #
-  # @param [String] Capability to check
+  # @param [Array] Capabilities to check
   # @param [String] Secret provided by user
   canDo: (capability, secret) ->
-    permitted = @getPermitted secret
-    if permitted.indexOf(capability) isnt -1
+    if typeof capability is 'string'
+      checkCapabilities = [capability]
+    else
+      checkCapabilities = capability
+    userCapabilities = @getPermitted secret
+    permitted = checkCapabilities.filter (perm) -> perm in userCapabilities
+    if permitted.length > 0
       return true
     false
 
