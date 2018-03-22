@@ -114,16 +114,6 @@ class RuntimeProtocol extends EventEmitter
         type = 'noflo-nodejs'
 
     capabilities = @transport.options.capabilities
-    unless capabilities
-      capabilities = [
-        'protocol:graph'
-        'protocol:component'
-        'protocol:network'
-        'protocol:runtime'
-        'component:setsource'
-        'component:getsource'
-      ]
-
     permittedCapabilities = capabilities.filter (capability) =>
       @transport.canDo capability, payload.secret
 

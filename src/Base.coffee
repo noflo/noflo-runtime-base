@@ -33,6 +33,16 @@ class BaseTransport
       # Start capturing so that we can send it to the UI when it connects
       @startCapture()
 
+    unless @options.capabilities
+      @options.capabilities = [
+        'protocol:graph'
+        'protocol:component'
+        'protocol:network'
+        'protocol:runtime'
+        'component:setsource'
+        'component:getsource'
+      ]
+
     unless @options.defaultPermissions
       # Default: no capabilities granted for anonymous users
       @options.defaultPermissions = []
