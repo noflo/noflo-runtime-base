@@ -5,6 +5,9 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.10.1 (March 29th 2018)
+  - Made `runtime:ports` signal compatible with the FBP Protocol schema
+  - Added responses to `renameinport` and `renameoutport` requests
 * 0.10.0 (March 22nd 2018)
   - Added support for FBP Protocol 0.7
   - Changed the `component:component` message to conform with the FBP protocol schema
