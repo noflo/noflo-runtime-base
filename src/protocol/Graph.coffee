@@ -215,6 +215,18 @@ class GraphProtocol
         #port: port.port
         #metadata: port.metadata
       @sendAll 'removeoutport', data, context
+    graph.on 'renameInport', (oldName, newName) =>
+      data =
+        from: oldName
+        to: newName
+        graph: id
+      @sendAll 'renameinport', data, context
+    graph.on 'renameOutport', (oldName, newName) =>
+      data =
+        from: oldName
+        to: newName
+        graph: id
+      @sendAll 'renameoutport', data, context
 
   addNode: (graph, node, context) ->
     unless node.id or node.component
