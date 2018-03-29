@@ -203,17 +203,11 @@ class GraphProtocol
       data =
         public: publicName
         graph: id
-        #node: port.process
-        #port: port.port
-        #metadata: port.metadata
       @sendAll 'removeinport', data, context
     graph.on 'removeOutport', (publicName, port) =>
       data =
         public: publicName
         graph: id
-        #node: port.process
-        #port: port.port
-        #metadata: port.metadata
       @sendAll 'removeoutport', data, context
     graph.on 'renameInport', (oldName, newName) =>
       data =
