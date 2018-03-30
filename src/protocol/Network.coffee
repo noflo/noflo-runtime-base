@@ -15,7 +15,7 @@ prepareSocketEvent = (event, graphName) ->
       port: event.socket.to.port
   if event.subgraph
     payload.subgraph = event.subgraph
-  if event.group
+  if typeof event.group isnt 'undefined'
     payload.group = event.group
   if event.datatype
     payload.type = event.datatype
@@ -39,6 +39,7 @@ prepareSocketEvent = (event, graphName) ->
     if event.metadata?.secure
       # Don't send actual payload for private connections
       payload.data = 'DATA'
+
   payload
 
 getPortSignature = (item) ->
@@ -173,7 +174,7 @@ class NetworkProtocol extends EventEmitter
       switch event.type
         when 'openBracket'
           protocolEvent.type = 'begingroup'
-          protocolEvent.group = event.data
+          protocolEvent.group = event.data or ''
         when 'data'
           protocolEvent.type = 'data'
           protocolEvent.data = event.data
@@ -181,7 +182,7 @@ class NetworkProtocol extends EventEmitter
           protocolEvent.schema = event.schema
         when 'closeBracket'
           protocolEvent.type = 'endgroup'
-          protocolEvent.group = event.data
+          protocolEvent.group = event.data or ''
       @sendAll protocolEvent.type, prepareSocketEvent(protocolEvent, graphName), context
     network.on 'process-error', (event) =>
       error = event.error.message
