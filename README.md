@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.10.2 (March 30th 2018)
+  - Ensured that `network:begingroup` and `network:endgroup` include the required `group` property
 * 0.10.1 (March 29th 2018)
   - Made `runtime:ports` signal compatible with the FBP Protocol schema
   - Added responses to `renameinport` and `renameoutport` requests
