@@ -1,3 +1,5 @@
+EventEmitter = require('events').EventEmitter
+
 protocols =
   Runtime: require './protocol/Runtime'
   Graph: require './protocol/Graph'
@@ -11,8 +13,9 @@ debugMessagingSendPayload = require('debug') 'noflo-runtime-base:messaging:send:
 
 # This is the class all NoFlo runtime implementations can extend to easily wrap
 # into any transport protocol.
-class BaseTransport
+class BaseTransport extends EventEmitter
   constructor: (@options) ->
+    super()
     @options = {} unless @options
     @version = '0.7'
     @component = new protocols.Component @
@@ -46,18 +49,22 @@ class BaseTransport
     unless @options.permissions
       @options.permissions = {}
 
-    if @options.defaultGraph?
-      setTimeout =>
-        @_startDefaultGraph()
-      , 0
+    setTimeout =>
+      @_startDefaultGraph()
+    , 0
 
   _startDefaultGraph: () ->
+    unless @options.defaultGraph?
+      @emit 'ready', null
+      return
+
     @options.defaultGraph.baseDir = @options.baseDir
     graphName = 'default/main'
     @context = 'none'
     @graph.registerGraph graphName, @options.defaultGraph
-    @network._startNetwork @options.defaultGraph, graphName, @context, (err) ->
-      throw err if err
+    @network._startNetwork @options.defaultGraph, graphName, @context, (err, net) =>
+      return @emit 'error', err if err
+      @emit 'ready', net
 
   # Check if a given user is authorized for a given capability
   #

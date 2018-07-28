@@ -199,7 +199,9 @@ class NetworkProtocol extends EventEmitter
 
   _startNetwork: (graph, graphName, context, callback) ->
     doStart = (net) ->
-      net.start callback
+      net.start (err) ->
+        return callback err if err
+        callback null, net
 
     network = @networks[graphName]
     if network and network.network
