@@ -21,14 +21,6 @@ class BaseTransport
     @runtime = new protocols.Runtime @
     @context = null
 
-    if @options.defaultGraph?
-      @options.defaultGraph.baseDir = @options.baseDir
-      graphName = 'default/main'
-      @context = 'none'
-      @graph.registerGraph graphName, @options.defaultGraph
-      @network._startNetwork @options.defaultGraph, graphName, @context, (err) ->
-        throw err if err
-
     if @options.captureOutput? and @options.captureOutput
       # Start capturing so that we can send it to the UI when it connects
       @startCapture()
@@ -53,6 +45,19 @@ class BaseTransport
 
     unless @options.permissions
       @options.permissions = {}
+
+    if @options.defaultGraph?
+      setTimeout =>
+        @_startDefaultGraph()
+      , 0
+
+  _startDefaultGraph: () ->
+    @options.defaultGraph.baseDir = @options.baseDir
+    graphName = 'default/main'
+    @context = 'none'
+    @graph.registerGraph graphName, @options.defaultGraph
+    @network._startNetwork @options.defaultGraph, graphName, @context, (err) ->
+      throw err if err
 
   # Check if a given user is authorized for a given capability
   #
