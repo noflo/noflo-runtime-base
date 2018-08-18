@@ -14,7 +14,7 @@ debugMessagingSendPayload = require('debug') 'noflo-runtime-base:messaging:send:
 class BaseTransport
   constructor: (@options) ->
     @options = {} unless @options
-    @version = '0.7'
+    @version = '0.8'
     @component = new protocols.Component @
     @graph = new protocols.Graph @
     @network = new protocols.Network @
@@ -112,7 +112,10 @@ class BaseTransport
   # @param [Object] Message payload
   # @param [Object] Message context, dependent on the transport
   send: (protocol, topic, payload, context) ->
-    debugMessagingSend "#{protocol} #{topic}"
+    if context.requestId
+      debugMessagingSend "#{protocol} #{topic} (ID: #{context.requestId}"
+    else
+      debugMessagingSend "#{protocol} #{topic}"
     debugMessagingSendPayload payload
    
   # Send a message to *all users*  via the transport protocol
@@ -130,7 +133,8 @@ class BaseTransport
   #
   # The context is originally received from the transport. This could be
   # an iframe origin or a specific WebSocket connection. The context will
-  # be utilized when sending messages back to the requester.
+  # be utilized when sending messages back to the requester. The context
+  # must also contain the secret and requestId the request was made with.
   #
   # @param [String] Name of the protocol
   # @param [String] Topic of the message
@@ -138,10 +142,15 @@ class BaseTransport
   # @param [Object] Message context, dependent on the transport
   receive: (protocol, topic, payload, context) ->
     payload = {} unless payload
-    debugMessagingReceive "#{protocol} #{topic}"
+    debugMessagingReceive "#{protocol} #{topic} (ID: #{context.requestId})"
     debugMessagingReceivePayload payload
 
-    unless @canInput protocol, topic, payload.secret
+    if payload.secret and not context.secret
+      # Compatibility with pre-0.8 FBP clients
+      context.secret = payload.secret
+      delete payload.secret
+
+    unless @canInput protocol, topic, context.secret
       @send protocol, 'error', new Error("#{protocol}:#{topic} is not permitted"), context
       return
 
