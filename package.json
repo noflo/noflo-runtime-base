@@ -37,7 +37,8 @@
     "debug": "^3.0.0",
     "json-stringify-safe": "^5.0.1",
     "noflo": "^1.0.0",
-    "temp": "^0.8.3"
+    "temp": "^0.8.3",
+    "uuid": "^3.3.2"
   },
   "nyc": {
     "include": [

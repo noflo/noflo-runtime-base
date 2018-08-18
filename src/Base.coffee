@@ -112,8 +112,8 @@ class BaseTransport
   # @param [Object] Message payload
   # @param [Object] Message context, dependent on the transport
   send: (protocol, topic, payload, context) ->
-    if context.requestId
-      debugMessagingSend "#{protocol} #{topic} (ID: #{context.requestId}"
+    if context.responseTo
+      debugMessagingSend "#{protocol} #{topic} (ID: #{context.responseTo}"
     else
       debugMessagingSend "#{protocol} #{topic}"
     debugMessagingSendPayload payload

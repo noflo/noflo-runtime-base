@@ -3,6 +3,7 @@ isBrowser = ->
 
 Base = require './Base'
 EventEmitter = require('events').EventEmitter
+uuid = require 'uuid/v4'
 
 class DirectRuntime extends Base
   constructor: (options) ->
@@ -30,6 +31,10 @@ class DirectRuntime extends Base
       protocol: protocol
       command: topic
       payload: payload
+
+    if context.responseTo
+      m.responseTo = context.responseTo
+
     context.client._receive m
 
   sendAll: (protocol, topic, payload) ->
@@ -59,6 +64,7 @@ class DirectClient extends EventEmitter
       protocol: protocol
       command: topic
       payload: payload
+      requestId: uuid()
     @emit 'send', m
 
   _receive: (message) ->
