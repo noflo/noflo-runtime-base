@@ -37,13 +37,17 @@ class GraphProtocol
       when 'removegroup' then @removeGroup graph, payload, context
       when 'renamegroup' then @renameGroup graph, payload, context
       when 'changegroup' then @changeGroup graph, payload, context
-      else @send 'error', new Error("graph:#{topic} not supported"), context
+      else
+        context.responseTo = context.requestId
+        @send 'error', new Error("graph:#{topic} not supported"), context
 
   resolveGraph: (payload, context) ->
     unless payload.graph
+      context.responseTo = context.requestId
       @send 'error', new Error('No graph specified'), context
       return
     unless @graphs[payload.graph]
+      context.responseTo = context.requestId
       @send 'error', new Error('Requested graph not found'), context
       return
     return @graphs[payload.graph]
@@ -59,6 +63,7 @@ class GraphProtocol
 
   initGraph: (payload, context) ->
     unless payload.id
+      context.responseTo = context.requestId
       @send 'error', new Error('No graph ID provided'), context
       return
     unless payload.name
@@ -89,6 +94,7 @@ class GraphProtocol
       @transport.component.registerGraph fullName, graph, context
 
     @graphs[payload.id] = graph
+    context.responseTo = context.requestId
     @sendAll 'clear',
       id: payload.id
       name: payload.name
@@ -224,30 +230,35 @@ class GraphProtocol
 
   addNode: (graph, node, context) ->
     unless node.id or node.component
+      context.responseTo = context.requestId
       @send 'error', new Error('No ID or component supplied'), context
       return
     graph.addNode node.id, node.component, node.metadata
 
   removeNode: (graph, payload, context) ->
     unless payload.id
+      context.responseTo = context.requestId
       @send 'error', new Error('No ID supplied'), context
       return
     graph.removeNode payload.id
 
   renameNode: (graph, payload, context) ->
     unless payload.from or payload.to
+      context.responseTo = context.requestId
       @send 'error', new Error('No from or to supplied'), context
       return
     graph.renameNode payload.from, payload.to
 
   changeNode: (graph, payload, context) ->
     unless payload.id or payload.metadata
+      context.responseTo = context.requestId
       @send 'error', new Error('No id or metadata supplied'), context
       return
     graph.setNodeMetadata payload.id, payload.metadata
 
   addEdge: (graph, edge, context) ->
     unless edge.src or edge.tgt
+      context.responseTo = context.requestId
       @send 'error', new Error('No src or tgt supplied'), context
       return
     if typeof edge.src.index is 'number' or typeof edge.tgt.index is 'number'
@@ -258,18 +269,21 @@ class GraphProtocol
 
   removeEdge: (graph, edge, context) ->
     unless edge.src or edge.tgt
+      context.responseTo = context.requestId
       @send 'error', new Error('No src or tgt supplied'), context
       return
     graph.removeEdge edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port
 
   changeEdge: (graph, edge, context) ->
     unless edge.src or edge.tgt
+      context.responseTo = context.requestId
       @send 'error', new Error('No src or tgt supplied'), context
       return
     graph.setEdgeMetadata edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata
 
   addInitial: (graph, payload, context) ->
     unless payload.src or payload.tgt
+      context.responseTo = context.requestId
       @send 'error', new Error('No src or tgt supplied'), context
       return
     if graph.addInitialIndex and typeof payload.tgt.index is 'number'
@@ -279,66 +293,77 @@ class GraphProtocol
 
   removeInitial: (graph, payload, context) ->
     unless payload.tgt
+      context.responseTo = context.requestId
       @send 'error', new Error('No tgt supplied'), context
       return
     graph.removeInitial payload.tgt.node, payload.tgt.port
 
   addInport: (graph, payload, context) ->
     unless payload.public or payload.node or payload.port
+      context.responseTo = context.requestId
       @send 'error', new Error('Missing exported inport information'), context
       return
     graph.addInport payload.public, payload.node, payload.port, payload.metadata
 
   removeInport: (graph, payload, context) ->
     unless payload.public
+      context.responseTo = context.requestId
       @send 'error', new Error('Missing exported inport name'), context
       return
     graph.removeInport payload.public
 
   renameInport: (graph, payload, context) ->
     unless payload.from or payload.to
+      context.responseTo = context.requestId
       @send 'error', new Error('No from or to supplied'), context
       return
     graph.renameInport payload.from, payload.to
 
   addOutport: (graph, payload, context) ->
     unless payload.public or payload.node or payload.port
+      context.responseTo = context.requestId
       @send 'error', new Error('Missing exported outport information'), context
       return
     graph.addOutport payload.public, payload.node, payload.port, payload.metadata
 
   removeOutport: (graph, payload, context) ->
     unless payload.public
+      context.responseTo = context.requestId
       @send 'error', new Error('Missing exported outport name'), context
       return
     graph.removeOutport payload.public
 
   renameOutport: (graph, payload, context) ->
     unless payload.from or payload.to
+      context.responseTo = context.requestId
       @send 'error', new Error('No from or to supplied'), context
       return
     graph.renameOutport payload.from, payload.to
 
   addGroup: (graph, payload, context) ->
     unless payload.name or payload.nodes or payload.metadata
+      context.responseTo = context.requestId
       @send 'error', new Error('No name or nodes or metadata supplied'), context
       return
     graph.addGroup payload.name, payload.nodes, payload.metadata
 
   removeGroup: (graph, payload, context) ->
     unless payload.name
+      context.responseTo = context.requestId
       @send 'error', new Error('No name supplied'), context
       return
     graph.removeGroup payload.name
 
   renameGroup: (graph, payload, context) ->
     unless payload.from or payload.to
+      context.responseTo = context.requestId
       @send 'error', new Error('No from or to supplied'), context
       return
     graph.renameGroup payload.from, payload.to
 
   changeGroup: (graph, payload, context) ->
     unless payload.name or payload.metadata
+      context.responseTo = context.requestId
       @send 'error', new Error('No name or metadata supplied'), context
       return
     graph.setEdgeMetadata payload.name, payload.metadata

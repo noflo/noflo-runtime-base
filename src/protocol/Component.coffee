@@ -14,7 +14,9 @@ class ComponentProtocol
       when 'list' then @listComponents payload, context
       when 'getsource' then @getSource payload, context
       when 'source' then @setSource payload, context
-      else @send 'error', new Error("component:#{topic} not supported"), context
+      else
+        context.responseTo = context.requestId
+        @send 'error', new Error("component:#{topic} not supported"), context
 
   getLoader: (baseDir, options = {}) ->
     unless @loaders[baseDir]
@@ -27,6 +29,7 @@ class ComponentProtocol
     loader = @getLoader baseDir, @transport.options
     loader.listComponents (err, components) =>
       if err
+        context.responseTo = context.requestId
         @send 'error', err, context
         return
       componentNames = Object.keys components
@@ -35,6 +38,7 @@ class ComponentProtocol
         @processComponent loader, component, context, (err) =>
           processed++
           return if processed < componentNames.length
+          context.responseTo = context.requestId
           @send 'componentsready', processed, context
 
   getSource: (payload, context) ->
@@ -45,10 +49,12 @@ class ComponentProtocol
         # Try one of the registered graphs
         graph = @transport.graph.graphs[payload.name]
         unless graph?
+          context.responseTo = context.requestId
           @send 'error', err, context
           return
 
         nameParts = utils.parseName payload.name
+        context.responseTo = context.requestId
         @send 'source',
           name: nameParts.name
           library: nameParts.library
@@ -56,12 +62,14 @@ class ComponentProtocol
           language: 'json'
         , context
       else
+        context.responseTo = context.requestId
         @send 'source', component, context
 
   setSource: (payload, context) ->
     baseDir = @transport.options.baseDir
     loader = @getLoader baseDir, @transport.options
     loader.setSource payload.library, payload.name, payload.code, payload.language, (err) =>
+      context.responseTo = context.requestId
       if err
         @send 'error', err, context
         return

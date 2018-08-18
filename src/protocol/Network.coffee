@@ -86,9 +86,11 @@ class NetworkProtocol extends EventEmitter
 
   resolveGraph: (payload, context) ->
     unless payload.graph
+      context.responseTo = context.requestId
       @send 'error', new Error('No graph specified'), context
       return
     unless @transport.graph.graphs[payload.graph]
+      context.responseTo = context.requestId
       @send 'error', new Error('Requested graph not found'), context
       return
     return @transport.graph.graphs[payload.graph]
@@ -215,19 +217,23 @@ class NetworkProtocol extends EventEmitter
   startNetwork: (graph, payload, context) ->
     network = @networks[payload.graph]
     @_startNetwork graph, payload.graph, context, (err) =>
+      context.responseTo = context.requestId
       @send 'error', err, context if err
       return
 
   stopNetwork: (graph, payload, context) ->
     unless @networks[payload.graph]
+      context.responseTo = context.requestId
       @send 'error', new Error("Network #{payload.graph} not found"), context
       return
     net = @networks[payload.graph].network
     unless net
+      context.responseTo = context.requestId
       @send 'error', new Error("Network #{payload.graph} not found"), context
       return
     if net.isStarted()
       @networks[payload.graph].network.stop (err) =>
+        context.responseTo = context.requestId
         if err
           @send 'error', err, context
           return
@@ -240,6 +246,7 @@ class NetworkProtocol extends EventEmitter
         return
       return
     # Was already stopped, just send the confirmation
+    context.responseTo = context.requestId
     @send 'stopped',
       time: new Date
       graph: payload.graph
@@ -256,11 +263,14 @@ class NetworkProtocol extends EventEmitter
       @send 'error', new Error("Network #{payload.graph} not found"), context
       return
     net.setDebug payload.enable
+    context.responseTo = context.requestId
     @send 'setdebug',
       enable: payload.enable
+    , context
     return
 
   getStatus: (graph, payload, context) ->
+    context.responseTo = context.requestId
     unless @networks[payload.graph]
       @send 'error', new Error("Network #{payload.graph} not found"), context
       return

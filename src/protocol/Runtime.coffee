@@ -91,6 +91,7 @@ class RuntimeProtocol extends EventEmitter
       when 'getruntime' then @getRuntime payload, context
       when 'packet'
         @sendPacket payload, (err) =>
+          context.responseTo = context.requestId
           if err
             @sendError err.message, context
             return
@@ -101,7 +102,9 @@ class RuntimeProtocol extends EventEmitter
             payload: payload.payload
           , context
           return
-      else @send 'error', new Error("runtime:#{topic} not supported"), context
+      else
+        context.responseTo = context.requestId
+        @send 'error', new Error("runtime:#{topic} not supported"), context
 
   getRuntime: (payload, context) ->
     type = @transport.options.type
@@ -129,6 +132,7 @@ class RuntimeProtocol extends EventEmitter
     payload.repository = @transport.options.repository if @transport.options.repository
     payload.repositoryVersion = @transport.options.repositoryVersion if @transport.options.repositoryVersion
 
+    context.responseTo = context.requestId
     @send 'runtime', payload, context
     # send port info about currently set up networks
     for name, network of @transport.network.networks
