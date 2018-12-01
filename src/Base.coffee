@@ -26,7 +26,7 @@ class BaseTransport
       graphName = @_getGraphName(@options.defaultGraph)
       @context = 'none'
       @graph.registerGraph graphName, @options.defaultGraph
-      @protocol.runtime.setMainGraph graphName, @options.defaultGraph
+      @runtime.setMainGraph graphName, @options.defaultGraph
       @network._startNetwork @options.defaultGraph, graphName, @context, (err) ->
         throw err if err
 
