@@ -23,7 +23,7 @@ class BaseTransport
 
     if @options.defaultGraph?
       @options.defaultGraph.baseDir = @options.baseDir
-      graphName = 'default/main'
+      graphName = @_getGraphName(@options.defaultGraph)
       @context = 'none'
       @graph.registerGraph graphName, @options.defaultGraph
       @network._startNetwork @options.defaultGraph, graphName, @context, (err) ->
@@ -53,6 +53,12 @@ class BaseTransport
 
     unless @options.permissions
       @options.permissions = {}
+
+  # Generate a name for the main graph
+  _getGraphName: (graph) ->
+    namespace = @options.namespace or 'default'
+    graphName = graph.name or 'main'
+    return "#{namespace}/#{graphName}"
 
   # Check if a given user is authorized for a given capability
   #
