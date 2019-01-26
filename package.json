@@ -20,7 +20,7 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-mocha-phantomjs": "^4.0.0",
     "grunt-mocha-test": "^0.13.2",
-    "grunt-noflo-browser": "^1.5.1",
+    "grunt-noflo-browser": "1.6.0",
     "mocha": "^5.0.0",
     "noflo-core": ">= 0.4.0",
     "nyc": "^12.0.1"
