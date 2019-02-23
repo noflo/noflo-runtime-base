@@ -5,7 +5,7 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
-* 0.10.5 (git master)
+* 0.10.5 (February 23rd 2019)
   - Added `runtime.component` lifecycle event `updated` when component sources are modified via the protocol. Can be used to persist changes
   - Added `runtime.graph` lifecycle event `updated` when a graph is modified via the protocol. Can be used to persist changes
 * 0.10.4 (December 1st 2018)
