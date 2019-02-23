@@ -60,3 +60,29 @@ describe 'Component protocol', ->
         client.once 'message', listener
       client.once 'message', listener
       client.send 'component', 'list', payload
+
+  describe 'sending component:getsource', ->
+    it 'should fail without proper authentication', (done) ->
+      payload =
+        name: 'core/Repeat'
+      client.once 'message', (msg) ->
+        chai.expect(msg.protocol).to.equal 'component'
+        chai.expect(msg.command).to.equal 'error'
+        done()
+      client.send 'component', 'getsource', payload
+    it 'should respond with the source code of the component', (done) ->
+      payload =
+        name: 'core/Repeat'
+        secret: 'foo'
+      client.once 'message', (msg) ->
+        chai.expect(msg.protocol).to.equal 'component'
+        chai.expect(msg.command).to.equal 'source'
+        chai.expect(msg.payload.library).to.equal 'core'
+        chai.expect(msg.payload.name).to.equal 'Repeat'
+        chai.expect(msg.payload.language).to.be.oneOf [
+          'javascript'
+          'coffeescript'
+        ]
+        chai.expect(msg.payload.code).to.be.a 'string'
+        done()
+      client.send 'component', 'getsource', payload
