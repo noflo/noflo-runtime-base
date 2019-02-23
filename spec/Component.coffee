@@ -24,7 +24,7 @@ describe 'Component protocol', ->
           'component:getsource'
         ]
       baseDir: baseDir
-    runtime.component.on 'setsource', (msg) ->
+    runtime.component.on 'updated', (msg) ->
       runtimeEvents.push msg
     client = new direct.Client runtime
     client.connect()
@@ -113,7 +113,7 @@ exports.getComponent = function () {
         chai.expect(msg.command).to.equal 'error'
         done()
       client.send 'component', 'source', payload
-    it 'should not have emitted setsource events', ->
+    it 'should not have emitted updated events', ->
       chai.expect(runtimeEvents).to.eql []
     it 'should respond with a new component', (done) ->
       payload =
@@ -129,7 +129,7 @@ exports.getComponent = function () {
         chai.expect(msg.payload.name).to.equal 'math/GetRandom'
         done()
       client.send 'component', 'source', payload
-    it 'should have emitted a setsource event', ->
+    it 'should have emitted a updated event', ->
       chai.expect(runtimeEvents.length).to.equal 1
       event = runtimeEvents.shift()
       chai.expect(event.name).to.equal 'GetRandom'

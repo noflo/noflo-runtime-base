@@ -10,11 +10,14 @@ describe 'Graph protocol', ->
   runtime = null
   client = null
   client2 = null
+  runtimeEvents = []
 
   beforeEach ->
     runtime = new direct.Runtime
       permissions:
         foo: ['protocol:graph']
+    runtime.graph.on 'updated', (msg) ->
+      runtimeEvents.push msg
     client = new direct.Client runtime
     client.connect()
     client2 = new direct.Client runtime
@@ -76,10 +79,16 @@ describe 'Graph protocol', ->
       chai.expect(msg.command).to.equal 'addnode'
       chai.expect(msg.payload).to.deep.equal payload
       done()
+    after ->
+      runtimeEvents = []
     it 'should respond with graph:addnode', (done) ->
       client.on 'message', (msg) -> checkAddNode msg, done
       client.send 'graph', 'clear', { id: graph, main: true, secret: 'foo'}
       client.send 'graph', 'addnode', authenticatedPayload
+    it 'should have emitted an updated event', ->
+      chai.expect(runtimeEvents.length).to.equal 1
+      event = runtimeEvents.shift()
+      chai.expect(event.name).to.equal graph
     it 'should send to all clients', (done) ->
       client2.on 'message', (msg) -> checkAddNode msg, done
       client.send 'graph', 'clear', { id: graph, main: true, secret: 'foo' }

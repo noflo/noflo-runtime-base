@@ -68,7 +68,7 @@ class ComponentProtocol extends EventEmitter
       if err
         @send 'error', err, context
         return
-      @emit 'setsource',
+      @emit 'updated',
         name: payload.name
         library: payload.library
         code: payload.code

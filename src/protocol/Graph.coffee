@@ -1,7 +1,10 @@
 noflo = require 'noflo'
+EventEmitter = require('events').EventEmitter
 
-class GraphProtocol
-  constructor: (@transport) ->
+class GraphProtocol extends EventEmitter
+  constructor: (transport) ->
+    super()
+    @transport = transport
     @graphs = {}
 
   send: (topic, payload, context) ->
@@ -221,6 +224,10 @@ class GraphProtocol
         to: newName
         graph: id
       @sendAll 'renameoutport', data, context
+    graph.on 'endTransaction', () =>
+      @emit 'updated',
+        name: id
+        graph: graph
 
   addNode: (graph, node, context) ->
     unless node.id or node.component
