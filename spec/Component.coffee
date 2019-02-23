@@ -86,3 +86,37 @@ describe 'Component protocol', ->
         chai.expect(msg.payload.code).to.be.a 'string'
         done()
       client.send 'component', 'getsource', payload
+
+  describe 'sending component:source', ->
+    source = """
+var noflo = require('noflo');
+exports.getComponent = function () {
+  return noflo.asComponent(Math.random);
+};
+    """
+    it 'should fail without proper authentication', (done) ->
+      payload =
+        name: 'GetRandom'
+        library: 'math'
+        language: 'javascript'
+        code: source
+        tests: ''
+      client.once 'message', (msg) ->
+        chai.expect(msg.protocol).to.equal 'component'
+        chai.expect(msg.command).to.equal 'error'
+        done()
+      client.send 'component', 'source', payload
+    it 'should respond with a new component', (done) ->
+      payload =
+        name: 'GetRandom'
+        library: 'math'
+        language: 'javascript'
+        code: source
+        tests: ''
+        secret: 'foo'
+      client.once 'message', (msg) ->
+        chai.expect(msg.protocol).to.equal 'component'
+        chai.expect(msg.command).to.equal 'component'
+        chai.expect(msg.payload.name).to.equal 'math/GetRandom'
+        done()
+      client.send 'component', 'source', payload
