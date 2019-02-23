@@ -13,6 +13,7 @@ describe 'Component protocol', ->
   runtime = null
   client = null
   client2 = null
+  runtimeEvents = []
 
   beforeEach ->
     runtime = new direct.Runtime
@@ -23,6 +24,8 @@ describe 'Component protocol', ->
           'component:getsource'
         ]
       baseDir: baseDir
+    runtime.component.on 'setsource', (msg) ->
+      runtimeEvents.push msg
     client = new direct.Client runtime
     client.connect()
     client2 = new direct.Client runtime
@@ -94,6 +97,10 @@ exports.getComponent = function () {
   return noflo.asComponent(Math.random);
 };
     """
+    before ->
+      runtimeEvents = []
+    after ->
+      runtimeEvents = []
     it 'should fail without proper authentication', (done) ->
       payload =
         name: 'GetRandom'
@@ -106,6 +113,8 @@ exports.getComponent = function () {
         chai.expect(msg.command).to.equal 'error'
         done()
       client.send 'component', 'source', payload
+    it 'should not have emitted setsource events', ->
+      chai.expect(runtimeEvents).to.eql []
     it 'should respond with a new component', (done) ->
       payload =
         name: 'GetRandom'
@@ -120,3 +129,10 @@ exports.getComponent = function () {
         chai.expect(msg.payload.name).to.equal 'math/GetRandom'
         done()
       client.send 'component', 'source', payload
+    it 'should have emitted a setsource event', ->
+      chai.expect(runtimeEvents.length).to.equal 1
+      event = runtimeEvents.shift()
+      chai.expect(event.name).to.equal 'GetRandom'
+      chai.expect(event.library).to.equal 'math'
+      chai.expect(event.language).to.equal 'javascript'
+      chai.expect(event.code).to.equal source

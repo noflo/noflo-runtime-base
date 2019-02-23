@@ -1,10 +1,13 @@
 noflo = require 'noflo'
 debounce = require 'debounce'
+EventEmitter = require('events').EventEmitter
 utils = require '../utils'
 
-class ComponentProtocol
+class ComponentProtocol extends EventEmitter
   loaders: {}
-  constructor: (@transport) ->
+  constructor: (transport) ->
+    super()
+    @transport = transport
 
   send: (topic, payload, context) ->
     @transport.send 'component', topic, payload, context
@@ -65,6 +68,11 @@ class ComponentProtocol
       if err
         @send 'error', err, context
         return
+      @emit 'setsource',
+        name: payload.name
+        library: payload.library
+        code: payload.code
+        language: payload.language
       @processComponent loader, loader.normalizeName(payload.library, payload.name), context
 
   processComponent: (loader, component, context, callback) ->

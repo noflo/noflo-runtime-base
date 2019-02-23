@@ -5,6 +5,10 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.10.5 (git master)
+  - Added `runtime.component` lifecycle event `setsource` when component sources are modified via the protocol. Can be used to persist changes
+* 0.10.4 (December 1st 2018)
+  - Typo fix for registering a main graph
 * 0.10.3 (December 1st 2018)
   - Made the `defaultGraph` option use the project's actual namespace and graph name instead of hardcoded `default/main`
 * 0.10.2 (March 30th 2018)
