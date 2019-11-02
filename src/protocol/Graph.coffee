@@ -15,12 +15,13 @@ class GraphProtocol extends EventEmitter
 
   receive: (topic, payload, context) ->
     # Find locally stored graph by ID
-    if topic isnt 'clear'
+    if topic isnt 'clear' && topic isnt 'list'
       graph = @resolveGraph payload, context
       return unless graph
 
     switch topic
       when 'clear' then @initGraph payload, context
+      when 'list' then @listGraphs payload, context
       when 'addnode' then @addNode graph, payload, context
       when 'removenode' then @removeNode graph, payload, context
       when 'renamenode' then @renameNode graph, payload, context
@@ -229,6 +230,14 @@ class GraphProtocol extends EventEmitter
         name: id
         graph: graph
 
+  listGraphs: (payload, context) ->
+    graphNames = []
+    for graphName,v of @graphs
+      graphNames.push(graphName)
+    
+    @send 'list', {"graphs":graphNames}, context
+    return
+      
   addNode: (graph, node, context) ->
     unless node.id or node.component
       @send 'error', new Error('No ID or component supplied'), context
