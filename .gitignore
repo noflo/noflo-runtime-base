@@ -1,6 +1,7 @@
 /components
 /node_modules
 /browser
+/dist
 /npm-debug.log
 /package-lock.json
 /.nyc_output
