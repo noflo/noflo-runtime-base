@@ -1,16 +1,3 @@
-let chai; let
-  direct;
-const noflo = require('noflo');
-
-if (noflo.isBrowser()) {
-  ({
-    direct,
-  } = require('noflo-runtime-base'));
-} else {
-  if (!chai) { chai = require('chai'); }
-  direct = require('../src/direct');
-}
-
 describe('Graph protocol', () => {
   let runtime = null;
   let client = null;

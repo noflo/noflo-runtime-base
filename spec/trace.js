@@ -1,21 +1,3 @@
-let baseDir; let direct; let
-  Tracer;
-const noflo = require('noflo');
-
-if (noflo.isBrowser()) {
-  ({
-    direct,
-  } = require('noflo-runtime-base'));
-  ({ Tracer } = require('noflo-runtime-base').trace);
-  baseDir = '/noflo-runtime-base';
-} else {
-  if (!chai) { var chai = require('chai'); }
-  direct = require('../src/direct');
-  ({ Tracer } = require('../src/trace'));
-  const path = require('path');
-  baseDir = path.resolve(__dirname, '../');
-}
-
 describe('Tracer', () => {
   let tracer = null;
 

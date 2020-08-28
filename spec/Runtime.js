@@ -1,19 +1,3 @@
-let baseDir; let chai; let
-  direct;
-const noflo = require('noflo');
-
-if (noflo.isBrowser()) {
-  ({
-    direct,
-  } = require('noflo-runtime-base'));
-  baseDir = 'noflo-runtime-base';
-} else {
-  if (!chai) { chai = require('chai'); }
-  direct = require('../src/direct');
-  const path = require('path');
-  baseDir = path.resolve(__dirname, '../');
-}
-
 describe('Runtime protocol', () => {
   let runtime = null;
   let client = null;
