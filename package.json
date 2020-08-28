@@ -18,6 +18,10 @@
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-mocha": "^8.0.0",
+    "karma": "^5.1.1",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-mocha": "^2.0.1",
+    "karma-mocha-reporter": "^2.2.5",
     "mocha": "^5.0.0",
     "noflo-component-loader": "^0.3.2",
     "noflo-core": ">= 0.4.0",
@@ -34,7 +38,8 @@
     "build": "webpack --config ./webpack.config.js",
     "pretest": "npm run lint && npm run build",
     "test:nodejs": "nyc mocha spec/*.js",
-    "test": "npm run test:nodejs"
+    "test:browser": "karma start node_modules/noflo-webpack-config/karma.config.js",
+    "test": "npm run test:nodejs && npm run test:browser"
   },
   "main": "./src/Base.js",
   "dependencies": {
