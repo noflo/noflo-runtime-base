@@ -351,7 +351,13 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No src or tgt supplied'), context);
       return;
     }
-    graph.setEdgeMetadata(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata);
+    graph.setEdgeMetadata(
+      edge.src.node,
+      edge.src.port,
+      edge.tgt.node,
+      edge.tgt.port,
+      edge.metadata,
+    );
   }
 
   addInitial(graph, payload, context) {
@@ -360,7 +366,13 @@ class GraphProtocol extends EventEmitter {
       return;
     }
     if (graph.addInitialIndex && (typeof payload.tgt.index === 'number')) {
-      graph.addInitialIndex(payload.src.data, payload.tgt.node, payload.tgt.port, payload.tgt.index, payload.metadata);
+      graph.addInitialIndex(
+        payload.src.data,
+        payload.tgt.node,
+        payload.tgt.port,
+        payload.tgt.index,
+        payload.metadata,
+      );
       return;
     }
     graph.addInitial(payload.src.data, payload.tgt.node, payload.tgt.port, payload.metadata);

@@ -1,4 +1,4 @@
-exports.parseName = function (name) {
+exports.parseName = function parseName(name) {
   if (name.indexOf('/') === -1) {
     return {
       library: null,

@@ -1,42 +1,26 @@
+/* eslint class-methods-use-this: ["error", { "exceptMethods": ["detach"] }] */
 const noflo = require('noflo');
 const debug = require('debug')('noflo-runtime-base:trace');
+const TraceBuffer = require('./TraceBuffer');
 
 let jsonStringify = JSON.stringify;
 try {
   // eslint-disable-next-line global-require
   jsonStringify = require('json-stringify-safe');
 } catch (error) {
-  console.log(`WARN: failed to load json-stringify-safe, circular objects may cause fail.\n${error.message}`);
+  debug(`WARN: failed to load json-stringify-safe, circular objects may cause fail.\n${error.message}`);
 }
 
-const clone = function (obj) {
+function clone(obj) {
   const s = jsonStringify(obj);
   return JSON.parse(s);
-};
-
-class TraceBuffer {
-  constructor() {
-    this.events = []; // PERF: use a linked-list variety instead
-  }
-
-  add(event) {
-    // FIXME: respect a (configurable) limit on size https://github.com/noflo/noflo-runtime-base/issues/34
-    return this.events.push(event);
-  }
-
-  getAll(consumeFunc, doneFunc) {
-    for (e of Array.from(this.events)) {
-      consumeFunc(e);
-    }
-    return doneFunc(null);
-  }
 }
 
-const subscribeExportedOutports = function (network, networkId, eventNames, subscribeFunc) {
+function subscribeExportedOutports(network, networkId, eventNames, subscribeFunc) {
   const graphSockets = {};
 
   // Basically same as code in runtime:data protocol handling
-  for (var pub in network.graph.outports) {
+  Object.keys(network.graph.outports).forEach((pub) => {
     const internal = network.graph.outports[pub];
     const socket = noflo.internalSocket.createSocket();
     graphSockets[pub] = socket;
@@ -58,15 +42,15 @@ const subscribeExportedOutports = function (network, networkId, eventNames, subs
       return subscribeFunc(event, data);
     });
 
-    for (const event of Array.from(eventNames)) {
+    eventNames.forEach((event) => {
       socket.on(event, sendFunc(event));
-    }
-  }
+    });
+  });
   return graphSockets;
-};
+}
 
 // Convert to flowtrace/FBP-protocol format http://noflojs.org/documentation/protocol/
-const networkToTraceEvent = function (networkId, type, data) {
+function networkToTraceEvent(networkId, type, data) {
   debug('event', networkId, type, `'${data.id}'`);
   const {
     socket,
@@ -94,27 +78,27 @@ const networkToTraceEvent = function (networkId, type, data) {
   };
 
   const serializeGroup = function (p) {
+    const serialized = p;
     try {
-      return p.group = data.group.toString();
+      serialized.group = data.group.toString();
     } catch (e) {
       debug('group serialization error', e);
-      return p.error = e.message;
+      serialized.error = e.message;
     }
   };
 
   const p = event.payload;
   switch (type) {
-    case 'connect': null; break;
-    case 'disconnect': null; break;
+    case 'connect': break;
+    case 'disconnect': break;
     case 'begingroup': serializeGroup(event.payload); break;
     case 'endgroup': serializeGroup(event.payload); break;
     case 'data':
       try {
         p.data = clone(data.data);
       } catch (error1) {
-        e = error1;
-        debug('data serialization error', e);
-        p.error = e.message;
+        debug('data serialization error', error1);
+        p.error = error1.message;
       }
       break;
     default:
@@ -123,7 +107,7 @@ const networkToTraceEvent = function (networkId, type, data) {
 
   debug('event done', networkId, type, `'${data.id}'`);
   return event;
-};
+}
 
 // Can be attached() to a NoFlo network, and keeps a circular buffer of events
 // which can be persisted on request
@@ -135,7 +119,8 @@ class Tracer {
   }
 
   attach(network) {
-    // FIXME: graphs loaded from .fbp don't have name. Should default to basename of file, and be configurable
+    // FIXME: graphs loaded from .fbp don't have name.
+    // Should default to basename of file, and be configurable
     const netId = network.graph.name || network.graph.properties.name || 'default';
     debug('attach', netId);
     const eventNames = [
@@ -151,15 +136,15 @@ class Tracer {
       return this.buffer.add(payload);
     }));
     // exported outport
-    const sockets = subscribeExportedOutports(network, netId, eventNames, (event, data) => {
+    subscribeExportedOutports(network, netId, eventNames, (event, data) => {
       const payload = networkToTraceEvent(netId, event, data);
       return this.buffer.add(payload);
     });
 
-    return this.header.graphs[netId] = network.graph.toJSON();
+    this.header.graphs[netId] = network.graph.toJSON();
   }
 
-  detach(network) {
+  detach() {
     // TODO: implement
   }
 
@@ -178,7 +163,9 @@ class Tracer {
 
   // node.js only
   dumpFile(filepath, callback) {
+    // eslint-disable-next-line global-require
     const fs = require('fs');
+    // eslint-disable-next-line global-require
     const temp = require('temp');
 
     let openFile = (cb) => fs.open(filepath, 'w', (err, fd) => cb(err, { path: filepath, fd }));
@@ -187,7 +174,10 @@ class Tracer {
     }
 
     return openFile((err, info) => {
-      if (err) { return callback(err); }
+      if (err) {
+        callback(err);
+        return;
+      }
 
       // HACKY json streaming serialization
       let events = 0;
@@ -196,20 +186,29 @@ class Tracer {
         let s = events ? ',' : '';
         events += 1;
         s += JSON.stringify(e, null, 2);
-        return write(s, (err) => {});
+        write(s, () => {});
       };
       // FIXME: handle, wait
 
       debug('streaming to file', info.path);
       const header = JSON.stringify(this.header, null, 2);
-      return write(`{\n \"header\": ${header}\n, \"events\":\n[`, (err) => this.buffer.getAll(writeEvent, (err) => {
-        if (err) { return callback(err); }
-        debug(`streamed ${events} events`);
-        return write(']\n }', (err) => {
-          debug('completed stream', info.path);
-          return callback(err, info.path);
+      write(`{\n "header": ${header}\n, "events":\n[`, (err1) => {
+        if (err1) {
+          callback(err1);
+          return;
+        }
+        this.buffer.getAll(writeEvent, (err2) => {
+          if (err2) {
+            callback(err2);
+            return;
+          }
+          debug(`streamed ${events} events`);
+          write(']\n }', (err3) => {
+            debug('completed stream', info.path);
+            callback(err3, info.path);
+          });
         });
-      }));
+      });
     });
   }
 }

@@ -1,3 +1,4 @@
+/* eslint class-methods-use-this: ["error", { "exceptMethods": ["processPort"] }] */
 const noflo = require('noflo');
 const debounce = require('debounce');
 const {

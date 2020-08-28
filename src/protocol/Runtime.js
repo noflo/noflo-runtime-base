@@ -205,27 +205,22 @@ class RuntimeProtocol extends EventEmitter {
   // XXX: should send updated runtime info?
 
   subscribeExportedPorts(name, network, add) {
-    let d;
     const sendExportedPorts = () => this.sendPorts(name, network);
-
     const dependencies = [
       'addInport',
       'addOutport',
       'removeInport',
       'removeOutport',
     ];
-    for (d of Array.from(dependencies)) {
+    dependencies.forEach((d) => {
       network.graph.removeListener(d, sendExportedPorts);
-    }
+    });
 
     if (add) {
-      return (() => {
-        const result = [];
-        for (d of Array.from(dependencies)) {
-          result.push(network.graph.on(d, sendExportedPorts));
-        }
-        return result;
-      })();
+      const result = [];
+      dependencies.forEach((d) => {
+        result.push(network.graph.on(d, sendExportedPorts));
+      });
     }
   }
 
@@ -241,29 +236,25 @@ class RuntimeProtocol extends EventEmitter {
 
     if (add) {
       graph.on('addOutport', portAdded);
-      return graph.on('removeOutport', portRemoved);
+      graph.on('removeOutport', portRemoved);
     }
   }
 
   subscribeOutdata(graphName, network, add) {
     // Unsubscribe all
-    let event; let
-      socket;
     if (!this.outputSockets[graphName]) { this.outputSockets[graphName] = {}; }
     let graphSockets = this.outputSockets[graphName];
-    for (const pub in graphSockets) {
-      socket = graphSockets[pub];
-      for (event of Array.from(events)) {
-        socket.removeAllListeners(event);
-      }
-    }
+    Object.keys(graphSockets).forEach((pub) => {
+      const socket = graphSockets[pub];
+      socket.removeAllListeners('ip');
+    });
     graphSockets = {};
 
     if (!add) { return; }
     // Subscribe new
-    return Object.keys(network.graph.outports).forEach((pub) => {
+    Object.keys(network.graph.outports).forEach((pub) => {
       const internal = network.graph.outports[pub];
-      socket = noflo.internalSocket.createSocket();
+      const socket = noflo.internalSocket.createSocket();
       graphSockets[pub] = socket;
       const {
         component,
@@ -272,7 +263,8 @@ class RuntimeProtocol extends EventEmitter {
         throw new Error(`Exported outport ${internal.port} in node ${internal.process} not found`);
       }
       component.outPorts[internal.port].attach(socket);
-      return socket.on('ip', (ip) => {
+      let event;
+      socket.on('ip', (ip) => {
         switch (ip.type) {
           case 'openBracket':
             event = 'begingroup';
@@ -289,7 +281,7 @@ class RuntimeProtocol extends EventEmitter {
           graph: graphName,
           payload: ip.data,
         });
-        return this.sendAll('packet', {
+        this.sendAll('packet', {
           port: pub,
           event,
           graph: graphName,

@@ -1,3 +1,4 @@
+/* eslint class-methods-use-this: ["error", { "exceptMethods": ["send", "sendAll"] }] */
 const protocols = {
   // eslint-disable-next-line global-require
   Runtime: require('./protocol/Runtime'),
@@ -142,7 +143,7 @@ class BaseTransport {
   // @param [String] Topic of the message
   // @param [Object] Message payload
   // @param [Object] Message context, dependent on the transport
-  send(protocol, topic, payload, context) {
+  send(protocol, topic, payload) {
     debugMessagingSend(`${protocol} ${topic}`);
     return debugMessagingSendPayload(payload);
   }
@@ -153,8 +154,12 @@ class BaseTransport {
   // the message by using the `canDo` method.
   //
   // Like send() only it sends to all.
-  // @param [Object] Message context, can be null
-  sendAll(protocol, topic, payload, context) {}
+  //
+  // @param [String] Name of the protocol
+  // @param [String] Topic of the message
+  // @param [Object] Message payload
+  // @param [Object] Message context, dependent on the transport
+  sendAll() {}
 
   // This is the entry-point to actual protocol handlers. When receiving
   // a message, the runtime should call this to make the requested actions
