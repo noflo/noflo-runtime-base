@@ -14,24 +14,35 @@
   "devDependencies": {
     "chai": "^4.0.0",
     "coveralls": "^3.0.0",
-    "grunt": "^1.0.1",
-    "grunt-coffeelint": "^0.0.16",
-    "grunt-contrib-coffee": "^2.0.0",
-    "grunt-contrib-watch": "^1.0.0",
-    "grunt-mocha-phantomjs": "^4.0.0",
-    "grunt-mocha-test": "^0.13.2",
-    "grunt-noflo-browser": "~1.6.0",
+    "eslint": "^7.7.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-mocha": "^8.0.0",
+    "karma": "^5.1.1",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-mocha": "^2.0.1",
+    "karma-mocha-reporter": "^2.2.5",
     "mocha": "^5.0.0",
+    "noflo-component-loader": "^0.3.2",
     "noflo-core": ">= 0.4.0",
-    "nyc": "^14.0.0"
+    "noflo-webpack-config": "^1.1.0",
+    "nyc": "^14.0.0",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
   },
   "keywords": [
     "noflo"
   ],
   "scripts": {
-    "test": "nyc grunt test"
+    "lint": "eslint src",
+    "build": "noflo-cache-preheat && webpack --config ./webpack.config.js",
+    "pretest": "npm run lint && npm run build",
+    "test:nodejs": "nyc mocha --require spec/utils/inject.js spec/*.js",
+    "test:browser": "karma start node_modules/noflo-webpack-config/karma.config.js",
+    "test": "npm run test:nodejs && npm run test:browser"
   },
-  "main": "./Base.js",
+  "main": "./src/Base.js",
   "dependencies": {
     "debounce": "^1.1.0",
     "debug": "^4.0.0",
@@ -41,8 +52,8 @@
   },
   "nyc": {
     "include": [
-      "*.js",
-      "protocol/*.js"
+      "src/*.js",
+      "src/protocol/*.js"
     ]
   }
 }

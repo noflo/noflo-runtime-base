@@ -13,3 +13,5 @@ deploy:
   on:
     tags: true
     repo: noflo/noflo-runtime-base
+addons:
+  chrome: stable
