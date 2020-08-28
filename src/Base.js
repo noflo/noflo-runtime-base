@@ -1,15 +1,12 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const protocols = {
+  // eslint-disable-next-line global-require
   Runtime: require('./protocol/Runtime'),
+  // eslint-disable-next-line global-require
   Graph: require('./protocol/Graph'),
+  // eslint-disable-next-line global-require
   Network: require('./protocol/Network'),
-  Component: require('./protocol/Component')
+  // eslint-disable-next-line global-require
+  Component: require('./protocol/Component'),
 };
 
 const debugMessagingReceive = require('debug')('noflo-runtime-base:messaging:receive');
@@ -32,11 +29,11 @@ class BaseTransport {
 
     if (this.options.defaultGraph != null) {
       this.options.defaultGraph.baseDir = this.options.baseDir;
-      const graphName = this._getGraphName(this.options.defaultGraph);
+      const graphName = this.getGraphName(this.options.defaultGraph);
       this.context = 'none';
       this.graph.registerGraph(graphName, this.options.defaultGraph);
       this.runtime.setMainGraph(graphName, this.options.defaultGraph);
-      this.network._startNetwork(this.options.defaultGraph, graphName, this.context, function(err) {
+      this.network._startNetwork(this.options.defaultGraph, graphName, this.context, (err) => {
         if (err) { throw err; }
       });
     }
@@ -57,7 +54,7 @@ class BaseTransport {
         'graph:readonly',
         'network:data',
         'network:control',
-        'network:status'
+        'network:status',
       ];
     }
 
@@ -72,7 +69,7 @@ class BaseTransport {
   }
 
   // Generate a name for the main graph
-  _getGraphName(graph) {
+  getGraphName(graph) {
     const namespace = this.options.namespace || 'default';
     const graphName = graph.name || 'main';
     return `${namespace}/${graphName}`;
@@ -90,7 +87,7 @@ class BaseTransport {
       checkCapabilities = capability;
     }
     const userCapabilities = this.getPermitted(secret);
-    const permitted = checkCapabilities.filter(perm => Array.from(userCapabilities).includes(perm));
+    const permitted = checkCapabilities.filter((perm) => userCapabilities.includes(perm));
     if (permitted.length > 0) {
       return true;
     }
@@ -105,18 +102,18 @@ class BaseTransport {
     }
     const message = `${protocol}:${topic}`;
     switch (message) {
-      case 'component:list': return this.canDo(['protocol:component'], secret); break;
-      case 'component:getsource': return this.canDo(['component:getsource'], secret); break;
-      case 'component:source': return this.canDo(['component:setsource'], secret); break;
-      case 'network:edges': return this.canDo(['network:data', 'protocol:network'], secret); break;
-      case 'network:start': return this.canDo(['network:control', 'protocol:network'], secret); break;
-      case 'network:stop': return this.canDo(['network:control', 'protocol:network'], secret); break;
-      case 'network:debug': return this.canDo(['network:control', 'protocol:network'], secret); break;
-      case 'network:getstatus': return this.canDo(['network:status', 'network:control', 'protocol:network'], secret); break;
-      case 'runtime:getruntime': return true; break;
-      case 'runtime:packet': return this.canDo(['protocol:runtime'], secret); break;
+      case 'component:list': return this.canDo(['protocol:component'], secret);
+      case 'component:getsource': return this.canDo(['component:getsource'], secret);
+      case 'component:source': return this.canDo(['component:setsource'], secret);
+      case 'network:edges': return this.canDo(['network:data', 'protocol:network'], secret);
+      case 'network:start': return this.canDo(['network:control', 'protocol:network'], secret);
+      case 'network:stop': return this.canDo(['network:control', 'protocol:network'], secret);
+      case 'network:debug': return this.canDo(['network:control', 'protocol:network'], secret);
+      case 'network:getstatus': return this.canDo(['network:status', 'network:control', 'protocol:network'], secret);
+      case 'runtime:getruntime': return true;
+      case 'runtime:packet': return this.canDo(['protocol:runtime'], secret);
+      default: return false;
     }
-    return false;
   }
 
   // Get enabled capabilities for a user
@@ -149,7 +146,7 @@ class BaseTransport {
     debugMessagingSend(`${protocol} ${topic}`);
     return debugMessagingSendPayload(payload);
   }
-   
+
   // Send a message to *all users*  via the transport protocol
   //
   // The transport should verify that the recipients are authorized to receive
@@ -171,8 +168,7 @@ class BaseTransport {
   // @param [String] Topic of the message
   // @param [Object] Message payload
   // @param [Object] Message context, dependent on the transport
-  receive(protocol, topic, payload, context) {
-    if (!payload) { payload = {}; }
+  receive(protocol, topic, payload = {}, context) {
     debugMessagingReceive(`${protocol} ${topic}`);
     debugMessagingReceivePayload(payload);
 
@@ -183,11 +179,25 @@ class BaseTransport {
 
     this.context = context;
     switch (protocol) {
-      case 'runtime': return this.runtime.receive(topic, payload, context);
-      case 'graph': return this.graph.receive(topic, payload, context);
-      case 'network': return this.network.receive(topic, payload, context);
-      case 'component': return this.component.receive(topic, payload, context);
-      default: return this.send(protocol, 'error', new Error(`Protocol ${protocol} is not supported`), context);
+      case 'runtime': {
+        this.runtime.receive(topic, payload, context);
+        return;
+      }
+      case 'graph': {
+        this.graph.receive(topic, payload, context);
+        return;
+      }
+      case 'network': {
+        this.network.receive(topic, payload, context);
+        return;
+      }
+      case 'component': {
+        this.component.receive(topic, payload, context);
+        return;
+      }
+      default: {
+        this.send(protocol, 'error', new Error(`Protocol ${protocol} is not supported`), context);
+      }
     }
   }
 }

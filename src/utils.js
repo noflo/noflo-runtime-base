@@ -1,14 +1,13 @@
-exports.parseName = function(name) {
-  let parsed;
+exports.parseName = function (name) {
   if (name.indexOf('/') === -1) {
-    return parsed = {
+    return {
       library: null,
-      name
+      name,
     };
   }
   const nameParts = name.split('/');
-  return parsed = {
+  return {
     library: nameParts[0],
-    name: nameParts[1]
+    name: nameParts[1],
   };
 };

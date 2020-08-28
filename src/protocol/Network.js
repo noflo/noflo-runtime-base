@@ -1,31 +1,23 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS202: Simplify dynamic range loops
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const noflo = require('noflo');
 const {
-  EventEmitter
+  EventEmitter,
 } = require('events');
 
-const prepareSocketEvent = function(event, graphName) {
+const prepareSocketEvent = function (event, graphName) {
   const payload = {
     id: event.id,
-    graph: graphName
+    graph: graphName,
   };
   if (event.socket.from) {
     payload.src = {
       node: event.socket.from.process.id,
-      port: event.socket.from.port
+      port: event.socket.from.port,
     };
   }
   if (event.socket.to) {
     payload.tgt = {
       node: event.socket.to.process.id,
-      port: event.socket.to.port
+      port: event.socket.to.port,
     };
   }
   if (event.subgraph) {
@@ -40,25 +32,26 @@ const prepareSocketEvent = function(event, graphName) {
   if (event.schema) {
     payload.schema = event.schema;
   }
-  if (typeof event.data !== 'undefined') {
+  payload.data = event.data;
+  if (typeof payload.data !== 'undefined') {
     if (!noflo.isBrowser()) {
-      if (Buffer.isBuffer(event.data)) {
+      if (Buffer.isBuffer(payload.data)) {
         // Make sure we're not trying to serialize the whole buffer to JSON
-        event.data = event.data.slice(0, 20);
+        payload.data = payload.data.slice(0, 20);
       }
     }
-    if (event.data != null ? event.data.toJSON : undefined) {
-      payload.data = event.data.toJSON();
+    if (payload.data != null ? payload.data.toJSON : undefined) {
+      payload.data = payload.data.toJSON();
     }
-    if (event.data != null ? event.data.toString : undefined) {
-      payload.data = event.data.toString();
+    if (payload.data != null ? payload.data.toString : undefined) {
+      payload.data = payload.data.toString();
       if (payload.data === '[object Object]') {
         try {
-          payload.data = JSON.parse(JSON.stringify(event.data));
-        } catch (error) {}
+          payload.data = JSON.parse(JSON.stringify(payload.data));
+        } catch (error) {
+          // Ignored
+        }
       }
-    } else {
-      payload.data = event.data;
     }
 
     if (event.metadata != null ? event.metadata.secure : undefined) {
@@ -70,19 +63,19 @@ const prepareSocketEvent = function(event, graphName) {
   return payload;
 };
 
-const getPortSignature = function(item) {
+const getPortSignature = (item) => {
   if (!item) { return ''; }
-  return item.process + '(' + item.port + ')';
+  return `${item.process}(${item.port})`;
 };
 
-const getEdgeSignature = edge => getPortSignature(edge.src) + ' -> ' + getPortSignature(edge.tgt);
+const getEdgeSignature = (edge) => `${getPortSignature(edge.src)} -> ${getPortSignature(edge.tgt)}`;
 
-const getConnectionSignature = function(connection) {
+const getConnectionSignature = (connection) => {
   if (!connection) { return ''; }
-  return connection.process.id + '(' + connection.port + ')';
+  return `${connection.process.id}(${connection.port})`;
 };
 
-const getSocketSignature = socket => getConnectionSignature(socket.from) +  ' -> ' + getConnectionSignature(socket.to);
+const getSocketSignature = (socket) => `${getConnectionSignature(socket.from)} -> ${getConnectionSignature(socket.to)}`;
 
 class NetworkProtocol extends EventEmitter {
   constructor(transport) {
@@ -104,27 +97,27 @@ class NetworkProtocol extends EventEmitter {
     if (!graph) { return; }
     switch (topic) {
       case 'start':
-        return this.startNetwork(graph, payload, context);
+        this.startNetwork(graph, payload, context); break;
       case 'stop':
-        return this.stopNetwork(graph, payload, context);
+        this.stopNetwork(graph, payload, context); break;
       case 'edges':
-        return this.updateEdgesFilter(graph, payload, context);
+        this.updateEdgesFilter(graph, payload, context); break;
       case 'debug':
-        return this.debugNetwork(graph, payload, context);
+        this.debugNetwork(graph, payload, context); break;
       case 'getstatus':
-        return this.getStatus(graph, payload, context);
-      default: return this.send('error', new Error(`network:${topic} not supported`), context);
+        this.getStatus(graph, payload, context); break;
+      default: this.send('error', new Error(`network:${topic} not supported`), context);
     }
   }
 
   resolveGraph(payload, context) {
     if (!payload.graph) {
       this.send('error', new Error('No graph specified'), context);
-      return;
+      return null;
     }
     if (!this.transport.graph.graphs[payload.graph]) {
       this.send('error', new Error('Requested graph not found'), context);
-      return;
+      return null;
     }
     return this.transport.graph.graphs[payload.graph];
   }
@@ -136,20 +129,20 @@ class NetworkProtocol extends EventEmitter {
     } else {
       network = {
         network: null,
-        filters: {}
+        filters: {},
       };
       this.networks[payload.graph] = network;
     }
 
-    for (let edge of Array.from(payload.edges)) {
+    payload.edges.forEach((edge) => {
       const signature = getEdgeSignature(edge);
       network.filters[signature] = true;
-    }
-    return this.send('edges', {
+    });
+    this.send('edges', {
       graph: payload.graph,
-      edges: payload.edges
-    }
-    , context);
+      edges: payload.edges,
+    },
+    context);
   }
 
   eventFiltered(graph, event) {
@@ -162,9 +155,9 @@ class NetworkProtocol extends EventEmitter {
     // Ensure we stop previous network
     if (this.networks[graphName] && this.networks[graphName].network) {
       const {
-        network
+        network,
       } = this.networks[graphName];
-      network.stop(err => {
+      network.stop((err) => {
         if (err) { return callback(err); }
         delete this.networks[graphName];
         this.emit('removenetwork', network, graphName, this.networks);
@@ -173,17 +166,18 @@ class NetworkProtocol extends EventEmitter {
       return;
     }
 
-    graph.componentLoader = this.transport.component.getLoader(graph.baseDir, this.transport.options);
+    const g = graph;
+    g.componentLoader = this.transport.component.getLoader(graph.baseDir, this.transport.options);
     const opts = JSON.parse(JSON.stringify(this.transport.options));
     opts.delay = true;
-    return noflo.createNetwork(graph, (err, network) => {
+    noflo.createNetwork(g, (err, network) => {
       if (err) { return callback(err); }
       if (this.networks[graphName] && this.networks[graphName].network) {
         this.networks[graphName].network = network;
       } else {
         this.networks[graphName] = {
           network,
-          filters: {}
+          filters: {},
         };
       }
       this.emit('addnetwork', network, graphName, this.networks);
@@ -191,80 +185,84 @@ class NetworkProtocol extends EventEmitter {
 
       // Run the network
       return network.connect(callback);
-    }
-    , opts);
+    },
+    opts);
   }
 
   subscribeNetwork(network, graphName, context) {
-    network.on('start', event => {
-      return this.sendAll('started', {
-        time: event.start,
+    network.on('start', (event) => this.sendAll('started', {
+      time: event.start,
+      graph: graphName,
+      running: network.isRunning(),
+      started: network.isStarted(),
+    },
+    context));
+    network.on('end', (event) => this.sendAll('stopped', {
+      time: new Date(),
+      uptime: event.uptime,
+      graph: graphName,
+      running: network.isRunning(),
+      started: network.isStarted(),
+    },
+    context));
+    network.on('icon', (event) => {
+      this.sendAll('icon', {
+        ...event,
         graph: graphName,
-        running: network.isRunning(),
-        started: network.isStarted()
-      }
-      , context);
+      }, context);
     });
-    network.on('end', event => {
-      return this.sendAll('stopped', {
-        time: new Date,
-        uptime: event.uptime,
-        graph: graphName,
-        running: network.isRunning(),
-        started: network.isStarted()
-      }
-      , context);
-    });
-    network.on('icon', event => {
-      event.graph = graphName;
-      return this.sendAll('icon', event, context);
-    });
-    network.on('ip', event => {
+    network.on('ip', (event) => {
       if (!this.eventFiltered(graphName, event)) { return; }
       const protocolEvent = {
         id: event.id,
         socket: event.socket,
         subgraph: event.subgraph,
-        metadata: event.metadata
+        metadata: event.metadata,
       };
       switch (event.type) {
-        case 'openBracket':
+        case 'openBracket': {
           protocolEvent.type = 'begingroup';
           protocolEvent.group = event.data || '';
           break;
-        case 'data':
+        }
+        case 'data': {
           protocolEvent.type = 'data';
           protocolEvent.data = event.data;
           protocolEvent.datatype = event.datatype;
           protocolEvent.schema = event.schema;
           break;
-        case 'closeBracket':
+        }
+        case 'closeBracket': {
           protocolEvent.type = 'endgroup';
           protocolEvent.group = event.data || '';
           break;
+        }
+        default: {
+          // Ignored for now
+        }
       }
-      return this.sendAll(protocolEvent.type, prepareSocketEvent(protocolEvent, graphName), context);
+      this.sendAll(protocolEvent.type, prepareSocketEvent(protocolEvent, graphName), context);
     });
-    return network.on('process-error', event => {
+    return network.on('process-error', (event) => {
       let error = event.error.message;
       // If we can get a backtrace, send 3 levels
       if (event.error.stack) {
         const bt = event.error.stack.split('\n');
-        for (let i = 0, end = Math.min(bt.length, 3), asc = 0 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+        for (let i = 0, end = Math.min(bt.length, 3), asc = end >= 0; asc ? i <= end : i >= end; asc ? i++ : i--) {
           error += `\n${bt[i]}`;
         }
       }
-      return this.sendAll('processerror', {
+      this.sendAll('processerror', {
         id: event.id,
         error,
-        graph: graphName
-      }
-      , context);
+        graph: graphName,
+      },
+      context);
     });
   }
 
   _startNetwork(graph, graphName, context, callback) {
-    const doStart = net => net.start(err => callback(err));
+    const doStart = (net) => net.start((err) => callback(err));
 
     let network = this.networks[graphName];
     if (network && network.network) {
@@ -272,7 +270,7 @@ class NetworkProtocol extends EventEmitter {
       return doStart(network.network);
     }
 
-    return this.initNetwork(graph, graphName, context, err => {
+    return this.initNetwork(graph, graphName, context, (err) => {
       if (err) { return callback(err); }
       network = this.networks[graphName];
       return doStart(network.network);
@@ -280,8 +278,7 @@ class NetworkProtocol extends EventEmitter {
   }
 
   startNetwork(graph, payload, context) {
-    const network = this.networks[payload.graph];
-    return this._startNetwork(graph, payload.graph, context, err => {
+    this._startNetwork(graph, payload.graph, context, (err) => {
       if (err) { this.send('error', err, context); }
     });
   }
@@ -297,29 +294,29 @@ class NetworkProtocol extends EventEmitter {
       return;
     }
     if (net.isStarted()) {
-      this.networks[payload.graph].network.stop(err => {
+      this.networks[payload.graph].network.stop((err) => {
         if (err) {
           this.send('error', err, context);
           return;
         }
         this.send('stopped', {
-          time: new Date,
+          time: new Date(),
           graph: payload.graph,
           running: net.isRunning(),
-          started: net.isStarted()
-        }
-        , context);
+          started: net.isStarted(),
+        },
+        context);
       });
       return;
     }
     // Was already stopped, just send the confirmation
-    return this.send('stopped', {
-      time: new Date,
+    this.send('stopped', {
+      time: new Date(),
       graph: payload.graph,
       running: net.isRunning(),
-      started: net.isStarted()
-    }
-    , context);
+      started: net.isStarted(),
+    },
+    context);
   }
 
   debugNetwork(graph, payload, context) {
@@ -334,7 +331,7 @@ class NetworkProtocol extends EventEmitter {
     }
     net.setDebug(payload.enable);
     this.send('setdebug',
-      {enable: payload.enable});
+      { enable: payload.enable });
   }
 
   getStatus(graph, payload, context) {
@@ -347,12 +344,12 @@ class NetworkProtocol extends EventEmitter {
       this.send('error', new Error(`Network ${payload.graph} not found`), context);
       return;
     }
-    return this.send('status', {
+    this.send('status', {
       graph: payload.graph,
       running: net.isRunning(),
-      started: net.isStarted()
-    }
-    , context);
+      started: net.isStarted(),
+    },
+    context);
   }
 }
 

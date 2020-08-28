@@ -6,10 +6,10 @@
  */
 const isBrowser = () => !((typeof process !== 'undefined') && process.execPath && (process.execPath.indexOf('node') !== -1));
 
-const Base = require('./Base');
 const {
-  EventEmitter
+  EventEmitter,
 } = require('events');
+const Base = require('./Base');
 
 class DirectRuntime extends Base {
   constructor(options) {
@@ -19,10 +19,9 @@ class DirectRuntime extends Base {
 
   _connect(client) {
     this.clients.push(client);
-    return client.on('send', msg => {
+    return client.on('send', (msg) =>
       // Capture context
-      return this._receive(msg, { client });
-  });
+      this._receive(msg, { client }));
   }
 
   _disconnect(client) {
@@ -41,7 +40,7 @@ class DirectRuntime extends Base {
     const m = {
       protocol,
       command: topic,
-      payload
+      payload,
     };
     return context.client._receive(m);
   }
@@ -50,13 +49,12 @@ class DirectRuntime extends Base {
     const m = {
       protocol,
       command: topic,
-      payload
+      payload,
     };
-    return Array.from(this.clients).map((client) =>
-      client._receive(m));
+    return Array.from(this.clients).map((client) => client._receive(m));
   }
 }
-    
+
 // Mostly used for testing
 class DirectClient extends EventEmitter {
   constructor(runtime, name) {
@@ -78,16 +76,14 @@ class DirectClient extends EventEmitter {
     const m = {
       protocol,
       command: topic,
-      payload
+      payload,
     };
     return this.emit('send', m);
   }
 
   _receive(message) {
-    return setTimeout(() => {
-      return this.emit('message', message);
-    }
-    , 1);
+    return setTimeout(() => this.emit('message', message),
+      1);
   }
 }
 

@@ -3,12 +3,13 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-let baseDir, chai, direct;
+let baseDir; let chai; let
+  direct;
 const noflo = require('noflo');
 
 if (noflo.isBrowser()) {
   ({
-    direct
+    direct,
   } = require('noflo-runtime-base'));
   baseDir = 'noflo-runtime-base';
 } else {
@@ -18,23 +19,23 @@ if (noflo.isBrowser()) {
   baseDir = path.resolve(__dirname, '../');
 }
 
-describe('Runtime protocol', function() {
+describe('Runtime protocol', () => {
   let runtime = null;
   let client = null;
 
-  describe('sending runtime:getruntime', function() {
-    beforeEach(function() {
-      runtime = new direct.Runtime;
+  describe('sending runtime:getruntime', () => {
+    beforeEach(() => {
+      runtime = new direct.Runtime();
       client = new direct.Client(runtime);
       return client.connect();
     });
-    afterEach(function() {
+    afterEach(() => {
       client.disconnect();
       client = null;
       return runtime = null;
     });
-    it('should respond with runtime:runtime for unauthorized user', function(done) {
-      client.once('message', function(msg) {
+    it('should respond with runtime:runtime for unauthorized user', (done) => {
+      client.once('message', (msg) => {
         chai.expect(msg.protocol).to.equal('runtime');
         chai.expect(msg.command).to.equal('runtime');
         chai.expect(msg.payload.type).to.have.string('noflo');
@@ -44,16 +45,17 @@ describe('Runtime protocol', function() {
       });
       return client.send('runtime', 'getruntime', null);
     });
-    return it('should respond with runtime:runtime for authorized user', function(done) {
+    return it('should respond with runtime:runtime for authorized user', (done) => {
       client.disconnect();
       runtime = new direct.Runtime({
         permissions: {
           'super-secret': ['protocol:graph', 'protocol:component', 'unknown:capability'],
-          'second-secret': ['protocol:graph', 'protocol:runtime']
-        }});
+          'second-secret': ['protocol:graph', 'protocol:runtime'],
+        },
+      });
       client = new direct.Client(runtime);
       client.connect();
-      client.once('message', function(msg) {
+      client.once('message', (msg) => {
         chai.expect(msg.protocol).to.equal('runtime');
         chai.expect(msg.command).to.equal('runtime');
         chai.expect(msg.payload.type).to.have.string('noflo');
@@ -62,31 +64,31 @@ describe('Runtime protocol', function() {
         return done();
       });
       return client.send('runtime', 'getruntime',
-        {secret: 'super-secret'});
+        { secret: 'super-secret' });
     });
   });
-  return describe('with a graph containing exported ports', function() {
+  return describe('with a graph containing exported ports', () => {
     let ports = null;
-    before(function() {
+    before(() => {
       runtime = new direct.Runtime({
         permissions: {
-          'second-secret': ['protocol:graph', 'protocol:runtime', 'protocol:network']
+          'second-secret': ['protocol:graph', 'protocol:runtime', 'protocol:network'],
         },
-        baseDir
+        baseDir,
       });
       client = new direct.Client(runtime);
       return client.connect();
     });
-    after(function() {
+    after(() => {
       client.disconnect();
       client = null;
       runtime = null;
-      runtime = new direct.Runtime;
+      runtime = new direct.Runtime();
       return ports = null;
     });
-    it('should be possible to upload graph', function(done) {
-      client.on('error', err => done(err));
-      client.on('message', function(msg) {
+    it('should be possible to upload graph', (done) => {
+      client.on('error', (err) => done(err));
+      client.on('message', (msg) => {
         if (msg.command === 'error') {
           return done(msg.payload);
         }
@@ -96,72 +98,64 @@ describe('Runtime protocol', function() {
       client.send('graph', 'clear', {
         id: 'bar',
         main: true,
-        secret: 'second-secret'
-      }
-      );
+        secret: 'second-secret',
+      });
       client.send('graph', 'addnode', {
         id: 'Hello',
         component: 'core/Repeat',
         graph: 'bar',
-        secret: 'second-secret'
-      }
-      );
+        secret: 'second-secret',
+      });
       client.send('graph', 'addnode', {
         id: 'World',
         component: 'core/Repeat',
         graph: 'bar',
-        secret: 'second-secret'
-      }
-      );
+        secret: 'second-secret',
+      });
       client.send('graph', 'addedge', {
         src: {
           node: 'Hello',
-          port: 'out'
+          port: 'out',
         },
         tgt: {
           node: 'World',
-          port: 'in'
+          port: 'in',
         },
         graph: 'bar',
-        secret: 'second-secret'
-      }
-      );
+        secret: 'second-secret',
+      });
       client.send('graph', 'addinport', {
         public: 'in',
         node: 'Hello',
         port: 'in',
         graph: 'bar',
-        secret: 'second-secret'
-      }
-      );
+        secret: 'second-secret',
+      });
       return client.send('graph', 'addoutport', {
         public: 'out',
         node: 'World',
         port: 'out',
         graph: 'bar',
-        secret: 'second-secret'
-      }
-      );
+        secret: 'second-secret',
+      });
     });
-    it('should be possible to start the network', function(done) {
-      client.on('error', err => done(err));
-      client.on('message', function(msg) {
+    it('should be possible to start the network', (done) => {
+      client.on('error', (err) => done(err));
+      client.on('message', (msg) => {
         if (msg.protocol !== 'network') { return; }
         if (msg.command !== 'started') { return; }
         return done();
       });
-      runtime.runtime.on('ports', emittedPorts => ports = emittedPorts);
+      runtime.runtime.on('ports', (emittedPorts) => ports = emittedPorts);
       return client.send('network', 'start', {
         graph: 'bar',
-        secret: 'second-secret'
-      }
-      );
+        secret: 'second-secret',
+      });
     });
-    it('packets sent to IN should be received at OUT', function(done) {
-      const payload =
-        {hello: 'World'};
-      client.on('error', err => done(err));
-      var messageListener = function(msg) {
+    it('packets sent to IN should be received at OUT', (done) => {
+      const payload = { hello: 'World' };
+      client.on('error', (err) => done(err));
+      var messageListener = function (msg) {
         if (msg.protocol !== 'runtime') { return; }
         if (msg.command !== 'packet') { return; }
         if (msg.payload.port !== 'out') { return; }
@@ -176,18 +170,16 @@ describe('Runtime protocol', function() {
         port: 'in',
         event: 'data',
         payload,
-        secret: 'second-secret'
-      }
-      );
+        secret: 'second-secret',
+      });
     });
-    it('should have emitted ports via JS API', function() {
+    it('should have emitted ports via JS API', () => {
       chai.expect(ports.inPorts.length).to.equal(1);
       return chai.expect(ports.outPorts.length).to.equal(1);
     });
-    return it('packets sent via JS API to IN should be received at OUT', function(done) {
-      const payload =
-        {hello: 'JavaScript'};
-      runtime.runtime.on('packet', function(msg) {
+    return it('packets sent via JS API to IN should be received at OUT', (done) => {
+      const payload = { hello: 'JavaScript' };
+      runtime.runtime.on('packet', (msg) => {
         if (msg.event !== 'data') { return; }
         chai.expect(msg.payload).to.eql(payload);
         return done();
@@ -197,9 +189,9 @@ describe('Runtime protocol', function() {
         port: 'in',
         event: 'data',
         payload,
-        secret: 'second-secret'
-      }
-      , function(err) {
+        secret: 'second-secret',
+      },
+      (err) => {
         if (err) { return done(err); }
       });
     });

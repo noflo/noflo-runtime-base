@@ -3,12 +3,13 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-let baseDir, chai, direct;
+let baseDir; let chai; let
+  direct;
 const noflo = require('noflo');
 
 if (noflo.isBrowser()) {
   ({
-    direct
+    direct,
   } = require('noflo-runtime-base'));
   baseDir = 'noflo-runtime-base';
 } else {
@@ -18,29 +19,29 @@ if (noflo.isBrowser()) {
   baseDir = path.resolve(__dirname, '../');
 }
 
-describe('Network protocol', function() {
+describe('Network protocol', () => {
   let runtime = null;
   let client = null;
   before(() => runtime = new direct.Runtime({
     permissions: {
-      foo: ['protocol:graph', 'protocol:network']
+      foo: ['protocol:graph', 'protocol:network'],
     },
-    baseDir
+    baseDir,
   }));
-  beforeEach(function() {
+  beforeEach(() => {
     client = new direct.Client(runtime);
     return client.connect();
   });
-  afterEach(function() {
+  afterEach(() => {
     if (!client) { return; }
     client.removeAllListeners('message');
     client.disconnect();
     return client = null;
   });
 
-  describe('defining a graph', () => it('should succeed', function(done) {
-    client.on('error', err => done(err));
-    client.on('message', function(msg) {
+  describe('defining a graph', () => it('should succeed', (done) => {
+    client.on('error', (err) => done(err));
+    client.on('message', (msg) => {
       if (msg.command === 'error') {
         return done(msg.payload);
       }
@@ -51,59 +52,54 @@ describe('Network protocol', function() {
     client.send('graph', 'clear', {
       id: 'bar',
       main: true,
-      secret: 'foo'
-    }
-    );
+      secret: 'foo',
+    });
     client.send('graph', 'addnode', {
       id: 'Hello',
       component: 'core/Repeat',
       graph: 'bar',
-      secret: 'foo'
-    }
-    );
+      secret: 'foo',
+    });
     client.send('graph', 'addnode', {
       id: 'World',
       component: 'core/Drop',
       graph: 'bar',
-      secret: 'foo'
-    }
-    );
+      secret: 'foo',
+    });
     client.send('graph', 'addedge', {
       src: {
         node: 'Hello',
-        port: 'out'
+        port: 'out',
       },
       tgt: {
         node: 'World',
-        port: 'in'
+        port: 'in',
       },
       graph: 'bar',
-      secret: 'foo'
-    }
-    );
+      secret: 'foo',
+    });
     return client.send('graph', 'addinitial', {
       src: {
-        data: 'Hello, world!'
+        data: 'Hello, world!',
       },
       tgt: {
         node: 'Hello',
-        port: 'in'
+        port: 'in',
       },
       graph: 'bar',
-      secret: 'foo'
-    }
-    );
+      secret: 'foo',
+    });
   }));
-  return describe('starting the network', function() {
-    it('should process the nodes and stop when it completes', function(done) {
+  return describe('starting the network', () => {
+    it('should process the nodes and stop when it completes', (done) => {
       const expects = [
         'started',
         'data',
         'data',
-        'stopped'
+        'stopped',
       ];
-      client.on('error', err => done(err));
-      client.on('message', function(msg) {
+      client.on('error', (err) => done(err));
+      client.on('message', (msg) => {
         if (msg.command === 'error') {
           return done(msg.payload);
         }
@@ -114,13 +110,12 @@ describe('Network protocol', function() {
       });
       return client.send('network', 'start', {
         graph: 'bar',
-        secret: 'foo'
-      }
-      );
+        secret: 'foo',
+      });
     });
-    return it('should provide a "finished" status', function(done) {
-      client.on('error', err => done(err));
-      client.on('message', function(msg) {
+    return it('should provide a "finished" status', (done) => {
+      client.on('error', (err) => done(err));
+      client.on('message', (msg) => {
         chai.expect(msg.protocol).to.equal('network');
         chai.expect(msg.command).to.equal('status');
         chai.expect(msg.payload.graph).to.equal('bar');
@@ -130,9 +125,8 @@ describe('Network protocol', function() {
       });
       return client.send('network', 'getstatus', {
         graph: 'bar',
-        secret: 'foo'
-      }
-      );
+        secret: 'foo',
+      });
     });
   });
 });

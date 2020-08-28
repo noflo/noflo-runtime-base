@@ -1,11 +1,6 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const noflo = require('noflo');
 const {
-  EventEmitter
+  EventEmitter,
 } = require('events');
 
 class GraphProtocol extends EventEmitter {
@@ -32,38 +27,38 @@ class GraphProtocol extends EventEmitter {
     }
 
     switch (topic) {
-      case 'clear': return this.initGraph(payload, context);
-      case 'addnode': return this.addNode(graph, payload, context);
-      case 'removenode': return this.removeNode(graph, payload, context);
-      case 'renamenode': return this.renameNode(graph, payload, context);
-      case 'changenode': return this.changeNode(graph, payload, context);
-      case 'addedge': return this.addEdge(graph, payload, context);
-      case 'removeedge': return this.removeEdge(graph, payload, context);
-      case 'changeedge': return this.changeEdge(graph, payload, context);
-      case 'addinitial': return this.addInitial(graph, payload, context);
-      case 'removeinitial': return this.removeInitial(graph, payload, context);
-      case 'addinport': return this.addInport(graph, payload, context);
-      case 'removeinport': return this.removeInport(graph, payload, context);
-      case 'renameinport': return this.renameInport(graph, payload, context);
-      case 'addoutport': return this.addOutport(graph, payload, context);
-      case 'removeoutport': return this.removeOutport(graph, payload, context);
-      case 'renameoutport': return this.renameOutport(graph, payload, context);
-      case 'addgroup': return this.addGroup(graph, payload, context);
-      case 'removegroup': return this.removeGroup(graph, payload, context);
-      case 'renamegroup': return this.renameGroup(graph, payload, context);
-      case 'changegroup': return this.changeGroup(graph, payload, context);
-      default: return this.send('error', new Error(`graph:${topic} not supported`), context);
+      case 'clear': this.initGraph(payload, context); break;
+      case 'addnode': this.addNode(graph, payload, context); break;
+      case 'removenode': this.removeNode(graph, payload, context); break;
+      case 'renamenode': this.renameNode(graph, payload, context); break;
+      case 'changenode': this.changeNode(graph, payload, context); break;
+      case 'addedge': this.addEdge(graph, payload, context); break;
+      case 'removeedge': this.removeEdge(graph, payload, context); break;
+      case 'changeedge': this.changeEdge(graph, payload, context); break;
+      case 'addinitial': this.addInitial(graph, payload, context); break;
+      case 'removeinitial': this.removeInitial(graph, payload, context); break;
+      case 'addinport': this.addInport(graph, payload, context); break;
+      case 'removeinport': this.removeInport(graph, payload, context); break;
+      case 'renameinport': this.renameInport(graph, payload, context); break;
+      case 'addoutport': this.addOutport(graph, payload, context); break;
+      case 'removeoutport': this.removeOutport(graph, payload, context); break;
+      case 'renameoutport': this.renameOutport(graph, payload, context); break;
+      case 'addgroup': this.addGroup(graph, payload, context); break;
+      case 'removegroup': this.removeGroup(graph, payload, context); break;
+      case 'renamegroup': this.renameGroup(graph, payload, context); break;
+      case 'changegroup': this.changeGroup(graph, payload, context); break;
+      default: this.send('error', new Error(`graph:${topic} not supported`), context);
     }
   }
 
   resolveGraph(payload, context) {
     if (!payload.graph) {
       this.send('error', new Error('No graph specified'), context);
-      return;
+      return null;
     }
     if (!this.graphs[payload.graph]) {
       this.send('error', new Error('Requested graph not found'), context);
-      return;
+      return null;
     }
     return this.graphs[payload.graph];
   }
@@ -75,7 +70,7 @@ class GraphProtocol extends EventEmitter {
   sendGraph(id, graph, context) {
     const payload = {
       graph: id,
-      description: graph.toJSON()
+      description: graph.toJSON(),
     };
     return this.send('graph', payload, context);
   }
@@ -85,17 +80,14 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No graph ID provided'), context);
       return;
     }
-    if (!payload.name) {
-      payload.name = 'NoFlo runtime';
-    }
-
-    const graph = new noflo.Graph(payload.name);
+    const graph = new noflo.Graph(payload.name || 'NoFlo runtime');
 
     let fullName = payload.id;
-    if (payload.library) {
-      payload.library = payload.library.replace('noflo-', '');
-      graph.properties.library = payload.library;
-      fullName = `${payload.library}/${fullName}`;
+    let { library } = payload;
+    if (library) {
+      library = library.replace('noflo-', '');
+      graph.properties.library = library;
+      fullName = `${library}/${fullName}`;
     }
     if (payload.icon) {
       graph.properties.icon = payload.icon;
@@ -118,127 +110,123 @@ class GraphProtocol extends EventEmitter {
     }
 
     this.graphs[payload.id] = graph;
-    return this.sendAll('clear', {
+    this.sendAll('clear', {
       id: payload.id,
       name: payload.name,
       library: payload.library,
       main: payload.main,
       icon: payload.icon,
-      description: payload.description
-    }
-    , context);
+      description: payload.description,
+    },
+    context);
   }
 
   registerGraph(id, graph) {
     if (id === 'default/main') { this.transport.runtime.setMainGraph(id, graph); }
     this.subscribeGraph(id, graph, '');
-    return this.graphs[id] = graph;
+    this.graphs[id] = graph;
   }
 
   subscribeGraph(id, graph, context) {
-    graph.on('addNode', node => {
-      node.graph = id;
-      return this.sendAll('addnode', node, context);
+    graph.on('addNode', (node) => {
+      this.sendAll('addnode', {
+        ...node,
+        graph: id,
+      }, context);
     });
-    graph.on('removeNode', node => {
+    graph.on('removeNode', (node) => {
       const nodeData = {
         id: node.id,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('removenode', nodeData, context);
+      this.sendAll('removenode', nodeData, context);
     });
-    graph.on('renameNode', (oldId, newId) => {
-      return this.sendAll('renamenode', {
-        from: oldId,
-        to: newId,
-        graph: id
-      }
-      , context);
-    });
-    graph.on('changeNode', (node, before) => {
-      return this.sendAll('changenode', {
-        id: node.id,
-        metadata: node.metadata,
-        graph: id
-      }
-      , context);
-    });
-    graph.on('addEdge', edge => {
-      if (typeof edge.from.index !== 'number') { delete edge.from.index; }
-      if (typeof edge.to.index !== 'number') { delete edge.to.index; }
+    graph.on('renameNode', (oldId, newId) => this.sendAll('renamenode', {
+      from: oldId,
+      to: newId,
+      graph: id,
+    },
+    context));
+    graph.on('changeNode', (node) => this.sendAll('changenode', {
+      id: node.id,
+      metadata: node.metadata,
+      graph: id,
+    },
+    context));
+    graph.on('addEdge', (edge) => {
       const edgeData = {
         src: edge.from,
         tgt: edge.to,
         metadata: edge.metadata,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('addedge', edgeData, context);
+      this.sendAll('addedge', edgeData, context);
     });
-    graph.on('removeEdge', edge => {
+    graph.on('removeEdge', (edge) => {
       const edgeData = {
         src: edge.from,
         tgt: edge.to,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('removeedge', edgeData, context);
+      this.sendAll('removeedge', edgeData, context);
     });
-    graph.on('changeEdge', edge => {
+    graph.on('changeEdge', (edge) => {
       const edgeData = {
         src: edge.from,
         tgt: edge.to,
         metadata: edge.metadata,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('changeedge', edgeData, context);
+      this.sendAll('changeedge', edgeData, context);
     });
-    graph.on('addInitial', iip => {
+    graph.on('addInitial', (iip) => {
       const iipData = {
         src: iip.from,
         tgt: iip.to,
         metadata: iip.metadata,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('addinitial', iipData, context);
+      this.sendAll('addinitial', iipData, context);
     });
-    graph.on('removeInitial', iip => {
+    graph.on('removeInitial', (iip) => {
       const iipData = {
         src: iip.from,
         tgt: iip.to,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('removeinitial', iipData, context);
+      this.sendAll('removeinitial', iipData, context);
     });
-    graph.on('addGroup', group => {
+    graph.on('addGroup', (group) => {
       const groupData = {
         name: group.name,
         nodes: group.nodes,
         metadata: group.metadata,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('addgroup', groupData, context);
+      this.sendAll('addgroup', groupData, context);
     });
-    graph.on('removeGroup', group => {
+    graph.on('removeGroup', (group) => {
       const groupData = {
         name: group.name,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('removegroup', groupData, context);
+      this.sendAll('removegroup', groupData, context);
     });
     graph.on('renameGroup', (oldName, newName) => {
       const groupData = {
         from: oldName,
         to: newName,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('renamegroup', groupData, context);
+      this.sendAll('renamegroup', groupData, context);
     });
-    graph.on('changeGroup', group => {
+    graph.on('changeGroup', (group) => {
       const groupData = {
         name: group.name,
         metadata: group.metadata,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('changegroup', groupData, context);
+      this.sendAll('changegroup', groupData, context);
     });
     graph.on('addInport', (publicName, port) => {
       const data = {
@@ -246,9 +234,9 @@ class GraphProtocol extends EventEmitter {
         node: port.process,
         port: port.port,
         metadata: port.metadata,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('addinport', data, context);
+      this.sendAll('addinport', data, context);
     });
     graph.on('addOutport', (publicName, port) => {
       const data = {
@@ -256,47 +244,44 @@ class GraphProtocol extends EventEmitter {
         node: port.process,
         port: port.port,
         metadata: port.metadata,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('addoutport', data, context);
+      this.sendAll('addoutport', data, context);
     });
-    graph.on('removeInport', (publicName, port) => {
+    graph.on('removeInport', (publicName) => {
       const data = {
         public: publicName,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('removeinport', data, context);
+      this.sendAll('removeinport', data, context);
     });
-    graph.on('removeOutport', (publicName, port) => {
+    graph.on('removeOutport', (publicName) => {
       const data = {
         public: publicName,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('removeoutport', data, context);
+      this.sendAll('removeoutport', data, context);
     });
     graph.on('renameInport', (oldName, newName) => {
       const data = {
         from: oldName,
         to: newName,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('renameinport', data, context);
+      this.sendAll('renameinport', data, context);
     });
     graph.on('renameOutport', (oldName, newName) => {
       const data = {
         from: oldName,
         to: newName,
-        graph: id
+        graph: id,
       };
-      return this.sendAll('renameoutport', data, context);
+      this.sendAll('renameoutport', data, context);
     });
-    return graph.on('endTransaction', () => {
-      return this.emit('updated', {
-        name: id,
-        graph
-      }
-      );
-    });
+    return graph.on('endTransaction', () => this.emit('updated', {
+      name: id,
+      graph,
+    }));
   }
 
   addNode(graph, node, context) {
@@ -304,7 +289,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No ID or component supplied'), context);
       return;
     }
-    return graph.addNode(node.id, node.component, node.metadata);
+    graph.addNode(node.id, node.component, node.metadata);
   }
 
   removeNode(graph, payload, context) {
@@ -312,7 +297,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No ID supplied'), context);
       return;
     }
-    return graph.removeNode(payload.id);
+    graph.removeNode(payload.id);
   }
 
   renameNode(graph, payload, context) {
@@ -320,7 +305,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No from or to supplied'), context);
       return;
     }
-    return graph.renameNode(payload.from, payload.to);
+    graph.renameNode(payload.from, payload.to);
   }
 
   changeNode(graph, payload, context) {
@@ -328,7 +313,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No id or metadata supplied'), context);
       return;
     }
-    return graph.setNodeMetadata(payload.id, payload.metadata);
+    graph.setNodeMetadata(payload.id, payload.metadata);
   }
 
   addEdge(graph, edge, context) {
@@ -338,11 +323,19 @@ class GraphProtocol extends EventEmitter {
     }
     if ((typeof edge.src.index === 'number') || (typeof edge.tgt.index === 'number')) {
       if (graph.addEdgeIndex) {
-        graph.addEdgeIndex(edge.src.node, edge.src.port, edge.src.index, edge.tgt.node, edge.tgt.port, edge.tgt.index, edge.metadata);
+        graph.addEdgeIndex(
+          edge.src.node,
+          edge.src.port,
+          edge.src.index,
+          edge.tgt.node,
+          edge.tgt.port,
+          edge.tgt.index,
+          edge.metadata,
+        );
         return;
       }
     }
-    return graph.addEdge(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata);
+    graph.addEdge(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata);
   }
 
   removeEdge(graph, edge, context) {
@@ -350,7 +343,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No src or tgt supplied'), context);
       return;
     }
-    return graph.removeEdge(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port);
+    graph.removeEdge(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port);
   }
 
   changeEdge(graph, edge, context) {
@@ -358,7 +351,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No src or tgt supplied'), context);
       return;
     }
-    return graph.setEdgeMetadata(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata);
+    graph.setEdgeMetadata(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port, edge.metadata);
   }
 
   addInitial(graph, payload, context) {
@@ -370,7 +363,7 @@ class GraphProtocol extends EventEmitter {
       graph.addInitialIndex(payload.src.data, payload.tgt.node, payload.tgt.port, payload.tgt.index, payload.metadata);
       return;
     }
-    return graph.addInitial(payload.src.data, payload.tgt.node, payload.tgt.port, payload.metadata);
+    graph.addInitial(payload.src.data, payload.tgt.node, payload.tgt.port, payload.metadata);
   }
 
   removeInitial(graph, payload, context) {
@@ -378,7 +371,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No tgt supplied'), context);
       return;
     }
-    return graph.removeInitial(payload.tgt.node, payload.tgt.port);
+    graph.removeInitial(payload.tgt.node, payload.tgt.port);
   }
 
   addInport(graph, payload, context) {
@@ -386,7 +379,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('Missing exported inport information'), context);
       return;
     }
-    return graph.addInport(payload.public, payload.node, payload.port, payload.metadata);
+    graph.addInport(payload.public, payload.node, payload.port, payload.metadata);
   }
 
   removeInport(graph, payload, context) {
@@ -394,7 +387,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('Missing exported inport name'), context);
       return;
     }
-    return graph.removeInport(payload.public);
+    graph.removeInport(payload.public);
   }
 
   renameInport(graph, payload, context) {
@@ -402,7 +395,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No from or to supplied'), context);
       return;
     }
-    return graph.renameInport(payload.from, payload.to);
+    graph.renameInport(payload.from, payload.to);
   }
 
   addOutport(graph, payload, context) {
@@ -410,7 +403,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('Missing exported outport information'), context);
       return;
     }
-    return graph.addOutport(payload.public, payload.node, payload.port, payload.metadata);
+    graph.addOutport(payload.public, payload.node, payload.port, payload.metadata);
   }
 
   removeOutport(graph, payload, context) {
@@ -418,7 +411,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('Missing exported outport name'), context);
       return;
     }
-    return graph.removeOutport(payload.public);
+    graph.removeOutport(payload.public);
   }
 
   renameOutport(graph, payload, context) {
@@ -426,7 +419,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No from or to supplied'), context);
       return;
     }
-    return graph.renameOutport(payload.from, payload.to);
+    graph.renameOutport(payload.from, payload.to);
   }
 
   addGroup(graph, payload, context) {
@@ -434,7 +427,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No name or nodes or metadata supplied'), context);
       return;
     }
-    return graph.addGroup(payload.name, payload.nodes, payload.metadata);
+    graph.addGroup(payload.name, payload.nodes, payload.metadata);
   }
 
   removeGroup(graph, payload, context) {
@@ -442,7 +435,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No name supplied'), context);
       return;
     }
-    return graph.removeGroup(payload.name);
+    graph.removeGroup(payload.name);
   }
 
   renameGroup(graph, payload, context) {
@@ -450,7 +443,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No from or to supplied'), context);
       return;
     }
-    return graph.renameGroup(payload.from, payload.to);
+    graph.renameGroup(payload.from, payload.to);
   }
 
   changeGroup(graph, payload, context) {
@@ -458,7 +451,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No name or metadata supplied'), context);
       return;
     }
-    return graph.setEdgeMetadata(payload.name, payload.metadata);
+    graph.setEdgeMetadata(payload.name, payload.metadata);
   }
 }
 

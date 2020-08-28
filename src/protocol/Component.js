@@ -1,14 +1,7 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const noflo = require('noflo');
 const debounce = require('debounce');
 const {
-  EventEmitter
+  EventEmitter,
 } = require('events');
 const utils = require('../utils');
 
@@ -16,6 +9,7 @@ class ComponentProtocol extends EventEmitter {
   static initClass() {
     this.prototype.loaders = {};
   }
+
   constructor(transport) {
     super();
     this.transport = transport;
@@ -34,8 +28,7 @@ class ComponentProtocol extends EventEmitter {
     }
   }
 
-  getLoader(baseDir, options) {
-    if (options == null) { options = {}; }
+  getLoader(baseDir, options = {}) {
     if (!this.loaders[baseDir]) {
       this.loaders[baseDir] = new noflo.ComponentLoader(baseDir, options);
     }
@@ -45,7 +38,7 @@ class ComponentProtocol extends EventEmitter {
 
   listComponents(payload, context) {
     const {
-      baseDir
+      baseDir,
     } = this.transport.options;
     const loader = this.getLoader(baseDir, this.transport.options);
     return loader.listComponents((err, components) => {
@@ -55,11 +48,16 @@ class ComponentProtocol extends EventEmitter {
       }
       const componentNames = Object.keys(components);
       let processed = 0;
-      return componentNames.forEach(component => {
-        return this.processComponent(loader, component, context, err => {
-          processed++;
+      componentNames.forEach((component) => {
+        this.processComponent(loader, component, context, (error) => {
+          if (error) {
+            this.send('error', error, context);
+            processed += 1;
+            return;
+          }
+          processed += 1;
           if (processed < componentNames.length) { return; }
-          return this.send('componentsready', processed, context);
+          this.send('componentsready', processed, context);
         });
       });
     });
@@ -67,7 +65,7 @@ class ComponentProtocol extends EventEmitter {
 
   getSource(payload, context) {
     const {
-      baseDir
+      baseDir,
     } = this.transport.options;
     const loader = this.getLoader(baseDir, this.transport.options);
     return loader.getSource(payload.name, (err, component) => {
@@ -80,25 +78,24 @@ class ComponentProtocol extends EventEmitter {
         }
 
         const nameParts = utils.parseName(payload.name);
-        return this.send('source', {
+        this.send('source', {
           name: nameParts.name,
           library: nameParts.library,
           code: JSON.stringify(graph.toJSON()),
-          language: 'json'
-        }
-        , context);
-      } else {
-        return this.send('source', component, context);
+          language: 'json',
+        },
+        context);
       }
+      this.send('source', component, context);
     });
   }
 
   setSource(payload, context) {
     const {
-      baseDir
+      baseDir,
     } = this.transport.options;
     const loader = this.getLoader(baseDir, this.transport.options);
-    return loader.setSource(payload.library, payload.name, payload.code, payload.language, err => {
+    loader.setSource(payload.library, payload.name, payload.code, payload.language, (err) => {
       if (err) {
         this.send('error', err, context);
         return;
@@ -107,46 +104,39 @@ class ComponentProtocol extends EventEmitter {
         name: payload.name,
         library: payload.library,
         code: payload.code,
-        language: payload.language
-      }
-      );
-      return this.processComponent(loader, loader.normalizeName(payload.library, payload.name), context);
+        language: payload.language,
+      });
+      this.processComponent(loader, loader.normalizeName(payload.library, payload.name), context);
     });
   }
 
-  processComponent(loader, component, context, callback) {
-    if (!callback) {
-      callback = function() {};
-    }
-
+  processComponent(loader, component, context, callback = () => {}) {
     return loader.load(component, (err, instance) => {
-      if (!instance) {
-        if (err instanceof Error) {
-          this.send('error', err, context);
-          return callback(err);
-        }
-        instance = err;
+      if (err) {
+        this.send('error', err, context);
+        callback(err);
+        return;
       }
 
       // Ensure graphs are not run automatically when just querying their ports
       if (!instance.isReady()) {
         instance.once('ready', () => {
           this.sendComponent(component, instance, context);
-          return callback(null);
+          callback(null);
         });
         return;
       }
       this.sendComponent(component, instance, context);
-      return callback(null);
-    }
-    , true);
+      callback(null);
+    },
+    true);
   }
 
   processPort(portName, port) {
     // Required port properties
     const portDef = {
       id: portName,
-      type: port.getDataType ? port.getDataType() : 'all'
+      type: port.getDataType ? port.getDataType() : 'all',
     };
     if (typeof port.getSchema === 'function' ? port.getSchema() : undefined) {
       portDef.schema = port.getSchema();
@@ -170,45 +160,44 @@ class ComponentProtocol extends EventEmitter {
   }
 
   sendComponent(component, instance, context) {
-    let port, portName;
     const inPorts = [];
     const outPorts = [];
-    for (portName in instance.inPorts) {
-      port = instance.inPorts[portName];
-      if (!port || (typeof port === 'function') || !port.canAttach) { continue; }
+    Object.keys(instance.inPorts).forEach((portName) => {
+      const port = instance.inPorts[portName];
+      if (!port || (typeof port === 'function') || !port.canAttach) { return; }
       inPorts.push(this.processPort(portName, port));
-    }
-    for (portName in instance.outPorts) {
-      port = instance.outPorts[portName];
-      if (!port || (typeof port === 'function') || !port.canAttach) { continue; }
+    });
+    Object.keys(instance.outPorts).forEach((portName) => {
+      const port = instance.outPorts[portName];
+      if (!port || (typeof port === 'function') || !port.canAttach) { return; }
       outPorts.push(this.processPort(portName, port));
-    }
+    });
 
     const icon = instance.getIcon ? instance.getIcon() : 'gear';
 
-    return this.send('component', {
+    this.send('component', {
       name: component,
       description: instance.description,
       subgraph: instance.isSubgraph(),
       icon,
       inPorts,
-      outPorts
-    }
-    , context);
+      outPorts,
+    },
+    context);
   }
 
   registerGraph(id, graph, context) {
+    const loader = this.getLoader(graph.baseDir, this.transport.options);
     const sender = () => this.processComponent(loader, id, context);
     const send = debounce(sender, 10);
-    var loader = this.getLoader(graph.baseDir, this.transport.options);
-    loader.listComponents((err, components) => {
+    loader.listComponents((err) => {
       if (err) {
         this.send('error', err, context);
         return;
       }
       loader.registerComponent('', id, graph);
       // Send initial graph info back to client
-      return send();
+      send();
     });
 
     // Send graph info again every time it changes so we get the updated ports
@@ -224,7 +213,7 @@ class ComponentProtocol extends EventEmitter {
     graph.on('renameInport', send);
     graph.on('addOutport', send);
     graph.on('removeOutport', send);
-    return graph.on('renameOutport', send);
+    graph.on('renameOutport', send);
   }
 }
 ComponentProtocol.initClass();
