@@ -26,14 +26,18 @@ function findPort(network, name, inPort) {
     internal = network.graph.outports[name];
   }
   if (!(internal != null ? internal.process : undefined)) { return null; }
-  const component = network.getNode(internal.process);
+  const node = network.getNode(internal.process);
+  if (!node) {
+    return null;
+  }
+  const component = node.component;
   if (!component) {
     return null;
   }
   if (inPort) {
-    return component.inPorts[internal.port];
+    return component.inPorts.ports[internal.port];
   }
-  return component.outPorts[internal.port];
+  return component.outPorts.ports[internal.port];
 }
 
 function portToPayload(pub, internal, network, inPort) {
@@ -153,8 +157,9 @@ class RuntimeProtocol extends EventEmitter {
     const {
       capabilities,
     } = this.transport.options;
+    const secret = request ? request.secret : null;
     const permittedCapabilities = capabilities.filter(
-      (capability) => this.transport.canDo(capability, request.secret),
+      (capability) => this.transport.canDo(capability, secret),
     );
 
     const payload = {

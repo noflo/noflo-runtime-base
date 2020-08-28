@@ -177,7 +177,8 @@ class BaseTransport {
     debugMessagingReceive(`${protocol} ${topic}`);
     debugMessagingReceivePayload(payload);
 
-    if (!this.canInput(protocol, topic, payload.secret)) {
+    const secret = payload ? payload.secret : null;
+    if (!this.canInput(protocol, topic, secret)) {
       this.send(protocol, 'error', new Error(`${protocol}:${topic} is not permitted`), context);
       return;
     }
