@@ -30,7 +30,7 @@ function findPort(network, name, inPort) {
   if (!node) {
     return null;
   }
-  const component = node.component;
+  const { component } = node;
   if (!component) {
     return null;
   }
