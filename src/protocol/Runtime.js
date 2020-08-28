@@ -1,44 +1,42 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS103: Rewrite code to no longer use __guard__, or convert again using --optional-chaining
- * DS205: Consider reworking code to avoid use of IIFEs
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const noflo = require('noflo');
 const {
   EventEmitter,
 } = require('events');
 
-const sendToInport = function (port, event, payload) {
+function sendToInport(port, event, payload) {
   const socket = noflo.internalSocket.createSocket();
   port.attach(socket);
   switch (event) {
     case 'begingroup': socket.beginGroup(payload); break;
     case 'endgroup': socket.endGroup(payload); break;
     case 'data': socket.send(payload); break;
+    default: {
+      // Ignored
+    }
   }
-  return port.detach(socket);
-};
+  port.detach(socket);
+}
 
-const findPort = function (network, name, inPort) {
+function findPort(network, name, inPort) {
   let internal;
-  if (!network.graph) { return; }
+  if (!network.graph) { return null; }
   if (inPort) {
     internal = network.graph.inports[name];
   } else {
     internal = network.graph.outports[name];
   }
-  if (!(internal != null ? internal.process : undefined)) { return; }
-  const component = __guard__(network.getNode(internal.process), (x) => x.component);
-  if (!component) { return; }
-  if (inPort) { return component.inPorts[internal.port]; }
+  if (!(internal != null ? internal.process : undefined)) { return null; }
+  const component = network.getNode(internal.process);
+  if (!component) {
+    return null;
+  }
+  if (inPort) {
+    return component.inPorts[internal.port];
+  }
   return component.outPorts[internal.port];
-};
+}
 
-const portToPayload = function (pub, internal, network, inPort) {
+function portToPayload(pub, internal, network, inPort) {
   const def = {
     id: pub,
     type: 'all',
@@ -56,27 +54,26 @@ const portToPayload = function (pub, internal, network, inPort) {
   def.addressable = port.isAddressable();
   def.required = port.isRequired();
   return def;
-};
+}
 
-const portsPayload = function (name, network) {
-  let internal; let
-    pub;
+function portsPayload(name, network) {
+  let internal;
   const payload = {
     graph: name,
     inPorts: [],
     outPorts: [],
   };
   if (!(network != null ? network.graph : undefined)) { return payload; }
-  for (pub in network.graph.inports) {
+  Object.keys(network.graph.inports).forEach((pub) => {
     internal = network.graph.inports[pub];
     payload.inPorts.push(portToPayload(pub, internal, network, true));
-  }
-  for (pub in network.graph.outports) {
+  });
+  Object.keys(network.graph.outports).forEach((pub) => {
     internal = network.graph.outports[pub];
     payload.outPorts.push(portToPayload(pub, internal, network, false));
-  }
+  });
   return payload;
-};
+}
 
 class RuntimeProtocol extends EventEmitter {
   constructor(transport) {
@@ -94,9 +91,10 @@ class RuntimeProtocol extends EventEmitter {
         // processes don't exist until started
         this.subscribeOutdata(name, network, true);
       }
-      return network.on('start', () =>
+      return network.on('start', () => {
         // processes don't exist until started
-        this.subscribeOutdata(name, network, true));
+        this.subscribeOutdata(name, network, true);
+      });
     });
 
     this.transport.network.on('removenetwork', (network, name) => {
@@ -140,7 +138,7 @@ class RuntimeProtocol extends EventEmitter {
     }
   }
 
-  getRuntime(payload, context) {
+  getRuntime(request, context) {
     let {
       type,
     } = this.transport.options;
@@ -155,31 +153,39 @@ class RuntimeProtocol extends EventEmitter {
     const {
       capabilities,
     } = this.transport.options;
-    const permittedCapabilities = capabilities.filter((capability) => this.transport.canDo(capability, payload.secret));
+    const permittedCapabilities = capabilities.filter(
+      (capability) => this.transport.canDo(capability, request.secret),
+    );
 
-    payload = {
+    const payload = {
       type,
       version: this.transport.version,
       capabilities: permittedCapabilities,
       allCapabilities: capabilities,
     };
-    if (this.mainGraph) { payload.graph = this.mainGraph; }
+    if (this.mainGraph) {
+      payload.graph = this.mainGraph;
+    }
 
     // Add project metadata if available
     if (this.transport.options.id) { payload.id = this.transport.options.id; }
     if (this.transport.options.label) { payload.label = this.transport.options.label; }
     if (this.transport.options.namespace) { payload.namespace = this.transport.options.namespace; }
-    if (this.transport.options.repository) { payload.repository = this.transport.options.repository; }
-    if (this.transport.options.repositoryVersion) { payload.repositoryVersion = this.transport.options.repositoryVersion; }
+    if (this.transport.options.repository) {
+      payload.repository = this.transport.options.repository;
+    }
+    if (this.transport.options.repositoryVersion) {
+      payload.repositoryVersion = this.transport.options.repositoryVersion;
+    }
 
     this.send('runtime', payload, context);
     // send port info about currently set up networks
     return (() => {
       const result = [];
-      for (const name in this.transport.network.networks) {
+      Object.keys(this.transport.network.networks).forEach((name) => {
         const network = this.transport.network.networks[name];
         result.push(this.sendPorts(name, network, context));
-      }
+      });
       return result;
     })();
   }
@@ -194,7 +200,7 @@ class RuntimeProtocol extends EventEmitter {
   }
 
   setMainGraph(id) {
-    return this.mainGraph = id;
+    this.mainGraph = id;
   }
   // XXX: should send updated runtime info?
 
@@ -304,7 +310,3 @@ class RuntimeProtocol extends EventEmitter {
 }
 
 module.exports = RuntimeProtocol;
-
-function __guard__(value, transform) {
-  return (typeof value !== 'undefined' && value !== null) ? transform(value) : undefined;
-}

@@ -3,7 +3,7 @@ const {
   EventEmitter,
 } = require('events');
 
-const prepareSocketEvent = function (event, graphName) {
+function prepareSocketEvent(event, graphName) {
   const payload = {
     id: event.id,
     graph: graphName,
@@ -61,7 +61,7 @@ const prepareSocketEvent = function (event, graphName) {
   }
 
   return payload;
-};
+}
 
 const getPortSignature = (item) => {
   if (!item) { return ''; }
@@ -248,9 +248,10 @@ class NetworkProtocol extends EventEmitter {
       // If we can get a backtrace, send 3 levels
       if (event.error.stack) {
         const bt = event.error.stack.split('\n');
-        for (let i = 0, end = Math.min(bt.length, 3), asc = end >= 0; asc ? i <= end : i >= end; asc ? i++ : i--) {
-          error += `\n${bt[i]}`;
-        }
+        const lines = bt.slice(0, 3);
+        lines.forEach((line) => {
+          error += `\n${line}`;
+        });
       }
       this.sendAll('processerror', {
         id: event.id,
