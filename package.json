@@ -31,7 +31,7 @@
   "scripts": {
     "test": "nyc grunt test"
   },
-  "main": "./Base.js",
+  "main": "./src/Base.js",
   "dependencies": {
     "debounce": "^1.1.0",
     "debug": "^4.0.0",

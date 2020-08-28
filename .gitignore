@@ -4,12 +4,6 @@
 /npm-debug.log
 /package-lock.json
 /.nyc_output
-Base.js
-direct.js
-protocol/*.js
-trace.js
-utils.js
 *~
 spec/result.xml
-spec/*.js
 spec/runner.html
