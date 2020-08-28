@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 let chai; let
   direct;
 const noflo = require('noflo');
@@ -13,7 +8,7 @@ if (noflo.isBrowser()) {
   } = require('noflo-runtime-base'));
 } else {
   if (!chai) { chai = require('chai'); }
-  direct = require('../direct');
+  direct = require('../src/direct');
 }
 
 describe('Graph protocol', () => {

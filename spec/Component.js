@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 let baseDir; let chai; let
   direct;
 const noflo = require('noflo');
@@ -14,7 +9,7 @@ if (noflo.isBrowser()) {
   baseDir = '';
 } else {
   if (!chai) { chai = require('chai'); }
-  direct = require('../direct');
+  direct = require('../src/direct');
   const path = require('path');
   baseDir = path.resolve(__dirname, '../');
 }
