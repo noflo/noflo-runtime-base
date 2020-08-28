@@ -36,7 +36,7 @@
   ],
   "scripts": {
     "lint": "eslint src",
-    "build": "webpack --config ./webpack.config.js",
+    "build": "noflo-cache-preheat && webpack --config ./webpack.config.js",
     "pretest": "npm run lint && npm run build",
     "test:nodejs": "nyc mocha --require spec/utils/inject.js spec/*.js",
     "test:browser": "karma start node_modules/noflo-webpack-config/karma.config.js",
