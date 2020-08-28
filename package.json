@@ -44,8 +44,8 @@
   },
   "nyc": {
     "include": [
-      "*.js",
-      "protocol/*.js"
+      "src/*.js",
+      "src/protocol/*.js"
     ]
   }
 }
