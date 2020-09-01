@@ -120,9 +120,9 @@ class GraphProtocol extends EventEmitter {
       },
       context);
 
+      // Register for runtime exported ports
+      this.transport.runtime.registerNetwork(payload.id, network);
       if (payload.main) {
-        // Register for runtime exported ports
-        this.transport.runtime.registerNetwork(payload.id, network);
         this.transport.runtime.setMainGraph(fullName, graph, context);
       } else {
         // Register to component loading
