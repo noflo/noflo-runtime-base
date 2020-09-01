@@ -138,7 +138,8 @@ describe('Network protocol', () => {
       client.on('message', (msg) => {
         chai.expect(msg.protocol).to.equal('graph');
         chai.expect(msg.command).to.equal('error');
-        chai.expect(msg.payload).to.include('Component 404NotFound not available');
+        chai.expect(msg.payload).to.be.an('error');
+        chai.expect(msg.payload.message).to.include('Component 404NotFound not available');
         done();
       });
     });
