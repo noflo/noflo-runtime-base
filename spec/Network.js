@@ -122,7 +122,8 @@ describe('Network protocol', () => {
         secret: 'foo',
       });
       client.on('message', (msg) => {
-        console.log(msg);
+        chai.expect(msg.protocol).to.equal('graph');
+        chai.expect(msg.command).to.equal('renamenode');
         done();
       });
     });

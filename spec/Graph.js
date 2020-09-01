@@ -104,5 +104,20 @@ describe('Graph protocol', () => {
     });
   });
 
-
+  describe('sending graph:addnode without an existing graph', () => {
+    it('should respond with an error', (done) => {
+      client.once('message', (msg) => {
+        chai.expect(msg.protocol).to.equal('graph');
+        chai.expect(msg.command).to.equal('error');
+        done();
+      });
+      client.send('graph', 'addnode', {
+        id: 'foo',
+        component: 'Bar',
+        graph: 'not-found',
+        metadata: {},
+        secret: 'foo',
+      });
+    });
+  });
 });
