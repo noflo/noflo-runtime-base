@@ -9,6 +9,7 @@ describe('Graph protocol', () => {
       permissions: {
         foo: ['protocol:graph'],
       },
+      baseDir,
     });
     runtime.graph.on('updated', (msg) => runtimeEvents.push(msg));
     client = new direct.Client(runtime);
@@ -73,16 +74,21 @@ describe('Graph protocol', () => {
     const graph = 'graphwithnodes';
     const payload = {
       id: 'node1',
-      component: 'Component1',
+      component: 'core/Repeat',
       graph,
       metadata: {},
     };
     const authenticatedPayload = JSON.parse(JSON.stringify(payload));
     authenticatedPayload.secret = 'foo';
     const checkAddNode = function (msg, done) {
-      if (msg.command !== 'addnode') { return; }
+      if (msg.command === 'error') {
+        done(msg.payload);
+        return;
+      }
+      if (msg.command !== 'addnode') {
+        return;
+      }
       chai.expect(msg.protocol).to.equal('graph');
-      chai.expect(msg.command).to.equal('addnode');
       chai.expect(msg.payload).to.deep.equal(payload);
       done();
     };
