@@ -81,6 +81,7 @@ class GraphProtocol extends EventEmitter {
       return;
     }
     const graph = new noflo.Graph(payload.name || 'NoFlo runtime');
+    graph.properties.id = payload.id;
 
     let fullName = payload.id;
     let { library } = payload;
@@ -289,7 +290,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No ID or component supplied'), context);
       return;
     }
-    const network = this.transport.network.getNetwork(graph.id);
+    const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, add node via network instead
       network.addNode(node, (err) => {
@@ -308,7 +309,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No ID supplied'), context);
       return;
     }
-    const network = this.transport.network.getNetwork(graph.id);
+    const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, remove node via network instead
       network.removeNode(payload, (err) => {
@@ -327,7 +328,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No from or to supplied'), context);
       return;
     }
-    const network = this.transport.network.getNetwork(graph.id);
+    const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, rename node via network instead
       network.renameNode(payload.from, payload.to, (err) => {
@@ -354,7 +355,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No src or tgt supplied'), context);
       return;
     }
-    const network = this.transport.network.getNetwork(graph.id);
+    const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, add edge via network instead
       network.addEdge({
@@ -391,7 +392,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No src or tgt supplied'), context);
       return;
     }
-    const network = this.transport.network.getNetwork(graph.id);
+    const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, remove edge via network instead
       network.removeEdge({
@@ -427,7 +428,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No src or tgt supplied'), context);
       return;
     }
-    const network = this.transport.network.getNetwork(graph.id);
+    const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, add IIP via network instead
       network.addInitial({
@@ -460,7 +461,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No tgt supplied'), context);
       return;
     }
-    const network = this.transport.network.getNetwork(graph.id);
+    const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, remove IIP via network instead
       network.removeInitial({
