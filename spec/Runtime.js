@@ -55,6 +55,9 @@ describe('Runtime protocol', () => {
         },
         baseDir,
       });
+      runtime.runtime.on('ports', (emittedPorts) => {
+        ports = emittedPorts;
+      });
       client = new direct.Client(runtime);
       client.connect();
     });
@@ -126,7 +129,6 @@ describe('Runtime protocol', () => {
         if (msg.command !== 'started') { return; }
         done();
       });
-      runtime.runtime.on('ports', (emittedPorts) => ports = emittedPorts);
       client.send('network', 'start', {
         graph: 'bar',
         secret: 'second-secret',
