@@ -86,26 +86,26 @@ class RuntimeProtocol extends EventEmitter {
     this.outputSockets = {}; // graphName -> publicPort -> noflo.Socket
     this.mainGraph = null;
 
-    this.transport.network.on('addnetwork', (network, name) => {
-      this.subscribeExportedPorts(name, network, true);
-      this.subscribeOutPorts(name, network);
-      this.sendPorts(name, network);
-
-      if (network.isStarted()) {
-        // processes don't exist until started
-        this.subscribeOutdata(name, network, true);
-      }
-      return network.on('start', () => {
-        // processes don't exist until started
-        this.subscribeOutdata(name, network, true);
-      });
-    });
-
     this.transport.network.on('removenetwork', (network, name) => {
       this.subscribeOutdata(name, network, false);
       this.subscribeOutPorts(name, network);
       this.subscribeExportedPorts(name, network.graph, false);
       return this.sendPorts(name, null);
+    });
+  }
+
+  registerNetwork(name, network) {
+    this.subscribeExportedPorts(name, network, true);
+    this.subscribeOutPorts(name, network);
+    this.sendPorts(name, network);
+
+    if (network.isStarted()) {
+      // processes don't exist until started
+      this.subscribeOutdata(name, network, true);
+    }
+    network.once('start', () => {
+      // processes don't exist until started
+      this.subscribeOutdata(name, network, true);
     });
   }
 

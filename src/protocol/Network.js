@@ -202,7 +202,13 @@ class NetworkProtocol extends EventEmitter {
       this.subscribeNetwork(network, graphName, context);
 
       // Wire up the network
-      network.connect(callback);
+      network.connect((err2) => {
+        if (err2) {
+          callback(err2);
+          return;
+        }
+        callback(null, network);
+      });
     },
     opts);
   }

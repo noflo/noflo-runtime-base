@@ -100,26 +100,35 @@ class GraphProtocol extends EventEmitter {
     // Pass the project baseDir
     graph.baseDir = this.transport.options.baseDir;
 
-    this.subscribeGraph(payload.id, graph, context);
+    // Prepare the network
+    this.transport.network.initNetwork(graph, payload.id, context, (err, network) => {
+      if (err) {
+        this.send('error', err, context);
+        return;
+      }
 
-    if (payload.main) {
-      // Register for runtime exported ports
-      this.transport.runtime.setMainGraph(fullName, graph, context);
-    } else {
-      // Register to component loading
-      this.transport.component.registerGraph(fullName, graph, context);
-    }
+      this.subscribeGraph(payload.id, graph, context);
 
-    this.graphs[payload.id] = graph;
-    this.sendAll('clear', {
-      id: payload.id,
-      name: payload.name,
-      library: payload.library,
-      main: payload.main,
-      icon: payload.icon,
-      description: payload.description,
-    },
-    context);
+      this.graphs[payload.id] = graph;
+      this.sendAll('clear', {
+        id: payload.id,
+        name: payload.name,
+        library: payload.library,
+        main: payload.main,
+        icon: payload.icon,
+        description: payload.description,
+      },
+      context);
+
+      if (payload.main) {
+        // Register for runtime exported ports
+        this.transport.runtime.registerNetwork(payload.id, network);
+        this.transport.runtime.setMainGraph(fullName, graph, context);
+      } else {
+        // Register to component loading
+        this.transport.component.registerGraph(fullName, graph, context);
+      }
+    });
   }
 
   registerGraph(id, graph) {
