@@ -8,10 +8,10 @@ deploy:
   provider: npm
   email: henri.bergius@iki.fi
   api_key:
-    secure: C7O0CxCicL3Bi+GxibG8oRQrpWoQ3kIU9LpX4ccvBlVo2A2LBQIzIrd7xd5CVsa4N1j8j0r2NBT4lJcliVyW7sg09of8bWVkPxwN6i57PirOFnHG76WqnDAqgu08sCR3Jk3ZGZklxVh8wDyvK553VbIlroRL6lwes6PoosQewI4=
-  skip_cleanup: true
+    secure: TbRl22Lxf1RZMlLS3BOGTUPj9PHNJQIMdPqF0m1p2TxHHCjhzppefbFXgBX/EckxLGwhLkB88G936HjzQ6c7vEQlRFrrNaMVAtsYw4s/vnpT0ldAuur3HcJvizL4l0setyHdc9jBqPV7eXm4p5N6Ojq9P6W3+bsyvV0cK1BYE1s=
   on:
     tags: true
     repo: noflo/noflo-runtime-base
+  skip_cleanup: true
 addons:
   chrome: stable
