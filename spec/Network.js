@@ -127,5 +127,20 @@ describe('Network protocol', () => {
         done();
       });
     });
+    it('should not be able to add a node with a non-existing component', (done) => {
+      client.on('error', (err) => done(err));
+      client.send('graph', 'addnode', {
+        id: 'Nonworking',
+        component: '404NotFound',
+        graph: 'bar',
+        secret: 'foo',
+      });
+      client.on('message', (msg) => {
+        chai.expect(msg.protocol).to.equal('graph');
+        chai.expect(msg.command).to.equal('error');
+        chai.expect(msg.payload).to.include('Component 404NotFound not available');
+        done();
+      });
+    });
   });
 });
