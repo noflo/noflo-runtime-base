@@ -183,6 +183,7 @@ class NetworkProtocol extends EventEmitter {
     opts.delay = true;
     noflo.createNetwork(g, {
       subscribeGraph: false,
+      delay: true,
     }, (err, network) => {
       if (err) {
         callback(err);
@@ -196,6 +197,7 @@ class NetworkProtocol extends EventEmitter {
           filters: {},
         };
       }
+
       this.emit('addnetwork', network, graphName, this.networks);
       this.subscribeNetwork(network, graphName, context);
 
@@ -213,14 +215,15 @@ class NetworkProtocol extends EventEmitter {
       started: network.isStarted(),
     },
     context));
-    network.on('end', (event) => this.sendAll('stopped', {
-      time: new Date(),
-      uptime: event.uptime,
-      graph: graphName,
-      running: network.isRunning(),
-      started: network.isStarted(),
-    },
-    context));
+    network.on('end', (event) => {
+      this.sendAll('stopped', {
+        time: new Date(),
+        uptime: event.uptime,
+        graph: graphName,
+        running: network.isRunning(),
+        started: network.isStarted(),
+      }, context);
+    });
     network.on('icon', (event) => {
       this.sendAll('icon', {
         ...event,
