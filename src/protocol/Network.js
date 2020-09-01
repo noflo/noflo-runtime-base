@@ -122,6 +122,16 @@ class NetworkProtocol extends EventEmitter {
     return this.transport.graph.graphs[payload.graph];
   }
 
+  getNetwork(graphName) {
+    if (!this.networks[graphName]) {
+      return null;
+    }
+    if (!this.networks[graphName].network) {
+      return null;
+    }
+    return this.networks[graphName].network;
+  }
+
   updateEdgesFilter(graph, payload, context) {
     let network = this.networks[payload.graph];
     if (network) {
@@ -153,15 +163,16 @@ class NetworkProtocol extends EventEmitter {
 
   initNetwork(graph, graphName, context, callback) {
     // Ensure we stop previous network
-    if (this.networks[graphName] && this.networks[graphName].network) {
-      const {
-        network,
-      } = this.networks[graphName];
-      network.stop((err) => {
-        if (err) { return callback(err); }
-        delete this.networks[graphName];
-        this.emit('removenetwork', network, graphName, this.networks);
-        return this.initNetwork(graph, graphName, context, callback);
+    const existingNetwork = this.getNetwork(graphName);
+    if (existingNetwork) {
+      existingNetwork.stop((err) => {
+        if (err) {
+          callback(err);
+          return;
+        }
+        delete this.networks[graphName].network;
+        this.emit('removenetwork', existingNetwork, graphName, this.networks);
+        this.initNetwork(graph, graphName, context, callback);
       });
       return;
     }
@@ -170,8 +181,14 @@ class NetworkProtocol extends EventEmitter {
     g.componentLoader = this.transport.component.getLoader(graph.baseDir, this.transport.options);
     const opts = JSON.parse(JSON.stringify(this.transport.options));
     opts.delay = true;
-    noflo.createNetwork(g, (err, network) => {
-      if (err) { return callback(err); }
+    noflo.createNetwork(g, {
+      subscribeGraph: false,
+      delay: true,
+    }, (err, network) => {
+      if (err) {
+        callback(err);
+        return;
+      }
       if (this.networks[graphName] && this.networks[graphName].network) {
         this.networks[graphName].network = network;
       } else {
@@ -180,11 +197,18 @@ class NetworkProtocol extends EventEmitter {
           filters: {},
         };
       }
+
       this.emit('addnetwork', network, graphName, this.networks);
       this.subscribeNetwork(network, graphName, context);
 
-      // Run the network
-      return network.connect(callback);
+      // Wire up the network
+      network.connect((err2) => {
+        if (err2) {
+          callback(err2);
+          return;
+        }
+        callback(null, network);
+      });
     },
     opts);
   }
@@ -197,14 +221,15 @@ class NetworkProtocol extends EventEmitter {
       started: network.isStarted(),
     },
     context));
-    network.on('end', (event) => this.sendAll('stopped', {
-      time: new Date(),
-      uptime: event.uptime,
-      graph: graphName,
-      running: network.isRunning(),
-      started: network.isStarted(),
-    },
-    context));
+    network.on('end', (event) => {
+      this.sendAll('stopped', {
+        time: new Date(),
+        uptime: event.uptime,
+        graph: graphName,
+        running: network.isRunning(),
+        started: network.isStarted(),
+      }, context);
+    });
     network.on('icon', (event) => {
       this.sendAll('icon', {
         ...event,
@@ -243,7 +268,7 @@ class NetworkProtocol extends EventEmitter {
       }
       this.sendAll(protocolEvent.type, prepareSocketEvent(protocolEvent, graphName), context);
     });
-    return network.on('process-error', (event) => {
+    network.on('process-error', (event) => {
       let error = event.error.message;
       // If we can get a backtrace, send 3 levels
       if (event.error.stack) {
@@ -263,33 +288,33 @@ class NetworkProtocol extends EventEmitter {
   }
 
   _startNetwork(graph, graphName, context, callback) {
-    const doStart = (net) => net.start((err) => callback(err));
-
-    let network = this.networks[graphName];
-    if (network && network.network) {
+    const existingNetwork = this.getNetwork(graphName);
+    if (existingNetwork) {
       // already initialized
-      return doStart(network.network);
+      existingNetwork.start(callback);
+      return;
     }
 
-    return this.initNetwork(graph, graphName, context, (err) => {
-      if (err) { return callback(err); }
-      network = this.networks[graphName];
-      return doStart(network.network);
+    this.initNetwork(graph, graphName, context, (err) => {
+      if (err) {
+        callback(err);
+        return;
+      }
+      const network = this.getNetwork(graphName);
+      network.start(callback);
     });
   }
 
   startNetwork(graph, payload, context) {
     this._startNetwork(graph, payload.graph, context, (err) => {
-      if (err) { this.send('error', err, context); }
+      if (err) {
+        this.send('error', err, context);
+      }
     });
   }
 
   stopNetwork(graph, payload, context) {
-    if (!this.networks[payload.graph]) {
-      this.send('error', new Error(`Network ${payload.graph} not found`), context);
-      return;
-    }
-    const net = this.networks[payload.graph].network;
+    const net = this.getNetwork(payload.graph);
     if (!net) {
       this.send('error', new Error(`Network ${payload.graph} not found`), context);
       return;
@@ -321,26 +346,19 @@ class NetworkProtocol extends EventEmitter {
   }
 
   debugNetwork(graph, payload, context) {
-    if (!this.networks[payload.graph]) {
-      this.send('error', new Error(`Network ${payload.graph} not found`), context);
-      return;
-    }
-    const net = this.networks[payload.graph].network;
+    const net = this.getNetwork(payload.graph);
     if (!net) {
       this.send('error', new Error(`Network ${payload.graph} not found`), context);
       return;
     }
     net.setDebug(payload.enable);
-    this.send('setdebug',
-      { enable: payload.enable });
+    this.send('setdebug', {
+      enable: payload.enable,
+    });
   }
 
   getStatus(graph, payload, context) {
-    if (!this.networks[payload.graph]) {
-      this.send('error', new Error(`Network ${payload.graph} not found`), context);
-      return;
-    }
-    const net = this.networks[payload.graph].network;
+    const net = this.getNetwork(payload.graph);
     if (!net) {
       this.send('error', new Error(`Network ${payload.graph} not found`), context);
       return;
