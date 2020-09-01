@@ -113,5 +113,18 @@ describe('Network protocol', () => {
         secret: 'foo',
       });
     });
+    it('should be able to rename a name', (done) => {
+      client.on('error', (err) => done(err));
+      client.send('graph', 'renamenode', {
+        from: 'World',
+        to: 'NoFlo',
+        graph: 'bar',
+        secret: 'foo',
+      });
+      client.on('message', (msg) => {
+        console.log(msg);
+        done();
+      });
+    });
   });
 });
