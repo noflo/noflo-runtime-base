@@ -289,6 +289,17 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No ID or component supplied'), context);
       return;
     }
+    const network = this.transport.network.getNetwork(graph.id);
+    if (network) {
+      // Live graph, add node via network instead
+      network.addNode(node, (err) => {
+        if (err) {
+          this.send('error', err, context);
+        }
+        // Acknowledgement will happen via Graph events
+      });
+      return;
+    }
     graph.addNode(node.id, node.component, node.metadata);
   }
 
@@ -297,12 +308,34 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No ID supplied'), context);
       return;
     }
+    const network = this.transport.network.getNetwork(graph.id);
+    if (network) {
+      // Live graph, remove node via network instead
+      network.removeNode(payload, (err) => {
+        if (err) {
+          this.send('error', err, context);
+        }
+        // Acknowledgement will happen via Graph events
+      });
+      return;
+    }
     graph.removeNode(payload.id);
   }
 
   renameNode(graph, payload, context) {
     if (!payload.from && !payload.to) {
       this.send('error', new Error('No from or to supplied'), context);
+      return;
+    }
+    const network = this.transport.network.getNetwork(graph.id);
+    if (network) {
+      // Live graph, rename node via network instead
+      network.renameNode(payload.from, payload.to, (err) => {
+        if (err) {
+          this.send('error', err, context);
+        }
+        // Acknowledgement will happen via Graph events
+      });
       return;
     }
     graph.renameNode(payload.from, payload.to);
@@ -319,6 +352,21 @@ class GraphProtocol extends EventEmitter {
   addEdge(graph, edge, context) {
     if (!edge.src && !edge.tgt) {
       this.send('error', new Error('No src or tgt supplied'), context);
+      return;
+    }
+    const network = this.transport.network.getNetwork(graph.id);
+    if (network) {
+      // Live graph, add edge via network instead
+      network.addEdge({
+        from: edge.src,
+        to: edge.tgt,
+        metadata: edge.metadata,
+      }, (err) => {
+        if (err) {
+          this.send('error', err, context);
+        }
+        // Acknowledgement will happen via Graph events
+      });
       return;
     }
     if ((typeof edge.src.index === 'number') || (typeof edge.tgt.index === 'number')) {
@@ -343,6 +391,20 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No src or tgt supplied'), context);
       return;
     }
+    const network = this.transport.network.getNetwork(graph.id);
+    if (network) {
+      // Live graph, remove edge via network instead
+      network.removeEdge({
+        from: edge.src,
+        to: edge.tgt,
+      }, (err) => {
+        if (err) {
+          this.send('error', err, context);
+        }
+        // Acknowledgement will happen via Graph events
+      });
+      return;
+    }
     graph.removeEdge(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port);
   }
 
@@ -365,6 +427,21 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No src or tgt supplied'), context);
       return;
     }
+    const network = this.transport.network.getNetwork(graph.id);
+    if (network) {
+      // Live graph, add IIP via network instead
+      network.addInitial({
+        from: payload.src,
+        to: payload.tgt,
+        metadata: payload.metadata,
+      }, (err) => {
+        if (err) {
+          this.send('error', err, context);
+        }
+        // Acknowledgement will happen via Graph events
+      });
+      return;
+    }
     if (graph.addInitialIndex && (typeof payload.tgt.index === 'number')) {
       graph.addInitialIndex(
         payload.src.data,
@@ -381,6 +458,21 @@ class GraphProtocol extends EventEmitter {
   removeInitial(graph, payload, context) {
     if (!payload.tgt) {
       this.send('error', new Error('No tgt supplied'), context);
+      return;
+    }
+    const network = this.transport.network.getNetwork(graph.id);
+    if (network) {
+      // Live graph, remove IIP via network instead
+      network.removeInitial({
+        from: payload.src,
+        to: payload.tgt,
+        metadata: payload.metadata,
+      }, (err) => {
+        if (err) {
+          this.send('error', err, context);
+        }
+        // Acknowledgement will happen via Graph events
+      });
       return;
     }
     graph.removeInitial(payload.tgt.node, payload.tgt.port);
