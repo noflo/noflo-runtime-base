@@ -6,12 +6,12 @@ describe('Runtime protocol', () => {
     beforeEach(() => {
       runtime = new direct.Runtime();
       client = new direct.Client(runtime);
-      return client.connect();
+      client.connect();
     });
     afterEach(() => {
       client.disconnect();
       client = null;
-      return runtime = null;
+      runtime = null;
     });
     it('should respond with runtime:runtime for unauthorized user', (done) => {
       client.once('message', (msg) => {
@@ -20,11 +20,11 @@ describe('Runtime protocol', () => {
         chai.expect(msg.payload.type).to.have.string('noflo');
         chai.expect(msg.payload.capabilities).to.eql([]);
         chai.expect(msg.payload.allCapabilities).to.include('protocol:graph');
-        return done();
+        done();
       });
-      return client.send('runtime', 'getruntime', null);
+      client.send('runtime', 'getruntime', null);
     });
-    return it('should respond with runtime:runtime for authorized user', (done) => {
+    it('should respond with runtime:runtime for authorized user', (done) => {
       client.disconnect();
       runtime = new direct.Runtime({
         permissions: {
@@ -40,13 +40,13 @@ describe('Runtime protocol', () => {
         chai.expect(msg.payload.type).to.have.string('noflo');
         chai.expect(msg.payload.capabilities).to.eql(['protocol:graph', 'protocol:component']);
         chai.expect(msg.payload.allCapabilities).to.include('protocol:graph');
-        return done();
+        done();
       });
-      return client.send('runtime', 'getruntime',
+      client.send('runtime', 'getruntime',
         { secret: 'super-secret' });
     });
   });
-  return describe('with a graph containing exported ports', () => {
+  describe('with a graph containing exported ports', () => {
     let ports = null;
     before(() => {
       runtime = new direct.Runtime({
@@ -56,23 +56,24 @@ describe('Runtime protocol', () => {
         baseDir,
       });
       client = new direct.Client(runtime);
-      return client.connect();
+      client.connect();
     });
     after(() => {
       client.disconnect();
       client = null;
       runtime = null;
       runtime = new direct.Runtime();
-      return ports = null;
+      ports = null;
     });
     it('should be possible to upload graph', (done) => {
       client.on('error', (err) => done(err));
       client.on('message', (msg) => {
         if (msg.command === 'error') {
-          return done(msg.payload);
+          done(msg.payload);
+          return;
         }
         if (msg.command !== 'addoutport') { return; }
-        return done();
+        done();
       });
       client.send('graph', 'clear', {
         id: 'bar',
@@ -110,7 +111,7 @@ describe('Runtime protocol', () => {
         graph: 'bar',
         secret: 'second-secret',
       });
-      return client.send('graph', 'addoutport', {
+      client.send('graph', 'addoutport', {
         public: 'out',
         node: 'World',
         port: 'out',
@@ -123,10 +124,10 @@ describe('Runtime protocol', () => {
       client.on('message', (msg) => {
         if (msg.protocol !== 'network') { return; }
         if (msg.command !== 'started') { return; }
-        return done();
+        done();
       });
       runtime.runtime.on('ports', (emittedPorts) => ports = emittedPorts);
-      return client.send('network', 'start', {
+      client.send('network', 'start', {
         graph: 'bar',
         secret: 'second-secret',
       });
@@ -134,17 +135,17 @@ describe('Runtime protocol', () => {
     it('packets sent to IN should be received at OUT', (done) => {
       const payload = { hello: 'World' };
       client.on('error', (err) => done(err));
-      var messageListener = function (msg) {
+      const messageListener = function (msg) {
         if (msg.protocol !== 'runtime') { return; }
         if (msg.command !== 'packet') { return; }
         if (msg.payload.port !== 'out') { return; }
         if (msg.payload.event !== 'data') { return; }
         chai.expect(msg.payload.payload).to.eql(payload);
         client.removeListener('message', messageListener);
-        return done();
+        done();
       };
       client.on('message', messageListener);
-      return client.send('runtime', 'packet', {
+      client.send('runtime', 'packet', {
         graph: 'bar',
         port: 'in',
         event: 'data',
@@ -154,16 +155,16 @@ describe('Runtime protocol', () => {
     });
     it('should have emitted ports via JS API', () => {
       chai.expect(ports.inPorts.length).to.equal(1);
-      return chai.expect(ports.outPorts.length).to.equal(1);
+      chai.expect(ports.outPorts.length).to.equal(1);
     });
-    return it('packets sent via JS API to IN should be received at OUT', (done) => {
+    it('packets sent via JS API to IN should be received at OUT', (done) => {
       const payload = { hello: 'JavaScript' };
       runtime.runtime.on('packet', (msg) => {
         if (msg.event !== 'data') { return; }
         chai.expect(msg.payload).to.eql(payload);
-        return done();
+        done();
       });
-      return runtime.runtime.sendPacket({
+      runtime.runtime.sendPacket({
         graph: 'bar',
         port: 'in',
         event: 'data',
@@ -171,7 +172,9 @@ describe('Runtime protocol', () => {
         secret: 'second-secret',
       },
       (err) => {
-        if (err) { return done(err); }
+        if (err) {
+          done(err);
+        }
       });
     });
   });
