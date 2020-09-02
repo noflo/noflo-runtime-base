@@ -89,7 +89,7 @@ class RuntimeProtocol extends EventEmitter {
     this.transport.network.on('removenetwork', (network, name) => {
       this.subscribeOutdata(name, network, false);
       this.subscribeOutPorts(name, network);
-      this.subscribeExportedPorts(name, network.graph, false);
+      this.subscribeExportedPorts(name, network, false);
       return this.sendPorts(name, null);
     });
   }
