@@ -57,7 +57,7 @@ class GraphProtocol extends EventEmitter {
       return null;
     }
     if (!this.graphs[payload.graph]) {
-      this.send('error', new Error('Requested graph not found'), context);
+      this.send('error', new Error(`Requested graph "${payload.graph}" not found`), context);
       return null;
     }
     return this.graphs[payload.graph];
