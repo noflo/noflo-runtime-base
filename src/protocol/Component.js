@@ -86,6 +86,7 @@ class ComponentProtocol extends EventEmitter {
           language: 'json',
         },
         context);
+        return;
       }
       this.send('source', component, context);
     });
