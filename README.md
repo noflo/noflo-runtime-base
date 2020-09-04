@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.1 (September 4th 2020)
+  - The runtime instantiates networks now for all graphs in the current project in addition to the "main" graph
 * 0.11.0 (September 1st 2020)
   - NoFlo Networks are now instantiated for all graphs, meaning that graph operations fail more gracefully and networks start faster
   - Ported from CoffeeScript to ES6
