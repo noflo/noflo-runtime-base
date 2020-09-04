@@ -99,10 +99,10 @@ class GraphProtocol extends EventEmitter {
     // Pass the project baseDir
     graph.baseDir = this.transport.options.baseDir;
 
-    this.registerGraph(payload.id, graph, context);
+    this.registerGraph(payload.id, graph, context, true);
   }
 
-  registerGraph(id, graph, context = null) {
+  registerGraph(id, graph, context = null, propagate = true) {
     // Prepare the network
     this.transport.network.initNetwork(graph, id, context, (err, network) => {
       if (err) {
@@ -123,8 +123,11 @@ class GraphProtocol extends EventEmitter {
       },
       context);
 
-      const fullName = graph.properties.library ? `${graph.properties.library}/${id}` : id;
+      if (!propagate) {
+        return;
+      }
 
+      const fullName = graph.properties.library ? `${graph.properties.library}/${id}` : id;
       // Register for runtime exported ports
       this.transport.runtime.registerNetwork(id, network);
       if (graph.name === 'main' || graph.properties.main) {
