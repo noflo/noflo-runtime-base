@@ -197,7 +197,7 @@ class ComponentProtocol extends EventEmitter {
         this.send('error', err, context);
         return;
       }
-      loader.registerComponent('', id, graph);
+      loader.registerComponent(graph.properties.library, id, graph);
       // Send initial graph info back to client
       send();
     });
