@@ -115,6 +115,7 @@ describe('Graph protocol', () => {
       client.once('message', (msg) => {
         chai.expect(msg.protocol).to.equal('graph');
         chai.expect(msg.command).to.equal('error');
+        chai.expect(msg.payload.message).to.equal('Requested graph not found');
         done();
       });
       client.send('graph', 'addnode', {
