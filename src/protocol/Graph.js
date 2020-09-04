@@ -82,13 +82,12 @@ class GraphProtocol extends EventEmitter {
     }
     const graph = new noflo.Graph(payload.name || 'NoFlo runtime');
     graph.properties.id = payload.id;
+    graph.properties.main = payload.main;
 
-    let fullName = payload.id;
     let { library } = payload;
     if (library) {
       library = library.replace('noflo-', '');
       graph.properties.library = library;
-      fullName = `${library}/${fullName}`;
     }
     if (payload.icon) {
       graph.properties.icon = payload.icon;
@@ -100,41 +99,44 @@ class GraphProtocol extends EventEmitter {
     // Pass the project baseDir
     graph.baseDir = this.transport.options.baseDir;
 
+    this.registerGraph(payload.id, graph, context, true);
+  }
+
+  registerGraph(id, graph, context = null, propagate = true) {
     // Prepare the network
-    this.transport.network.initNetwork(graph, payload.id, context, (err, network) => {
+    this.transport.network.initNetwork(graph, id, context, (err, network) => {
       if (err) {
         this.send('error', err, context);
         return;
       }
 
-      this.subscribeGraph(payload.id, graph, context);
+      this.subscribeGraph(id, graph, context);
 
-      this.graphs[payload.id] = graph;
+      this.graphs[id] = graph;
       this.sendAll('clear', {
-        id: payload.id,
-        name: payload.name,
-        library: payload.library,
-        main: payload.main,
-        icon: payload.icon,
-        description: payload.description,
+        id,
+        name: graph.name,
+        library: graph.properties.library,
+        main: graph.properties.main,
+        icon: graph.properties.icon,
+        description: graph.properties.description,
       },
       context);
 
+      if (!propagate) {
+        return;
+      }
+
+      const fullName = graph.properties.library ? `${graph.properties.library}/${id}` : id;
       // Register for runtime exported ports
-      this.transport.runtime.registerNetwork(payload.id, network);
-      if (payload.main) {
+      this.transport.runtime.registerNetwork(id, network);
+      if (graph.name === 'main' || graph.properties.main) {
         this.transport.runtime.setMainGraph(fullName, graph, context);
       } else {
         // Register to component loading
         this.transport.component.registerGraph(fullName, graph, context);
       }
     });
-  }
-
-  registerGraph(id, graph) {
-    if (id === 'default/main') { this.transport.runtime.setMainGraph(id, graph); }
-    this.subscribeGraph(id, graph, '');
-    this.graphs[id] = graph;
   }
 
   subscribeGraph(id, graph, context) {

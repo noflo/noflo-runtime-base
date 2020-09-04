@@ -4,7 +4,7 @@ const debounce = require('debounce');
 const {
   EventEmitter,
 } = require('events');
-const utils = require('../utils');
+const { parseName } = require('../utils');
 
 class ComponentProtocol extends EventEmitter {
   static initClass() {
@@ -72,13 +72,14 @@ class ComponentProtocol extends EventEmitter {
     return loader.getSource(payload.name, (err, component) => {
       if (err) {
         // Try one of the registered graphs
-        const graph = this.transport.graph.graphs[payload.name];
+        const nameParts = parseName(payload.name);
+        const graph = this.transport.graph.graphs[payload.name]
+          || this.transport.graph.graphs[nameParts.name];
         if (graph == null) {
           this.send('error', err, context);
           return;
         }
 
-        const nameParts = utils.parseName(payload.name);
         this.send('source', {
           name: nameParts.name,
           library: nameParts.library,
@@ -119,14 +120,26 @@ class ComponentProtocol extends EventEmitter {
         callback(err);
         return;
       }
-
+      const { library, name: componentName } = parseName(component);
       // Ensure graphs are not run automatically when just querying their ports
       if (!instance.isReady()) {
         instance.once('ready', () => {
+          if (instance.isSubgraph()
+            && library === this.transport.options.namespace
+            && !this.transport.graph.graphs[componentName]) {
+            // Register subgraph also to the graph protocol handler
+            this.transport.graph.registerGraph(componentName, instance.network.graph, null, false);
+          }
           this.sendComponent(component, instance, context);
           callback(null);
         });
         return;
+      }
+      if (instance.isSubgraph()
+        && library === this.transport.options.namespace
+        && !this.transport.graph.graphs[component]) {
+        // Register subgraph also to the graph protocol handler
+        this.transport.graph.registerGraph(componentName, instance.network.graph, null, false);
       }
       this.sendComponent(component, instance, context);
       callback(null);
@@ -197,7 +210,7 @@ class ComponentProtocol extends EventEmitter {
         this.send('error', err, context);
         return;
       }
-      loader.registerComponent('', id, graph);
+      loader.registerComponent(graph.properties.library, id, graph);
       // Send initial graph info back to client
       send();
     });
