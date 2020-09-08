@@ -27,7 +27,7 @@ class DirectRuntime extends Base {
   }
 
   send(protocol, topic, payload, context) {
-    if (!context.client) { return; }
+    if (!context || !context.client) { return; }
     const m = {
       protocol,
       command: topic,
