@@ -78,11 +78,15 @@ describe('Base interface', () => {
       };
       noflo.graph.loadJSON(graphData, (err, graph) => {
         if (err) {
-          return done(err);
+          done(err);
+          return;
         }
         const rt = new direct.Runtime({
           defaultGraph: graph,
           baseDir,
+        });
+        rt.on('ready', () => {
+          done(new Error('Received unexpected network'));
         });
         rt.on('error', (err) => {
           chai.expect(err).to.be.an('error');
