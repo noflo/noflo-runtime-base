@@ -15,7 +15,7 @@ describe('Base interface', () => {
       const graphData = {
         processes: {
           Node1: {
-            component: 'core/Repeat',
+            component: 'core/RepeatAsync',
           },
         },
         connections: [
