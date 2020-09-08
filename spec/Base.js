@@ -90,7 +90,7 @@ describe('Base interface', () => {
         });
         rt.on('error', (err) => {
           chai.expect(err).to.be.an('error');
-          console.log(err.message);
+          chai.expect(err.message).to.include('No inport \'missing\'');
           done();
         });
       });
