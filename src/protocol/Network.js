@@ -291,7 +291,13 @@ class NetworkProtocol extends EventEmitter {
     const existingNetwork = this.getNetwork(graphName);
     if (existingNetwork) {
       // already initialized
-      existingNetwork.start(callback);
+      existingNetwork.start((e) => {
+        if (e) {
+          callback(e);
+          return;
+        }
+        callback(null, existingNetwork);
+      });
       return;
     }
 
@@ -301,7 +307,13 @@ class NetworkProtocol extends EventEmitter {
         return;
       }
       const network = this.getNetwork(graphName);
-      network.start(callback);
+      network.start((e) => {
+        if (e) {
+          callback(e);
+          return;
+        }
+        callback(null, network);
+      });
     });
   }
 
