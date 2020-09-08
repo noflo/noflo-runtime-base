@@ -82,8 +82,6 @@ class BaseTransport extends EventEmitter {
     this.options.defaultGraph.baseDir = this.options.baseDir;
     const graphName = this.getGraphName(this.options.defaultGraph);
     this.context = 'none';
-    this.graph.registerGraph(graphName, this.options.defaultGraph);
-    this.runtime.setMainGraph(graphName, this.options.defaultGraph);
     this.network._startNetwork(
       this.options.defaultGraph,
       graphName,
@@ -93,6 +91,8 @@ class BaseTransport extends EventEmitter {
           this.emit('error', err);
           return;
         }
+        this.graph.registerGraph(graphName, this.options.defaultGraph, false);
+        this.runtime.setMainGraph(graphName, this.options.defaultGraph);
         this.emit('ready', network);
       },
     );
