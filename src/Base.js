@@ -1,3 +1,7 @@
+const {
+  EventEmitter,
+} = require('events');
+
 /* eslint class-methods-use-this: ["error", { "exceptMethods": ["send", "sendAll"] }] */
 const protocols = {
   // eslint-disable-next-line global-require
@@ -17,8 +21,9 @@ const debugMessagingSendPayload = require('debug')('noflo-runtime-base:messaging
 
 // This is the class all NoFlo runtime implementations can extend to easily wrap
 // into any transport protocol.
-class BaseTransport {
+class BaseTransport extends EventEmitter {
   constructor(options) {
+    super();
     this.options = options;
     if (!this.options) { this.options = {}; }
     this.version = '0.7';
@@ -27,17 +32,6 @@ class BaseTransport {
     this.network = new protocols.Network(this);
     this.runtime = new protocols.Runtime(this);
     this.context = null;
-
-    if (this.options.defaultGraph != null) {
-      this.options.defaultGraph.baseDir = this.options.baseDir;
-      const graphName = this.getGraphName(this.options.defaultGraph);
-      this.context = 'none';
-      this.graph.registerGraph(graphName, this.options.defaultGraph);
-      this.runtime.setMainGraph(graphName, this.options.defaultGraph);
-      this.network._startNetwork(this.options.defaultGraph, graphName, this.context, (err) => {
-        if (err) { throw err; }
-      });
-    }
 
     if ((this.options.captureOutput != null) && this.options.captureOutput) {
       // Start capturing so that we can send it to the UI when it connects
@@ -67,6 +61,10 @@ class BaseTransport {
     if (!this.options.permissions) {
       this.options.permissions = {};
     }
+
+    setTimeout(() => {
+      this._startDefaultGraph();
+    }, 0);
   }
 
   // Generate a name for the main graph
@@ -74,6 +72,30 @@ class BaseTransport {
     const namespace = this.options.namespace || 'default';
     const graphName = graph.name || 'main';
     return `${namespace}/${graphName}`;
+  }
+
+  _startDefaultGraph() {
+    if (!this.options.defaultGraph) {
+      this.emit('ready', null);
+      return;
+    }
+    this.options.defaultGraph.baseDir = this.options.baseDir;
+    const graphName = this.getGraphName(this.options.defaultGraph);
+    this.context = 'none';
+    this.network._startNetwork(
+      this.options.defaultGraph,
+      graphName,
+      this.context,
+      (err, network) => {
+        if (err) {
+          this.emit('error', err);
+          return;
+        }
+        this.graph.registerGraph(graphName, this.options.defaultGraph, false);
+        this.runtime.setMainGraph(graphName, this.options.defaultGraph);
+        this.emit('ready', network);
+      },
+    );
   }
 
   // Check if a given user is authorized for a given capability

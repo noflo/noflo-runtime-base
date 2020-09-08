@@ -202,9 +202,9 @@ class NetworkProtocol extends EventEmitter {
       this.subscribeNetwork(network, graphName, context);
 
       // Wire up the network
-      network.connect((err2) => {
-        if (err2) {
-          callback(err2);
+      network.connect((connectError) => {
+        if (connectError) {
+          callback(connectError);
           return;
         }
         callback(null, network);
@@ -291,7 +291,13 @@ class NetworkProtocol extends EventEmitter {
     const existingNetwork = this.getNetwork(graphName);
     if (existingNetwork) {
       // already initialized
-      existingNetwork.start(callback);
+      existingNetwork.start((startError) => {
+        if (startError) {
+          callback(startError);
+          return;
+        }
+        callback(null, existingNetwork);
+      });
       return;
     }
 
@@ -301,7 +307,13 @@ class NetworkProtocol extends EventEmitter {
         return;
       }
       const network = this.getNetwork(graphName);
-      network.start(callback);
+      network.start((startError) => {
+        if (startError) {
+          callback(startError);
+          return;
+        }
+        callback(null, network);
+      });
     });
   }
 
