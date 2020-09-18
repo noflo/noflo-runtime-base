@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   test:
+    name: Run test suite
     runs-on: ubuntu-latest
     strategy:
       matrix:
