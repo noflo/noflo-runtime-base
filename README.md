@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.2 (September 18th 2020)
+  - The runtime now emits a `ready` or `error` after construction dependending on main graph initialization result
 * 0.11.1 (September 4th 2020)
   - The runtime instantiates networks now for all graphs in the current project in addition to the "main" graph
 * 0.11.0 (September 1st 2020)
