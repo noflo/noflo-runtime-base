@@ -27,7 +27,7 @@
     "noflo-component-loader": "^0.3.2",
     "noflo-core": ">= 0.4.0",
     "noflo-webpack-config": "^1.1.0",
-    "nyc": "^14.0.0",
+    "nyc": "^15.1.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
