@@ -19,6 +19,8 @@ const debugMessagingReceivePayload = require('debug')('noflo-runtime-base:messag
 const debugMessagingSend = require('debug')('noflo-runtime-base:messaging:send');
 const debugMessagingSendPayload = require('debug')('noflo-runtime-base:messaging:send:payload');
 
+const { withNamespace } = require('./utils');
+
 // This is the class all NoFlo runtime implementations can extend to easily wrap
 // into any transport protocol.
 class BaseTransport extends EventEmitter {
@@ -71,7 +73,7 @@ class BaseTransport extends EventEmitter {
   getGraphName(graph) {
     const namespace = this.options.namespace || 'default';
     const graphName = graph.name || 'main';
-    return `${namespace}/${graphName}`;
+    return withNamespace(graphName, namespace);
   }
 
   _startDefaultGraph() {
