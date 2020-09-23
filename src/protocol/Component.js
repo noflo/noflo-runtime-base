@@ -128,7 +128,7 @@ class ComponentProtocol extends EventEmitter {
             && library === this.transport.options.namespace
             && !this.transport.graph.graphs[componentName]) {
             // Register subgraph also to the graph protocol handler
-            this.transport.graph.registerGraph(componentName, instance.network.graph, null, false);
+            this.transport.graph.registerGraph(component, instance.network.graph, null, false);
           }
           this.sendComponent(component, instance, context);
           callback(null);

@@ -2,6 +2,7 @@ const noflo = require('noflo');
 const {
   EventEmitter,
 } = require('events');
+const { withNamespace } = require('../utils');
 
 class GraphProtocol extends EventEmitter {
   constructor(transport) {
@@ -127,7 +128,10 @@ class GraphProtocol extends EventEmitter {
         return;
       }
 
-      const fullName = graph.properties.library ? `${graph.properties.library}/${id}` : id;
+      const fullName = withNamespace(
+        id,
+        graph.properties.library || this.transport.options.namespace,
+      );
       // Register for runtime exported ports
       this.transport.runtime.registerNetwork(id, network);
       if (graph.name === 'main' || graph.properties.main) {

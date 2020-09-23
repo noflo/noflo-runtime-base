@@ -11,3 +11,17 @@ exports.parseName = function parseName(name) {
     name: nameParts[1],
   };
 };
+
+exports.withNamespace = function withNamespace(name, namespace) {
+  if (!namespace || name.indexOf('/') !== -1) {
+    return name;
+  }
+  return `${name}/${namespace}`;
+};
+
+exports.withoutNamespace = function withoutNamespace(name) {
+  if (name.indexOf('/') === -1) {
+    return name;
+  }
+  return name.split('/')[1];
+};
