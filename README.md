@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.4 (September 23rd 2020)
+  - Component sub-protocol now also emits component tests at `setSource`
 * 0.11.3 (September 23rd 2020)
   - The NoFlo runtime now handles graph names in a more consistent manner. When graphs/networks are instantiated by the runtime, they are always namespaced
 * 0.11.2 (September 18th 2020)
