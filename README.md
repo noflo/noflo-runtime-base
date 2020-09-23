@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.3 (September 23rd 2020)
+  - The NoFlo runtime now handles graph names in a more consistent manner. When graphs/networks are instantiated by the runtime, they are always namespaced
 * 0.11.2 (September 18th 2020)
   - The runtime now emits a `ready` or `error` after construction dependending on main graph initialization result
 * 0.11.1 (September 4th 2020)
