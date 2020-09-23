@@ -107,6 +107,7 @@ class ComponentProtocol extends EventEmitter {
         name: payload.name,
         library: payload.library,
         code: payload.code,
+        tests: payload.tests,
         language: payload.language,
       });
       this.processComponent(loader, loader.normalizeName(payload.library, payload.name), context);
