@@ -5,6 +5,9 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.5 (September 25th 2020)
+  - fbp-spec graphs (`fixture.xx`) are now special-cased so that they don't get registered as components
+  - Fixed issue with namespacing graph components
 * 0.11.4 (September 23rd 2020)
   - Component sub-protocol now also emits component tests at `setSource`
 * 0.11.3 (September 23rd 2020)
