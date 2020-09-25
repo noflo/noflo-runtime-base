@@ -140,7 +140,7 @@ class ComponentProtocol extends EventEmitter {
         && library === this.transport.options.namespace
         && !this.transport.graph.graphs[component]) {
         // Register subgraph also to the graph protocol handler
-        this.transport.graph.registerGraph(componentName, instance.network.graph, null, false);
+        this.transport.graph.registerGraph(component, instance.network.graph, null, false);
       }
       this.sendComponent(component, instance, context);
       callback(null);
@@ -211,7 +211,8 @@ class ComponentProtocol extends EventEmitter {
         this.send('error', err, context);
         return;
       }
-      loader.registerComponent(graph.properties.library, id, graph);
+      const { library, name } = parseName(id);
+      loader.registerComponent(library, name, graph);
       // Send initial graph info back to client
       send();
     });

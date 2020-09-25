@@ -134,6 +134,12 @@ class GraphProtocol extends EventEmitter {
       );
       // Register for runtime exported ports
       this.transport.runtime.registerNetwork(id, network);
+
+      if (id.indexOf('fixture.') === 0) {
+        // fbp-spec graph, skip propagation
+        return;
+      }
+
       if (graph.name === 'main' || graph.properties.main) {
         this.transport.runtime.setMainGraph(fullName, graph, context);
       } else {

@@ -16,7 +16,7 @@ exports.withNamespace = function withNamespace(name, namespace) {
   if (!namespace || name.indexOf('/') !== -1) {
     return name;
   }
-  return `${name}/${namespace}`;
+  return `${namespace}/${name}`;
 };
 
 exports.withoutNamespace = function withoutNamespace(name) {
