@@ -169,7 +169,7 @@ class BaseTransport extends EventEmitter {
   // @param [Object] Message context, dependent on the transport
   send(protocol, topic, payload) {
     debugMessagingSend(`${protocol} ${topic}`);
-    return debugMessagingSendPayload(payload);
+    debugMessagingSendPayload(payload);
   }
 
   // Send a message to *all users*  via the transport protocol
