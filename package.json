@@ -29,7 +29,7 @@
     "noflo-webpack-config": "^1.1.0",
     "nyc": "^15.1.0",
     "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12"
+    "webpack-cli": "^4.0.0"
   },
   "keywords": [
     "noflo"
