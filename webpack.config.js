@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   entry: {
@@ -53,9 +54,20 @@ module.exports = {
   },
   resolve: {
     extensions: ['.coffee', '.js'],
+    fallback: {
+      buffer: require.resolve('buffer/'),
+      child_process: false,
+      fs: false,
+      os: false,
+      constants: false,
+      assert: false,
+      path: require.resolve('path-browserify'),
+      util: require.resolve('util'),
+    },
   },
-  node: {
-    child_process: 'empty',
-    fs: 'empty',
-  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      process: ['process'],
+    }),
+  ],
 };
