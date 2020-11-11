@@ -44,10 +44,11 @@ function prepareSocketEvent(event, graphName) {
       payload.data = payload.data.toJSON();
     }
     if (payload.data != null ? payload.data.toString : undefined) {
+      const origData = payload.data;
       payload.data = payload.data.toString();
       if (payload.data === '[object Object]') {
         try {
-          payload.data = JSON.parse(JSON.stringify(payload.data));
+          payload.data = JSON.parse(JSON.stringify(origData));
         } catch (error) {
           // Ignored
         }
