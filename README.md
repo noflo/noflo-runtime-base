@@ -5,6 +5,9 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.6 (November 11th 2020)
+  - Fixed sending of object payloads via `network:data` message
+  - Fixed library name incompatibility with fbp-protocol
 * 0.11.5 (September 25th 2020)
   - fbp-spec graphs (`fixture.xx`) are now special-cased so that they don't get registered as components
   - Fixed issue with namespacing graph components
