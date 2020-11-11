@@ -82,7 +82,7 @@ class ComponentProtocol extends EventEmitter {
 
         this.send('source', {
           name: nameParts.name,
-          library: nameParts.library,
+          library: nameParts.library || '',
           code: JSON.stringify(graph.toJSON()),
           language: 'json',
         },
