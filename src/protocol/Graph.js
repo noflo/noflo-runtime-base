@@ -258,6 +258,9 @@ class GraphProtocol extends EventEmitter {
         metadata: port.metadata,
         graph: id,
       };
+      if (!Object.keys(port.metadata).length) {
+        delete data.metadata;
+      }
       this.sendAll('addinport', data, context);
     });
     graph.on('addOutport', (publicName, port) => {
@@ -268,6 +271,9 @@ class GraphProtocol extends EventEmitter {
         metadata: port.metadata,
         graph: id,
       };
+      if (!Object.keys(port.metadata).length) {
+        delete data.metadata;
+      }
       this.sendAll('addoutport', data, context);
     });
     graph.on('removeInport', (publicName) => {
