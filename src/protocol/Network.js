@@ -179,7 +179,10 @@ class NetworkProtocol extends EventEmitter {
     }
 
     const g = graph;
-    g.componentLoader = this.transport.component.getLoader(graph.baseDir, this.transport.options);
+    g.properties.componentLoader = this.transport.component.getLoader(
+      graph.properties.baseDir,
+      this.transport.options,
+    );
     const opts = JSON.parse(JSON.stringify(this.transport.options));
     opts.delay = true;
     noflo.createNetwork(g, {
