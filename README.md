@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.7 (November 16th 2020)
+  - Compatibility with the TypeScript version of fbp-graph
 * 0.11.6 (November 11th 2020)
   - Fixed sending of object payloads via `network:data` message
   - Fixed library name incompatibility with fbp-protocol
