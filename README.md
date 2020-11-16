@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.8 (November 16th 2020)
+  - Compatibility improvements with the fbp-protocol test suite
 * 0.11.7 (November 16th 2020)
   - Compatibility with the TypeScript version of fbp-graph
 * 0.11.6 (November 11th 2020)
