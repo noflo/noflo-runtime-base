@@ -116,7 +116,7 @@ class GraphProtocol extends EventEmitter {
       this.graphs[id] = graph;
       this.sendAll('clear', {
         id,
-        name: graph.name,
+        name: graph.name || '',
         library: graph.properties.library,
         main: graph.properties.main,
         icon: graph.properties.icon,
