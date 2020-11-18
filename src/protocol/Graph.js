@@ -583,7 +583,7 @@ class GraphProtocol extends EventEmitter {
       this.send('error', new Error('No name or metadata supplied'), context);
       return;
     }
-    graph.setEdgeMetadata(payload.name, payload.metadata);
+    graph.setGroupMetadata(payload.name, payload.metadata);
   }
 }
 
