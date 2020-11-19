@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.11.10 (November 19th 2020)
+  - Fixed handling of `changegroup` commands
 * 0.11.9 (November 16th 2020)
   - Compatibility improvements with the fbp-protocol test suite
 * 0.11.7 (November 16th 2020)
