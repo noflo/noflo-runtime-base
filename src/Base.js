@@ -81,7 +81,6 @@ class BaseTransport extends EventEmitter {
       this.emit('ready', null);
       return;
     }
-    this.options.defaultGraph.properties.baseDir = this.options.baseDir;
     const graphName = this.getGraphName(this.options.defaultGraph);
     this.context = 'none';
     this.network._startNetwork(

@@ -97,9 +97,6 @@ class GraphProtocol extends EventEmitter {
       graph.properties.description = payload.description;
     }
 
-    // Pass the project baseDir
-    graph.properties.baseDir = this.transport.options.baseDir;
-
     this.registerGraph(payload.id, graph, context, true);
   }
 
