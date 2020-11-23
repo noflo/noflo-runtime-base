@@ -203,7 +203,10 @@ class ComponentProtocol extends EventEmitter {
   }
 
   registerGraph(id, graph, context) {
-    const loader = this.getLoader(graph.properties.baseDir, this.transport.options);
+    const {
+      baseDir,
+    } = this.transport.options;
+    const loader = this.getLoader(baseDir, this.transport.options);
     const sender = () => this.processComponent(loader, id, context);
     const send = debounce(sender, 10);
     loader.listComponents((err) => {
