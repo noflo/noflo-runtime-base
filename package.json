@@ -50,9 +50,9 @@
   "dependencies": {
     "debounce": "^1.1.0",
     "debug": "^4.0.0",
+    "flowtrace": "^0.1.3",
     "json-stringify-safe": "^5.0.1",
-    "noflo": "^1.3.0",
-    "temp": "^0.9.0"
+    "noflo": "^1.3.0"
   },
   "nyc": {
     "include": [

@@ -124,6 +124,9 @@ class NetworkProtocol extends EventEmitter {
   }
 
   getNetwork(graphName) {
+    if (!graphName) {
+      return null;
+    }
     if (!this.networks[graphName]) {
       return null;
     }

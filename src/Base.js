@@ -12,6 +12,8 @@ const protocols = {
   Network: require('./protocol/Network'),
   // eslint-disable-next-line global-require
   Component: require('./protocol/Component'),
+  // eslint-disable-next-line global-require
+  Trace: require('./protocol/Trace'),
 };
 
 const debugMessagingReceive = require('debug')('noflo-runtime-base:messaging:receive');
@@ -33,6 +35,7 @@ class BaseTransport extends EventEmitter {
     this.graph = new protocols.Graph(this);
     this.network = new protocols.Network(this);
     this.runtime = new protocols.Runtime(this);
+    this.trace = new protocols.Trace(this);
     this.context = null;
 
     if ((this.options.captureOutput != null) && this.options.captureOutput) {
@@ -46,6 +49,7 @@ class BaseTransport extends EventEmitter {
         'protocol:component',
         'protocol:network',
         'protocol:runtime',
+        'protocol:trace',
         'component:setsource',
         'component:getsource',
         'graph:readonly',
@@ -123,6 +127,10 @@ class BaseTransport extends EventEmitter {
     if (protocol === 'graph') {
       // All graph messages are under the same capability
       return this.canDo(['protocol:graph'], secret);
+    }
+    if (protocol === 'trace') {
+      // All trace messages are under the same capability
+      return this.canDo(['protocol:trace'], secret);
     }
     const message = `${protocol}:${topic}`;
     switch (message) {
@@ -222,6 +230,10 @@ class BaseTransport extends EventEmitter {
       }
       case 'component': {
         this.component.receive(topic, payload, context);
+        return;
+      }
+      case 'trace': {
+        this.trace.receive(topic, payload, context);
         return;
       }
       default: {
