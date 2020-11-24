@@ -142,7 +142,7 @@ class RuntimeProtocol extends EventEmitter {
     }
   }
 
-  getRuntime(request, context) {
+  getRuntimeDefinition() {
     let {
       type,
     } = this.transport.options;
@@ -154,23 +154,10 @@ class RuntimeProtocol extends EventEmitter {
       }
     }
 
-    const {
-      capabilities,
-    } = this.transport.options;
-    const secret = request ? request.secret : null;
-    const permittedCapabilities = capabilities.filter(
-      (capability) => this.transport.canDo(capability, secret),
-    );
-
     const payload = {
       type,
       version: this.transport.version,
-      capabilities: permittedCapabilities,
-      allCapabilities: capabilities,
     };
-    if (this.mainGraph) {
-      payload.graph = this.mainGraph;
-    }
 
     // Add project metadata if available
     if (this.transport.options.id) { payload.id = this.transport.options.id; }
@@ -181,6 +168,25 @@ class RuntimeProtocol extends EventEmitter {
     }
     if (this.transport.options.repositoryVersion) {
       payload.repositoryVersion = this.transport.options.repositoryVersion;
+    }
+
+    return payload;
+  }
+
+  getRuntime(request, context) {
+    const payload = this.getRuntimeDefinition();
+
+    const {
+      capabilities,
+    } = this.transport.options;
+    const secret = request ? request.secret : null;
+    payload.allCapabilities = capabilities;
+    payload.capabilities = capabilities.filter(
+      (capability) => this.transport.canDo(capability, secret),
+    );
+
+    if (this.mainGraph) {
+      payload.graph = this.mainGraph;
     }
 
     this.send('runtime', payload, context);
