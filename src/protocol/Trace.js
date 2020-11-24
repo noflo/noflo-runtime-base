@@ -57,8 +57,8 @@ class TraceProtocol {
       return;
     }
     const buffersize = payload.buffersize || 400;
-    // TODO: Populate metadata (similar to runtime:getruntime)
-    this.traces[payload.graph] = new Flowtrace({}, buffersize);
+    const metadata = this.transport.runtime.getRuntimeDefinition();
+    this.traces[payload.graph] = new Flowtrace(metadata, buffersize);
     network.setFlowtrace(this.traces[payload.graph], payload.graph, true);
     this.sendAll('start', {
       graph: payload.graph,
