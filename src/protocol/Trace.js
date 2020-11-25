@@ -50,6 +50,12 @@ class TraceProtocol {
     return this.traces[payload.graph];
   }
 
+  startTrace(graphName, network, buffersize = 400) {
+    const metadata = this.transport.runtime.getRuntimeDefinition();
+    this.traces[graphName] = new Flowtrace(metadata, buffersize);
+    network.setFlowtrace(this.traces[graphName], graphName, true);
+  }
+
   start(payload, context) {
     const network = this.transport.network.getNetwork(payload.graph);
     if (!network) {
@@ -57,9 +63,7 @@ class TraceProtocol {
       return;
     }
     const buffersize = payload.buffersize || 400;
-    const metadata = this.transport.runtime.getRuntimeDefinition();
-    this.traces[payload.graph] = new Flowtrace(metadata, buffersize);
-    network.setFlowtrace(this.traces[payload.graph], payload.graph, true);
+    this.startTrace(payload.graph, network, buffersize);
     this.sendAll('start', {
       graph: payload.graph,
       buffersize,
