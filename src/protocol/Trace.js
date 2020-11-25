@@ -54,6 +54,7 @@ class TraceProtocol {
     const metadata = this.transport.runtime.getRuntimeDefinition();
     this.traces[graphName] = this.traces[graphName] || new Flowtrace(metadata, buffersize);
     network.setFlowtrace(this.traces[graphName], graphName, true);
+    return this.traces[graphName];
   }
 
   start(payload, context) {
