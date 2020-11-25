@@ -5,6 +5,10 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.12.0 (November 25th 2020)
+  - Added support for the Trace sub-protocol
+  - Removed the local pseudo-Flowtrace implementation in favor of the proper Flowtrace library
+  - Switched to the new NoFlo 1.3 network options scheme
 * 0.11.10 (November 19th 2020)
   - Fixed handling of `changegroup` commands
 * 0.11.9 (November 16th 2020)
