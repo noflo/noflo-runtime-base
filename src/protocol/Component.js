@@ -124,13 +124,18 @@ class ComponentProtocol extends EventEmitter {
         const { library, name: componentName } = parseName(component);
         // Ensure graphs are not run automatically when just querying their ports
         if (!instance.isReady()) {
-          return new Promise((resolve) => {
+          return new Promise((resolve, reject) => {
             instance.once('ready', () => {
               if (instance.isSubgraph()
                 && library === this.transport.options.namespace
                 && !this.transport.graph.graphs[componentName]) {
                 // Register subgraph also to the graph protocol handler
-                this.transport.graph.registerGraph(component, instance.network.graph, null, false);
+                this.transport.graph.registerGraph(component, instance.network.graph, null, false)
+                  .then(() => {
+                    this.sendComponent(component, instance, context);
+                    resolve();
+                  }, reject);
+                return;
               }
               this.sendComponent(component, instance, context);
               resolve();
@@ -141,7 +146,10 @@ class ComponentProtocol extends EventEmitter {
           && library === this.transport.options.namespace
           && !this.transport.graph.graphs[component]) {
           // Register subgraph also to the graph protocol handler
-          this.transport.graph.registerGraph(component, instance.network.graph, null, false);
+          return this.transport.graph.registerGraph(component, instance.network.graph, null, false)
+            .then(() => {
+              this.sendComponent(component, instance, context);
+            });
         }
         this.sendComponent(component, instance, context);
         return null;

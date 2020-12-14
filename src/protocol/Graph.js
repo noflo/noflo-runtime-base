@@ -97,12 +97,15 @@ class GraphProtocol extends EventEmitter {
       graph.properties.description = payload.description;
     }
 
-    this.registerGraph(payload.id, graph, context, true);
+    this.registerGraph(payload.id, graph, context, true)
+      .catch((err) => {
+        this.send('error', err, context);
+      });
   }
 
   registerGraph(id, graph, context = null, propagate = true) {
     // Prepare the network
-    this.transport.network.initNetwork(graph, id, context)
+    return this.transport.network.initNetwork(graph, id, context)
       .then((network) => {
         this.subscribeGraph(id, graph, context);
         this.graphs[id] = graph;
@@ -139,6 +142,7 @@ class GraphProtocol extends EventEmitter {
         }
       }, (err) => {
         this.send('error', err, context);
+        return Promise.reject(err);
       });
   }
 
