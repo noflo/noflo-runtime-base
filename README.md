@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.13.0 (December 14th 2020)
+  - Adapted to Promises functionality in NoFlo 1.4
 * 0.12.0 (November 25th 2020)
   - Added support for the Trace sub-protocol
   - Removed the local pseudo-Flowtrace implementation in favor of the proper Flowtrace library
