@@ -20,58 +20,49 @@ describe('Network protocol', () => {
     client = null;
   });
 
-  describe('defining a graph', () => it('should succeed', (done) => {
-    client.on('error', (err) => done(err));
-    client.on('message', (msg) => {
-      if (msg.command === 'error') {
-        done(msg.payload);
-        return;
-      }
-      if (msg.command !== 'addinitial') { return; }
-      chai.expect(msg.payload.src.data).to.equal('Hello, world!');
-      done();
-    });
-    client.send('graph', 'clear', {
-      id: 'bar',
-      main: true,
-      secret: 'foo',
-    });
-    client.send('graph', 'addnode', {
-      id: 'Hello',
-      component: 'core/Repeat',
-      graph: 'bar',
-      secret: 'foo',
-    });
-    client.send('graph', 'addnode', {
-      id: 'World',
-      component: 'core/Drop',
-      graph: 'bar',
-      secret: 'foo',
-    });
-    client.send('graph', 'addedge', {
-      src: {
-        node: 'Hello',
-        port: 'out',
-      },
-      tgt: {
-        node: 'World',
-        port: 'in',
-      },
-      graph: 'bar',
-      secret: 'foo',
-    });
-    client.send('graph', 'addinitial', {
-      src: {
-        data: 'Hello, world!',
-      },
-      tgt: {
-        node: 'Hello',
-        port: 'in',
-      },
-      graph: 'bar',
-      secret: 'foo',
-    });
-  }));
+  describe('defining a graph', () => {
+    it('should succeed', () => Promise.resolve()
+      .then(() => client.send('graph', 'clear', {
+        id: 'bar',
+        main: true,
+        secret: 'foo',
+      }))
+      .then(() => client.send('graph', 'addnode', {
+        id: 'Hello',
+        component: 'core/Repeat',
+        graph: 'bar',
+        secret: 'foo',
+      }))
+      .then(() => client.send('graph', 'addnode', {
+        id: 'World',
+        component: 'core/Drop',
+        graph: 'bar',
+        secret: 'foo',
+      }))
+      .then(() => client.send('graph', 'addedge', {
+        src: {
+          node: 'Hello',
+          port: 'out',
+        },
+        tgt: {
+          node: 'World',
+          port: 'in',
+        },
+        graph: 'bar',
+        secret: 'foo',
+      }))
+      .then(() => client.send('graph', 'addinitial', {
+        src: {
+          data: 'Hello, world!',
+        },
+        tgt: {
+          node: 'Hello',
+          port: 'in',
+        },
+        graph: 'bar',
+        secret: 'foo',
+      })));
+  });
   describe('starting the network', () => {
     it('should process the nodes and stop when it completes', (done) => {
       const expects = [
@@ -80,12 +71,7 @@ describe('Network protocol', () => {
         'data',
         'stopped',
       ];
-      client.on('error', (err) => done(err));
       client.on('message', (msg) => {
-        if (msg.command === 'error') {
-          done(msg.payload);
-          return;
-        }
         if (msg.protocol !== 'network') { return; }
         chai.expect(msg.protocol).to.equal('network');
         chai.expect(msg.command).to.equal(expects.shift());
@@ -96,10 +82,10 @@ describe('Network protocol', () => {
       client.send('network', 'start', {
         graph: 'bar',
         secret: 'foo',
-      });
+      })
+        .catch(done);
     });
     it('should provide a "finished" status', (done) => {
-      client.on('error', (err) => done(err));
       client.on('message', (msg) => {
         chai.expect(msg.protocol).to.equal('network');
         chai.expect(msg.command).to.equal('status');
@@ -111,37 +97,28 @@ describe('Network protocol', () => {
       client.send('network', 'getstatus', {
         graph: 'bar',
         secret: 'foo',
-      });
+      })
+        .catch(done);
     });
-    it('should be able to rename a name', (done) => {
-      client.on('error', (err) => done(err));
-      client.send('graph', 'renamenode', {
+    it('should be able to rename a node', () => client
+      .send('graph', 'renamenode', {
         from: 'World',
         to: 'NoFlo',
         graph: 'bar',
         secret: 'foo',
-      });
-      client.on('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('graph');
-        chai.expect(msg.command).to.equal('renamenode');
-        done();
-      });
-    });
-    it('should not be able to add a node with a non-existing component', (done) => {
-      client.on('error', (err) => done(err));
-      client.send('graph', 'addnode', {
+      }));
+    it('should not be able to add a node with a non-existing component', () => client
+      .send('graph', 'addnode', {
         id: 'Nonworking',
         component: '404NotFound',
         graph: 'bar',
         secret: 'foo',
-      });
-      client.on('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('graph');
-        chai.expect(msg.command).to.equal('error');
-        chai.expect(msg.payload).to.be.an('error');
-        chai.expect(msg.payload.message).to.include('Component 404NotFound not available');
-        done();
-      });
-    });
+      })
+      .then(
+        () => Promise.reject(new Error('Unexpected success')),
+        (err) => {
+          chai.expect(err.message).to.include('Component 404NotFound not available');
+        },
+      ));
   });
 });

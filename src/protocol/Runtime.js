@@ -19,7 +19,7 @@ function sendToInport(port, event, payload) {
 
 function findPort(network, name, inPort) {
   let internal;
-  if (!network.graph) { return null; }
+  if (!network || !network.graph) { return null; }
   if (inPort) {
     internal = network.graph.inports[name];
   } else {
@@ -117,27 +117,25 @@ class RuntimeProtocol extends EventEmitter {
     return this.transport.sendAll('runtime', topic, payload);
   }
 
-  sendError(message, context) {
-    return this.send('error', new Error(message), context);
+  sendError(err, context) {
+    return this.send('error', err, context);
   }
 
   receive(topic, payload, context) {
     switch (topic) {
       case 'getruntime': return this.getRuntime(payload, context);
       case 'packet':
-        return this.sendPacket(payload, (err) => {
-          if (err) {
-            this.sendError(err.message, context);
-            return;
-          }
-          this.send('packetsent', {
-            port: payload.port,
-            event: payload.event,
-            graph: payload.graph,
-            payload: payload.payload,
-          },
-          context);
-        });
+        return this.sendPacket(payload)
+          .then(() => {
+            this.send('packetsent', {
+              port: payload.port,
+              event: payload.event,
+              graph: payload.graph,
+              payload: payload.payload,
+            }, context);
+          }, (err) => {
+            this.sendError(err, context);
+          });
       default: return this.send('error', new Error(`runtime:${topic} not supported`), context);
     }
   }
@@ -194,7 +192,7 @@ class RuntimeProtocol extends EventEmitter {
     return (() => {
       const result = [];
       Object.keys(this.transport.network.networks).forEach((name) => {
-        const network = this.transport.network.networks[name];
+        const network = this.transport.network.getNetwork(name);
         result.push(this.sendPorts(name, network, context));
       });
       return result;
@@ -302,13 +300,21 @@ class RuntimeProtocol extends EventEmitter {
     });
   }
 
-  sendPacket(payload, callback) {
-    const network = this.transport.network.networks[payload.graph];
-    if (!network) { return callback(new Error(`Cannot find network for graph ${payload.graph}`)); }
-    const port = findPort(network.network, payload.port, true);
-    if (!port) { return callback(new Error(`Cannot find internal port for ${payload.port}`)); }
-    sendToInport(port, payload.event, payload.payload);
-    return callback();
+  sendPacket(payload) {
+    return new Promise((resolve, reject) => {
+      const network = this.transport.network.getNetwork(payload.graph);
+      if (!network) {
+        reject(new Error(`Cannot find network for graph ${payload.graph}`));
+        return;
+      }
+      const port = findPort(network, payload.port, true);
+      if (!port) {
+        reject(new Error(`Cannot find internal port for ${payload.port}`));
+        return;
+      }
+      sendToInport(port, payload.event, payload.payload);
+      resolve();
+    });
   }
 }
 

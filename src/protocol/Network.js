@@ -165,26 +165,19 @@ class NetworkProtocol extends EventEmitter {
     return this.networks[graph].filters[sign];
   }
 
-  initNetwork(graph, graphName, context, callback) {
+  initNetwork(graph, graphName, context) {
     // Ensure we stop previous network
     const existingNetwork = this.getNetwork(graphName);
     if (existingNetwork) {
-      existingNetwork.stop((err) => {
-        if (err) {
-          callback(err);
-          return;
-        }
-        delete this.networks[graphName].network;
-        this.emit('removenetwork', existingNetwork, graphName, this.networks);
-        this.initNetwork(graph, graphName, context, callback);
-      });
-      return;
+      return existingNetwork.stop()
+        .then(() => {
+          delete this.networks[graphName].network;
+          this.emit('removenetwork', existingNetwork, graphName, this.networks);
+          return this.initNetwork(graph, graphName, context);
+        });
     }
 
-    const g = graph;
-    const opts = JSON.parse(JSON.stringify(this.transport.options));
-    opts.delay = true;
-    noflo.createNetwork(g, {
+    return noflo.createNetwork(graph, {
       subscribeGraph: false,
       delay: true,
       baseDir: this.transport.options.baseDir,
@@ -192,33 +185,23 @@ class NetworkProtocol extends EventEmitter {
         this.transport.options.baseDir,
         this.transport.options,
       ),
-    }, (err, network) => {
-      if (err) {
-        callback(err);
-        return;
-      }
-      if (this.networks[graphName] && this.networks[graphName].network) {
-        this.networks[graphName].network = network;
-      } else {
-        this.networks[graphName] = {
-          network,
-          filters: {},
-        };
-      }
-
-      this.emit('addnetwork', network, graphName, this.networks);
-      this.subscribeNetwork(network, graphName, context);
-
-      // Wire up the network
-      network.connect((connectError) => {
-        if (connectError) {
-          callback(connectError);
-          return;
+    })
+      .then((network) => {
+        if (this.networks[graphName] && this.networks[graphName].network) {
+          this.networks[graphName].network = network;
+        } else {
+          this.networks[graphName] = {
+            network,
+            filters: {},
+          };
         }
-        callback(null, network);
+
+        this.emit('addnetwork', network, graphName, this.networks);
+        this.subscribeNetwork(network, graphName, context);
+
+        // Wire up the network
+        return network.connect();
       });
-    },
-    opts);
   }
 
   subscribeNetwork(network, graphName, context) {
@@ -295,42 +278,22 @@ class NetworkProtocol extends EventEmitter {
     });
   }
 
-  _startNetwork(graph, graphName, context, callback) {
+  _startNetwork(graph, graphName, context) {
     const existingNetwork = this.getNetwork(graphName);
     if (existingNetwork) {
       // already initialized
-      existingNetwork.start((startError) => {
-        if (startError) {
-          callback(startError);
-          return;
-        }
-        callback(null, existingNetwork);
-      });
-      return;
+      return existingNetwork.start();
     }
 
-    this.initNetwork(graph, graphName, context, (err) => {
-      if (err) {
-        callback(err);
-        return;
-      }
-      const network = this.getNetwork(graphName);
-      network.start((startError) => {
-        if (startError) {
-          callback(startError);
-          return;
-        }
-        callback(null, network);
-      });
-    });
+    return this.initNetwork(graph, graphName, context)
+      .then((network) => network.start());
   }
 
   startNetwork(graph, payload, context) {
-    this._startNetwork(graph, payload.graph, context, (err) => {
-      if (err) {
+    this._startNetwork(graph, payload.graph, context)
+      .catch((err) => {
         this.send('error', err, context);
-      }
-    });
+      });
   }
 
   stopNetwork(graph, payload, context) {
@@ -340,19 +303,17 @@ class NetworkProtocol extends EventEmitter {
       return;
     }
     if (net.isStarted()) {
-      this.networks[payload.graph].network.stop((err) => {
-        if (err) {
+      this.networks[payload.graph].network.stop()
+        .then(() => {
+          this.send('stopped', {
+            time: new Date(),
+            graph: payload.graph,
+            running: net.isRunning(),
+            started: net.isStarted(),
+          }, context);
+        }, (err) => {
           this.send('error', err, context);
-          return;
-        }
-        this.send('stopped', {
-          time: new Date(),
-          graph: payload.graph,
-          running: net.isRunning(),
-          started: net.isStarted(),
-        },
-        context);
-      });
+        });
       return;
     }
     // Was already stopped, just send the confirmation
