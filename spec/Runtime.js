@@ -13,18 +13,14 @@ describe('Runtime protocol', () => {
       client = null;
       runtime = null;
     });
-    it('should respond with runtime:runtime for unauthorized user', (done) => {
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('runtime');
-        chai.expect(msg.command).to.equal('runtime');
-        chai.expect(msg.payload.type).to.have.string('noflo');
-        chai.expect(msg.payload.capabilities).to.eql([]);
-        chai.expect(msg.payload.allCapabilities).to.include('protocol:graph');
-        done();
-      });
-      client.send('runtime', 'getruntime', null);
-    });
-    it('should respond with runtime:runtime for authorized user', (done) => {
+    it('should respond with runtime:runtime for unauthorized user', () => client
+      .send('runtime', 'getruntime', null)
+      .then((payload) => {
+        chai.expect(payload.type).to.have.string('noflo');
+        chai.expect(payload.capabilities).to.eql([]);
+        chai.expect(payload.allCapabilities).to.include('protocol:graph');
+      }));
+    it('should respond with runtime:runtime for authorized user', () => {
       client.disconnect();
       runtime = new direct.Runtime({
         permissions: {
@@ -34,16 +30,14 @@ describe('Runtime protocol', () => {
       });
       client = new direct.Client(runtime);
       client.connect();
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('runtime');
-        chai.expect(msg.command).to.equal('runtime');
-        chai.expect(msg.payload.type).to.have.string('noflo');
-        chai.expect(msg.payload.capabilities).to.eql(['protocol:graph', 'protocol:component']);
-        chai.expect(msg.payload.allCapabilities).to.include('protocol:graph');
-        done();
-      });
-      client.send('runtime', 'getruntime',
-        { secret: 'super-secret' });
+      return client.send('runtime', 'getruntime', {
+        secret: 'super-secret',
+      })
+        .then((payload) => {
+          chai.expect(payload.type).to.have.string('noflo');
+          chai.expect(payload.capabilities).to.eql(['protocol:graph', 'protocol:component']);
+          chai.expect(payload.allCapabilities).to.include('protocol:graph');
+        });
     });
   });
   describe('with a graph containing exported ports', () => {
@@ -68,34 +62,25 @@ describe('Runtime protocol', () => {
       runtime = new direct.Runtime();
       ports = null;
     });
-    it('should be possible to upload graph', (done) => {
-      client.on('error', (err) => done(err));
-      client.on('message', (msg) => {
-        if (msg.command === 'error') {
-          done(msg.payload);
-          return;
-        }
-        if (msg.command !== 'addoutport') { return; }
-        done();
-      });
-      client.send('graph', 'clear', {
+    it('should be possible to upload graph', () => Promise.resolve()
+      .then(() => client.send('graph', 'clear', {
         id: 'bar',
         main: true,
         secret: 'second-secret',
-      });
-      client.send('graph', 'addnode', {
+      }))
+      .then(() => client.send('graph', 'addnode', {
         id: 'Hello',
         component: 'core/Repeat',
         graph: 'bar',
         secret: 'second-secret',
-      });
-      client.send('graph', 'addnode', {
+      }))
+      .then(() => client.send('graph', 'addnode', {
         id: 'World',
         component: 'core/Repeat',
         graph: 'bar',
         secret: 'second-secret',
-      });
-      client.send('graph', 'addedge', {
+      }))
+      .then(() => client.send('graph', 'addedge', {
         src: {
           node: 'Hello',
           port: 'out',
@@ -106,34 +91,26 @@ describe('Runtime protocol', () => {
         },
         graph: 'bar',
         secret: 'second-secret',
-      });
-      client.send('graph', 'addinport', {
+      }))
+      .then(() => client.send('graph', 'addinport', {
         public: 'in',
         node: 'Hello',
         port: 'in',
         graph: 'bar',
         secret: 'second-secret',
-      });
-      client.send('graph', 'addoutport', {
+      }))
+      .then(() => client.send('graph', 'addoutport', {
         public: 'out',
         node: 'World',
         port: 'out',
         graph: 'bar',
         secret: 'second-secret',
-      });
-    });
-    it('should be possible to start the network', (done) => {
-      client.on('error', (err) => done(err));
-      client.on('message', (msg) => {
-        if (msg.protocol !== 'network') { return; }
-        if (msg.command !== 'started') { return; }
-        done();
-      });
-      client.send('network', 'start', {
+      })));
+    it('should be possible to start the network', () => client
+      .send('network', 'start', {
         graph: 'bar',
         secret: 'second-secret',
-      });
-    });
+      }));
     it('packets sent to IN should be received at OUT', (done) => {
       const payload = { hello: 'World' };
       client.on('error', (err) => done(err));
@@ -153,7 +130,8 @@ describe('Runtime protocol', () => {
         event: 'data',
         payload,
         secret: 'second-secret',
-      });
+      })
+        .catch(done);
     });
     it('should have emitted ports via JS API', () => {
       chai.expect(ports.inPorts.length).to.equal(1);
@@ -172,12 +150,8 @@ describe('Runtime protocol', () => {
         event: 'data',
         payload,
         secret: 'second-secret',
-      },
-      (err) => {
-        if (err) {
-          done(err);
-        }
-      });
+      })
+        .catch(done);
     });
   });
 });

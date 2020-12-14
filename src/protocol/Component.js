@@ -42,26 +42,24 @@ class ComponentProtocol extends EventEmitter {
       baseDir,
     } = this.transport.options;
     const loader = this.getLoader(baseDir, this.transport.options);
-    return loader.listComponents((err, components) => {
-      if (err) {
-        this.send('error', err, context);
-        return;
-      }
-      const componentNames = Object.keys(components);
-      let processed = 0;
-      componentNames.forEach((component) => {
-        this.processComponent(loader, component, context, (error) => {
-          if (error) {
-            this.send('error', error, context);
+    loader.listComponents()
+      .then((components) => {
+        const componentNames = Object.keys(components);
+        let processed = 0;
+        return Promise.all(componentNames.map((component) => this
+          .processComponent(loader, component, context)
+          .then(() => {
             processed += 1;
-            return;
-          }
-          processed += 1;
-          if (processed < componentNames.length) { return; }
-          this.send('componentsready', processed, context);
-        });
+          }, (error) => {
+            processed += 1;
+            this.send('error', error, context);
+          })))
+          .then(() => {
+            this.send('componentsready', processed, context);
+          });
+      }, (err) => {
+        this.send('error', err, context);
       });
-    });
   }
 
   getSource(payload, context) {
@@ -69,28 +67,30 @@ class ComponentProtocol extends EventEmitter {
       baseDir,
     } = this.transport.options;
     const loader = this.getLoader(baseDir, this.transport.options);
-    return loader.getSource(payload.name, (err, component) => {
-      if (err) {
-        // Try one of the registered graphs
-        const nameParts = parseName(payload.name);
-        const graph = this.transport.graph.graphs[payload.name]
-          || this.transport.graph.graphs[nameParts.name];
-        if (graph == null) {
-          this.send('error', err, context);
-          return;
-        }
-
-        this.send('source', {
-          name: nameParts.name,
-          library: nameParts.library || '',
-          code: JSON.stringify(graph.toJSON()),
-          language: 'json',
+    loader.getSource(payload.name)
+      .then(
+        (src) => src,
+        (err) => {
+          // Try one of the registered graphs
+          const nameParts = parseName(payload.name);
+          const graph = this.transport.graph.graphs[payload.name]
+            || this.transport.graph.graphs[nameParts.name];
+          if (!graph) {
+            return Promise.reject(err);
+          }
+          return {
+            name: nameParts.name,
+            library: nameParts.library || '',
+            code: JSON.stringify(graph.toJSON()),
+            language: 'json',
+          };
         },
-        context);
-        return;
-      }
-      this.send('source', component, context);
-    });
+      )
+      .then((component) => {
+        this.send('source', component, context);
+      }, (err) => {
+        this.send('error', err, context);
+      });
   }
 
   setSource(payload, context) {
@@ -98,54 +98,54 @@ class ComponentProtocol extends EventEmitter {
       baseDir,
     } = this.transport.options;
     const loader = this.getLoader(baseDir, this.transport.options);
-    loader.setSource(payload.library, payload.name, payload.code, payload.language, (err) => {
-      if (err) {
+    loader.setSource(payload.library, payload.name, payload.code, payload.language)
+      .then(() => {
+        this.emit('updated', {
+          name: payload.name,
+          library: payload.library,
+          code: payload.code,
+          tests: payload.tests,
+          language: payload.language,
+        });
+        return this.processComponent(
+          loader,
+          loader.normalizeName(payload.library, payload.name),
+          context,
+        );
+      })
+      .catch((err) => {
         this.send('error', err, context);
-        return;
-      }
-      this.emit('updated', {
-        name: payload.name,
-        library: payload.library,
-        code: payload.code,
-        tests: payload.tests,
-        language: payload.language,
       });
-      this.processComponent(loader, loader.normalizeName(payload.library, payload.name), context);
-    });
   }
 
-  processComponent(loader, component, context, callback = () => {}) {
-    return loader.load(component, (err, instance) => {
-      if (err) {
-        this.send('error', err, context);
-        callback(err);
-        return;
-      }
-      const { library, name: componentName } = parseName(component);
-      // Ensure graphs are not run automatically when just querying their ports
-      if (!instance.isReady()) {
-        instance.once('ready', () => {
-          if (instance.isSubgraph()
-            && library === this.transport.options.namespace
-            && !this.transport.graph.graphs[componentName]) {
-            // Register subgraph also to the graph protocol handler
-            this.transport.graph.registerGraph(component, instance.network.graph, null, false);
-          }
-          this.sendComponent(component, instance, context);
-          callback(null);
-        });
-        return;
-      }
-      if (instance.isSubgraph()
-        && library === this.transport.options.namespace
-        && !this.transport.graph.graphs[component]) {
-        // Register subgraph also to the graph protocol handler
-        this.transport.graph.registerGraph(component, instance.network.graph, null, false);
-      }
-      this.sendComponent(component, instance, context);
-      callback(null);
-    },
-    true);
+  processComponent(loader, component, context) {
+    return loader.load(component)
+      .then((instance) => {
+        const { library, name: componentName } = parseName(component);
+        // Ensure graphs are not run automatically when just querying their ports
+        if (!instance.isReady()) {
+          return new Promise((resolve) => {
+            instance.once('ready', () => {
+              if (instance.isSubgraph()
+                && library === this.transport.options.namespace
+                && !this.transport.graph.graphs[componentName]) {
+                // Register subgraph also to the graph protocol handler
+                this.transport.graph.registerGraph(component, instance.network.graph, null, false);
+              }
+              this.sendComponent(component, instance, context);
+              resolve();
+            });
+          });
+        }
+        if (instance.isSubgraph()
+          && library === this.transport.options.namespace
+          && !this.transport.graph.graphs[component]) {
+          // Register subgraph also to the graph protocol handler
+          this.transport.graph.registerGraph(component, instance.network.graph, null, false);
+        }
+        this.sendComponent(component, instance, context);
+        return null;
+      });
   }
 
   processPort(portName, port) {
@@ -209,16 +209,6 @@ class ComponentProtocol extends EventEmitter {
     const loader = this.getLoader(baseDir, this.transport.options);
     const sender = () => this.processComponent(loader, id, context);
     const send = debounce(sender, 10);
-    loader.listComponents((err) => {
-      if (err) {
-        this.send('error', err, context);
-        return;
-      }
-      const { library, name } = parseName(id);
-      loader.registerComponent(library, name, graph);
-      // Send initial graph info back to client
-      send();
-    });
 
     // Send graph info again every time it changes so we get the updated ports
     graph.on('addNode', send);
@@ -234,6 +224,16 @@ class ComponentProtocol extends EventEmitter {
     graph.on('addOutport', send);
     graph.on('removeOutport', send);
     graph.on('renameOutport', send);
+
+    loader.listComponents()
+      .then(() => {
+        const { library, name } = parseName(id);
+        loader.registerComponent(library, name, graph);
+        // Send initial graph info back to client
+        send();
+      }, (err) => {
+        this.send('error', err, context);
+      });
   }
 }
 ComponentProtocol.initClass();

@@ -26,32 +26,28 @@ describe('Graph protocol', () => {
   });
 
   describe('sending graph:clear', () => {
-    it('should fail without proper authentication', (done) => {
+    it('should fail without proper authentication', () => {
       const payload = {
         id: 'mygraph',
         main: true,
       };
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('graph');
-        chai.expect(msg.command).to.equal('error');
-        done();
-      });
-      client.send('graph', 'clear', payload);
+      return client.send('graph', 'clear', payload)
+        .then(
+          () => Promise.reject(new Error('Unexpected success')),
+          () => true,
+        );
     });
-    it('should respond with graph:clear', (done) => {
+    it('should respond with graph:clear', () => {
       const payload = {
         id: 'mygraph',
         main: true,
         secret: 'foo',
       };
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('graph');
-        chai.expect(msg.command).to.equal('clear');
-        chai.expect(msg.payload).to.include.keys('id');
-        chai.expect(msg.payload.id).to.equal(payload.id);
-        done();
-      });
-      client.send('graph', 'clear', payload);
+      return client.send('graph', 'clear', payload)
+        .then((msg) => {
+          chai.expect(msg).to.include.keys('id');
+          chai.expect(msg.id).to.equal(payload.id);
+        });
     });
     it('should send to all clients', (done) => {
       const payload = {
@@ -66,7 +62,8 @@ describe('Graph protocol', () => {
         chai.expect(msg.payload.id).to.equal(payload.id);
         done();
       });
-      client.send('graph', 'clear', payload);
+      client.send('graph', 'clear', payload)
+        .catch(done);
     });
   });
 
@@ -92,11 +89,14 @@ describe('Graph protocol', () => {
       chai.expect(msg.payload).to.deep.equal(payload);
       done();
     };
-    after(() => runtimeEvents = []);
+    after(() => {
+      runtimeEvents = [];
+    });
     it('should respond with graph:addnode', (done) => {
       client.on('message', (msg) => checkAddNode(msg, done));
-      client.send('graph', 'clear', { id: graph, main: true, secret: 'foo' });
-      client.send('graph', 'addnode', authenticatedPayload);
+      client.send('graph', 'clear', { id: graph, main: true, secret: 'foo' })
+        .then(() => client.send('graph', 'addnode', authenticatedPayload))
+        .catch(done);
     });
     it('should have emitted an updated event', () => {
       chai.expect(runtimeEvents.length).to.equal(1);
@@ -105,26 +105,26 @@ describe('Graph protocol', () => {
     });
     it('should send to all clients', (done) => {
       client2.on('message', (msg) => checkAddNode(msg, done));
-      client.send('graph', 'clear', { id: graph, main: true, secret: 'foo' });
-      client.send('graph', 'addnode', authenticatedPayload);
+      client.send('graph', 'clear', { id: graph, main: true, secret: 'foo' })
+        .then(() => client.send('graph', 'addnode', authenticatedPayload))
+        .catch(done);
     });
   });
 
   describe('sending graph:addnode without an existing graph', () => {
-    it('should respond with an error', (done) => {
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('graph');
-        chai.expect(msg.command).to.equal('error');
-        chai.expect(msg.payload.message).to.equal('Requested graph not found');
-        done();
-      });
-      client.send('graph', 'addnode', {
+    it('should respond with an error', () => client
+      .send('graph', 'addnode', {
         id: 'foo',
         component: 'Bar',
         graph: 'not-found',
         metadata: {},
         secret: 'foo',
-      });
-    });
+      })
+      .then(
+        () => Promise.reject(new Error('Unexpected success')),
+        (err) => {
+          chai.expect(err.message).to.equal('Requested graph not found');
+        },
+      ));
   });
 });

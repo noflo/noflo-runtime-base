@@ -91,16 +91,14 @@ class BaseTransport extends EventEmitter {
       this.options.defaultGraph,
       graphName,
       this.context,
-      (err, network) => {
-        if (err) {
-          this.emit('error', err);
-          return;
-        }
+    )
+      .then((network) => {
         this.graph.registerGraph(graphName, this.options.defaultGraph, false);
         this.runtime.setMainGraph(graphName, this.options.defaultGraph);
         this.emit('ready', network);
-      },
-    );
+      }, (err) => {
+        this.emit('error', err);
+      });
   }
 
   // Check if a given user is authorized for a given capability

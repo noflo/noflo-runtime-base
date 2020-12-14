@@ -26,23 +26,22 @@ describe('Component protocol', () => {
     client = null;
     client2.disconnect();
     client2 = null;
-    return runtime = null;
+    runtime = null;
   });
 
   describe('sending component:list', () => {
-    it('should fail without proper authentication', (done) => {
+    it('should fail without proper authentication', () => {
       const payload = {};
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('component');
-        chai.expect(msg.command).to.equal('error');
-        return done();
-      });
-      return client.send('component', 'list', payload);
+      return client.send('component', 'list', payload)
+        .then(
+          () => Promise.reject(new Error('Unexpected success')),
+          () => true,
+        );
     });
     return it('should respond with list of components and a componentsready', (done) => {
       const payload = { secret: 'foo' };
       let componentsReceived = 0;
-      var listener = function (msg) {
+      const listener = (msg) => {
         chai.expect(msg.protocol).to.equal('component');
         chai.expect(msg.command).to.be.oneOf([
           'component',
@@ -53,42 +52,38 @@ describe('Component protocol', () => {
           done();
           return;
         }
-        componentsReceived++;
-        return client.once('message', listener);
+        componentsReceived += 1;
+        client.once('message', listener);
       };
       client.once('message', listener);
-      return client.send('component', 'list', payload);
+      client.send('component', 'list', payload);
     });
   });
 
   describe('sending component:getsource', () => {
-    it('should fail without proper authentication', (done) => {
+    it('should fail without proper authentication', () => {
       const payload = { name: 'core/Repeat' };
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('component');
-        chai.expect(msg.command).to.equal('error');
-        return done();
-      });
-      return client.send('component', 'getsource', payload);
+      return client.send('component', 'getsource', payload)
+        .then(
+          () => Promise.reject(new Error('Unexpected success')),
+          () => true,
+        );
     });
-    return it('should respond with the source code of the component', (done) => {
-      const payload = {
+    return it('should respond with the source code of the component', () => {
+      const msg = {
         name: 'core/Repeat',
         secret: 'foo',
       };
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('component');
-        chai.expect(msg.command).to.equal('source');
-        chai.expect(msg.payload.library).to.equal('core');
-        chai.expect(msg.payload.name).to.equal('Repeat');
-        chai.expect(msg.payload.language).to.be.oneOf([
-          'javascript',
-          'coffeescript',
-        ]);
-        chai.expect(msg.payload.code).to.be.a('string');
-        return done();
-      });
-      return client.send('component', 'getsource', payload);
+      return client.send('component', 'getsource', msg)
+        .then((payload) => {
+          chai.expect(payload.library).to.equal('core');
+          chai.expect(payload.name).to.equal('Repeat');
+          chai.expect(payload.language).to.be.oneOf([
+            'javascript',
+            'coffeescript',
+          ]);
+          chai.expect(payload.code).to.be.a('string');
+        });
     });
   });
 
@@ -101,7 +96,7 @@ exports.getComponent = function () {
 `;
     before(() => runtimeEvents = []);
     after(() => runtimeEvents = []);
-    it('should fail without proper authentication', (done) => {
+    it('should fail without proper authentication', () => {
       const payload = {
         name: 'GetRandom',
         library: 'math',
@@ -109,12 +104,11 @@ exports.getComponent = function () {
         code: source,
         tests: '',
       };
-      client.once('message', (msg) => {
-        chai.expect(msg.protocol).to.equal('component');
-        chai.expect(msg.command).to.equal('error');
-        return done();
-      });
-      return client.send('component', 'source', payload);
+      return client.send('component', 'source', payload)
+        .then(
+          () => Promise.reject(new Error('Unexpected success')),
+          () => true,
+        );
     });
     it('should not have emitted updated events', () => chai.expect(runtimeEvents).to.eql([]));
     it('should respond with a new component', (done) => {
@@ -132,7 +126,7 @@ exports.getComponent = function () {
         chai.expect(msg.payload.name).to.equal('math/GetRandom');
         return done();
       });
-      return client.send('component', 'source', payload);
+      client.send('component', 'source', payload);
     });
     return it('should have emitted a updated event', () => {
       chai.expect(runtimeEvents.length).to.equal(1);
@@ -140,7 +134,7 @@ exports.getComponent = function () {
       chai.expect(event.name).to.equal('GetRandom');
       chai.expect(event.library).to.equal('math');
       chai.expect(event.language).to.equal('javascript');
-      return chai.expect(event.code).to.equal(source);
+      chai.expect(event.code).to.equal(source);
     });
   });
 });

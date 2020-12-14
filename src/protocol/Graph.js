@@ -102,48 +102,44 @@ class GraphProtocol extends EventEmitter {
 
   registerGraph(id, graph, context = null, propagate = true) {
     // Prepare the network
-    this.transport.network.initNetwork(graph, id, context, (err, network) => {
-      if (err) {
+    this.transport.network.initNetwork(graph, id, context)
+      .then((network) => {
+        this.subscribeGraph(id, graph, context);
+        this.graphs[id] = graph;
+        this.sendAll('clear', {
+          id,
+          name: graph.name || '',
+          library: graph.properties.library,
+          main: graph.properties.main,
+          icon: graph.properties.icon,
+          description: graph.properties.description,
+        }, context);
+
+        if (!propagate) {
+          return;
+        }
+
+        const fullName = withNamespace(
+          id,
+          graph.properties.library || this.transport.options.namespace,
+        );
+        // Register for runtime exported ports
+        this.transport.runtime.registerNetwork(id, network);
+
+        if (id.indexOf('fixture.') === 0) {
+          // fbp-spec graph, skip propagation
+          return;
+        }
+
+        if (graph.name === 'main' || graph.properties.main) {
+          this.transport.runtime.setMainGraph(fullName, graph, context);
+        } else {
+          // Register to component loading
+          this.transport.component.registerGraph(fullName, graph, context);
+        }
+      }, (err) => {
         this.send('error', err, context);
-        return;
-      }
-
-      this.subscribeGraph(id, graph, context);
-
-      this.graphs[id] = graph;
-      this.sendAll('clear', {
-        id,
-        name: graph.name || '',
-        library: graph.properties.library,
-        main: graph.properties.main,
-        icon: graph.properties.icon,
-        description: graph.properties.description,
-      },
-      context);
-
-      if (!propagate) {
-        return;
-      }
-
-      const fullName = withNamespace(
-        id,
-        graph.properties.library || this.transport.options.namespace,
-      );
-      // Register for runtime exported ports
-      this.transport.runtime.registerNetwork(id, network);
-
-      if (id.indexOf('fixture.') === 0) {
-        // fbp-spec graph, skip propagation
-        return;
-      }
-
-      if (graph.name === 'main' || graph.properties.main) {
-        this.transport.runtime.setMainGraph(fullName, graph, context);
-      } else {
-        // Register to component loading
-        this.transport.component.registerGraph(fullName, graph, context);
-      }
-    });
+      });
   }
 
   subscribeGraph(id, graph, context) {
@@ -164,14 +160,12 @@ class GraphProtocol extends EventEmitter {
       from: oldId,
       to: newId,
       graph: id,
-    },
-    context));
+    }, context));
     graph.on('changeNode', (node) => this.sendAll('changenode', {
       id: node.id,
       metadata: node.metadata,
       graph: id,
-    },
-    context));
+    }, context));
     graph.on('addEdge', (edge) => {
       const edgeData = {
         src: edge.from,
@@ -317,12 +311,11 @@ class GraphProtocol extends EventEmitter {
     const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, add node via network instead
-      network.addNode(node, (err) => {
-        if (err) {
-          this.send('error', err, context);
-        }
+      network.addNode(node)
         // Acknowledgement will happen via Graph events
-      });
+        .catch((err) => {
+          this.send('error', err, context);
+        });
       return;
     }
     graph.addNode(node.id, node.component, node.metadata);
@@ -336,12 +329,11 @@ class GraphProtocol extends EventEmitter {
     const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, remove node via network instead
-      network.removeNode(payload, (err) => {
-        if (err) {
-          this.send('error', err, context);
-        }
+      network.removeNode(payload)
         // Acknowledgement will happen via Graph events
-      });
+        .catch((err) => {
+          this.send('error', err, context);
+        });
       return;
     }
     graph.removeNode(payload.id);
@@ -355,12 +347,11 @@ class GraphProtocol extends EventEmitter {
     const network = this.transport.network.getNetwork(graph.properties.id);
     if (network) {
       // Live graph, rename node via network instead
-      network.renameNode(payload.from, payload.to, (err) => {
-        if (err) {
-          this.send('error', err, context);
-        }
+      network.renameNode(payload.from, payload.to)
         // Acknowledgement will happen via Graph events
-      });
+        .catch((err) => {
+          this.send('error', err, context);
+        });
       return;
     }
     graph.renameNode(payload.from, payload.to);
@@ -386,12 +377,11 @@ class GraphProtocol extends EventEmitter {
         from: edge.src,
         to: edge.tgt,
         metadata: edge.metadata,
-      }, (err) => {
-        if (err) {
-          this.send('error', err, context);
-        }
+      })
         // Acknowledgement will happen via Graph events
-      });
+        .catch((err) => {
+          this.send('error', err, context);
+        });
       return;
     }
     if ((typeof edge.src.index === 'number') || (typeof edge.tgt.index === 'number')) {
@@ -422,12 +412,11 @@ class GraphProtocol extends EventEmitter {
       network.removeEdge({
         from: edge.src,
         to: edge.tgt,
-      }, (err) => {
-        if (err) {
-          this.send('error', err, context);
-        }
+      })
         // Acknowledgement will happen via Graph events
-      });
+        .catch((err) => {
+          this.send('error', err, context);
+        });
       return;
     }
     graph.removeEdge(edge.src.node, edge.src.port, edge.tgt.node, edge.tgt.port);
@@ -459,12 +448,11 @@ class GraphProtocol extends EventEmitter {
         from: payload.src,
         to: payload.tgt,
         metadata: payload.metadata,
-      }, (err) => {
-        if (err) {
-          this.send('error', err, context);
-        }
+      })
         // Acknowledgement will happen via Graph events
-      });
+        .catch((err) => {
+          this.send('error', err, context);
+        });
       return;
     }
     if (graph.addInitialIndex && (typeof payload.tgt.index === 'number')) {
@@ -492,12 +480,11 @@ class GraphProtocol extends EventEmitter {
         from: payload.src,
         to: payload.tgt,
         metadata: payload.metadata,
-      }, (err) => {
-        if (err) {
-          this.send('error', err, context);
-        }
+      })
         // Acknowledgement will happen via Graph events
-      });
+        .catch((err) => {
+          this.send('error', err, context);
+        });
       return;
     }
     graph.removeInitial(payload.tgt.node, payload.tgt.port);

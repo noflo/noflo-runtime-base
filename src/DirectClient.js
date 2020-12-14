@@ -20,17 +20,32 @@ class DirectClient extends EventEmitter {
   }
 
   send(protocol, topic, payload) {
-    const m = {
-      protocol,
-      command: topic,
-      payload,
-    };
-    return this.emit('send', m);
+    return new Promise((resolve, reject) => {
+      const m = {
+        protocol,
+        command: topic,
+        payload,
+      };
+      const onMsg = (msg) => {
+        if (msg.protocol !== protocol) {
+          // Unrelated, wait for next
+          this.once('message', onMsg);
+        }
+        if (msg.command === 'error') {
+          reject(new Error(msg.payload.message));
+          return;
+        }
+        resolve(msg.payload);
+      };
+      this.once('message', onMsg);
+      this.emit('send', m);
+    });
   }
 
   _receive(message) {
-    return setTimeout(() => this.emit('message', message),
-      1);
+    return setTimeout(() => {
+      this.emit('message', message);
+    }, 1);
   }
 }
 

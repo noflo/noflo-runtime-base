@@ -10,14 +10,14 @@ describe('Tracer', () => {
       console.log('before', Tracer);
       tracer = new Tracer();
       const loader = new noflo.ComponentLoader(baseDir);
-      return loader.load('noflo-runtime-base/TestRepeats', (err, instance) => {
-        if (err) { return done(err); }
-        component = instance;
-        return component.once('ready', () => {
-          tracer.attach(instance.network);
-          return setTimeout(done, 1);
-        });
-      });
+      loader.load('noflo-runtime-base/TestRepeats')
+        .then((instance) => {
+          component = instance;
+          component.once('ready', () => {
+            tracer.attach(instance.network);
+            setTimeout(done, 1);
+          });
+        }, done);
     });
 
     after(function (done) {
