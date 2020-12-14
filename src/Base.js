@@ -87,16 +87,15 @@ class BaseTransport extends EventEmitter {
     }
     const graphName = this.getGraphName(this.options.defaultGraph);
     this.context = 'none';
-    this.network._startNetwork(
-      this.options.defaultGraph,
-      graphName,
-      this.context,
-    )
+    this.graph
+      .registerGraph(graphName, this.options.defaultGraph, false)
+      .then(() => this.network
+        ._startNetwork(this.options.defaultGraph, graphName, this.context))
       .then((network) => {
-        this.graph.registerGraph(graphName, this.options.defaultGraph, false);
         this.runtime.setMainGraph(graphName, this.options.defaultGraph);
         this.emit('ready', network);
-      }, (err) => {
+      })
+      .catch((err) => {
         this.emit('error', err);
       });
   }
