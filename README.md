@@ -5,6 +5,8 @@ Base implementation of [FBP protocol](http://flowbased.github.io/fbp-protocol/) 
 
 ## Changes
 
+* 0.13.1 (December 14th 2020)
+  - `registerGraph` method now returns a Promise
 * 0.13.0 (December 14th 2020)
   - Adapted to Promises functionality in NoFlo 1.4
 * 0.12.0 (November 25th 2020)
